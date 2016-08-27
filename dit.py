@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 # Author:        Filipe L B Correia <filipelbc@gmail.com>
-# Last Change:   2016 Ago 27 18:07:56
+# Last Change:   2016 Ago 27 18:15:23
 #
-# About:         Time tracker and todo list
+# About:         Command line work time tracking and todo list
 #
 # ==============================================================================
 
