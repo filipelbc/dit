@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Author:        Filipe L B Correia <filipelbc@gmail.com>
-# Last Change:   2016 Ago 27 18:15:23
+# Last Change:   2016 Ago 27 19:06:00
 #
 # About:         Command line work time tracking and todo list
 #
@@ -13,15 +13,17 @@ Usage: dit [--verbose] [--directory "path"] <command>
 
     new "id" [--group "id"] [--subgroup "id"]
 
-    halt ["id"]  [--group "id"] [--subgroup "id"]
-
     workon [--new] "id" [--group "id"] [--subgroup "id"]
+
+    halt
 
     switchto [--new] "id" [--group "id"] [--subgroup "id"]
 
     conclude ["id"]  [--group "id"] [--subgroup "id"]
 
     list [--group "id"] [--subgroup "id"] [--all]
+
+    status
 
     export [org]
 """
@@ -263,19 +265,19 @@ class Dit:
         if len(argv) > 0 and argv[0] in ["--new", "-n"]:
             argv[0] = task
             self.new(argv)
-            return
 
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--group", "-g"]:
-                    group = argv.pop(0)
-                elif opt in ["--subgroup", "-s"]:
-                    subgroup = argv.pop(0)
+        else:
+            while True:
+                if len(argv) > 0 and argv[0].startswith("-"):
+                    opt = argv.pop(0)
+                    if opt in ["--group", "-g"]:
+                        group = argv.pop(0)
+                    elif opt in ["--subgroup", "-s"]:
+                        subgroup = argv.pop(0)
+                    else:
+                        raise Exception("No such option: %s" % opt)
                 else:
-                    raise Exception("No such option: %s" % opt)
-            else:
-                break
+                    break
 
         data = self._get_task_data(group, subgroup, task)
 
