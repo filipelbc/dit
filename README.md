@@ -2,7 +2,7 @@
 
 Command line work time tracking and todo list
 
-"""
+```
 Usage: dit [--verbose] [--directory "path"] <command>
 
     new "id" [--group "id"] [--subgroup "id"]
@@ -18,6 +18,4 @@ Usage: dit [--verbose] [--directory "path"] <command>
     list [--group "id"] [--subgroup "id"] [--all]
 
     export [org]
-"""
-
-
+```
