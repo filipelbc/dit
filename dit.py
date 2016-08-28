@@ -46,16 +46,22 @@ Usage:
       Prints an overview of the situation for the specified group, subgroup,
       or task. If none specified, the current task is used.
 
-    list [<gid> | <gname>] [--all, -a] [--concluded, -c] [--verbose, -v]
-      Lists a group, subgroup, or task. If none specified, lists current subgroup.
-      --all, -a
-        Lists all groups and subgroups.
+    list
+      This is a convenience alias for 'export'
+
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
+        [<gid> | <gname>]
+      Exports data to the specified format. Exports current subgroup unless
+      something is specified.
       --concluded, -a
         Include concluded tasks in the listing.
+      --all, -a
+        Exports all groups and subgroups.
       --verbose, -v
         More information is printed.
-
-    export [org]
+      --output, -o
+        File to which to export. Defaults to "stdout".
+        Format is deduced from file extension if present.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
 
@@ -196,6 +202,9 @@ class Dit:
                               current['subgroup'],
                               current['task'])
 
+    # ===========================================
+    # Index
+
     def _add_to_index(self, group, subgroup, task):
         group_id = -1
         for i in range(len(self.index)):
@@ -257,62 +266,63 @@ class Dit:
 
         self._save_index()
 
-    @staticmethod
-    def _print_task(task, task_id, data, verbose):
-        print("\n~ (%d) %s" % (task_id, task,))
+    # ===========================================
+    # Export
 
-        description = data['description']
-        print("\n  `%s`" % description)
+    def _export_task_(self, printer, group, subgroup, task, task_id, concluded, verbose):
+        data = self._get_task_data(group, subgroup, task)
 
-        notes = data['notes']
-        if notes:
-            print("  %sNotes:")
-        for note in notes:
-            print("    * %s" % note)
+        if not data.get('concluded_at', None) or concluded:
+            printer.task(group, subgroup, task, task_id, data, verbose)
 
-        props = data['properties']
-        if props:
-            print("  %sproperties:")
-        for prop in props:
-            print("    * %s" % prop)
+    def _export_task(self, printer, group, subgroup, task, concluded, verbose):
+        for i in range(len(self.index)):
+            if self.index[i][0] == group:
+                for j in range(len(self.index[i][1])):
+                    if self.index[i][1][j][0] == subgroup:
+                        for k in range(self.index[i][1][j][1]):
+                            if self.index[i][1][j][1][k] == task:
+                                self._export_task_(printer,
+                                                   group,
+                                                   subgroup,
+                                                   task,
+                                                   k,
+                                                   concluded,
+                                                   verbose)
 
-    def _list_tasks(self, group_id, subgroup_id, concluded, verbose):
+    def _export_tasks(self, printer, group_id, subgroup_id, concluded, verbose):
         n_tasks = len(self.index[group_id][1][subgroup_id][1])
 
         if n_tasks > 0:
             group = self.index[group_id][0]
             subgroup = self.index[group_id][1][subgroup_id][0]
 
-            print("\n# (%d.%d) \"%s\"/\"%s\"" % (
-                group_id, subgroup_id, group if group else "---",
-                subgroup if subgroup else "---",))
+            printer.subgroup(group, group_id, subgroup, subgroup_id, verbose)
 
             for i in range(n_tasks):
                 task = self.index[group_id][1][subgroup_id][1][i]
+                self._export_task_(group, subgroup, task, i, concluded, verbose)
 
-                task_fp = self._task_path(group, subgroup, task)
-                data = self._get_task_data_fp(task_fp)
-
-                if not data.get('concluded_at', None) or concluded:
-                    self._print_task(task, i, data, verbose)
-
-    def _list_all(self, concluded, verbose):
-        for i in range(len(self.index)):
-            for j in range(len(self.index[i][1])):
-                self._list_tasks(i, j, concluded, verbose)
-
-    def _list_group(self, group, concluded, verbose):
+    def _export_subgroup(self, printer, group, subgroup, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
-                for j in range(len(self.index[i][1])):
-                    self._list_tasks(i, j, concluded, verbose)
-
-    def _list_subgroup(self, group, subgroup, concluded, verbose):
-        for i in range(len(self.index)):
-            if self.index[i][0] == group:
+                printer.group(group, i)
                 for j in range(len(self.index[i][1])):
                     if self.index[i][1][j][0] == subgroup:
-                        self._list_tasks(i, j, concluded, verbose)
+                        self._export_tasks(i, j, concluded, verbose)
+
+    def _export_group(self, printer, group, concluded, verbose):
+        for i in range(len(self.index)):
+            if self.index[i][0] == group:
+                printer.group(group, i)
+                for j in range(len(self.index[i][1])):
+                    self._export_tasks(i, j, concluded, verbose)
+
+    def _export_all(self, printer, concluded, verbose):
+        for i in range(len(self.index)):
+            printer.group(self.index[i][0], i)
+            for j in range(len(self.index[i][1])):
+                self._export_tasks(printer, i, j, concluded, verbose)
 
     # ===========================================
     # Checks
@@ -356,8 +366,7 @@ class Dit:
     # ===========================================
     # Parsers
 
-    def _id_parse(self, argv):
-        ids = argv.pop(0).split(self.separator)
+    def _gid_parse(self, argv):
         # TODO
 
         group = None
@@ -366,23 +375,31 @@ class Dit:
 
         return (group, subgroup, task)
 
-    #     if len(ids) in [3, 2]:
-    #         group_id = ids.pop(0)
-    #         group = self.index[group_id][0]
-    #     else:
-    #         group = self.current_group
-    #         group_id =
+    def _id_parse(self, argv):
+        # TODO
 
-    #     if len(ids) == 2:
-    #         subgroup_id = ids.pop(0)
-    #         subgroup = self.index[group_id][0]
-    #     else:
-    #         subgroup = self.current_subgroup
+        group = None
+        subgroup = None
+        task = None
 
-    #     task_id = ids.pop(0)
-    #     task = s
+        return (group, subgroup, task)
 
-    #     return (group, subgroup, task)
+    def _gname_parse(self, argv):
+        names = argv.pop(0).split(self.separator)
+
+        group = names.pop(0)
+
+        if len(names) > 0:
+            subgroup = names.pop(0)
+        else:
+            subgroup = None
+
+        if len(names) > 0:
+            task = names.pop(0)
+        else:
+            task = None
+
+        return (group, subgroup, task)
 
     def _name_parse(self, argv):
         names = argv.pop(0).split(self.separator)
@@ -486,44 +503,65 @@ class Dit:
         self.halt(argv, also_conclude=True)
 
     def status(self, argv):
-        # TODO
         pass
+        # TODO
 
     def list(self, argv):
+        self.export(argv)
+
+    def export(self, argv):
         all = False
         concluded = False
         verbose = False
-        group = None
-        subgroup = None
+        output = None
+
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
-            if opt in ["--group", "-g"]:
-                group = argv.pop(0)
-            elif opt in ["--subgroup", "-s"]:
-                subgroup = argv.pop(0)
-            elif opt in ["--concluded", "-c"]:
+            if opt in ["--concluded", "-c"]:
                 concluded = True
             elif opt in ["--all", "-a"]:
                 all = True
             elif opt in ["--verbose", "-v"]:
                 verbose = True
+            elif opt in ["--output", "-o"]:
+                output = argv.pop(0)
+            elif opt in ["--id", '-i']:
+                (group, subgroup, task) = self._gid_parse(argv)
             else:
                 raise Exception("No such option: %s" % opt)
 
-        if all:
-            self._list_all(concluded, verbose)
-        elif group is None:
-            self._list_subgroup(self.current_group, self.current_subgroup,
-                                concluded, verbose)
-        elif subgroup is None:
-            self._list_group(group, concluded, verbose)
-        else:
-            self._list_subgroup(group, subgroup, concluded, verbose)
+        if len(argv) > 0:
+            (group, subgroup, task) = self._gname_parse(argv)
 
-    def export(self, argv):
-        # TODO
-        pass
+        if output in [None, "stdout"]:
+            file = sys.stdout
+            fmt = 'dit'
+        else:
+            file = open(output, 'w')
+            fmt = output.split(".")[-1]
+
+        if fmt not in ['dit', 'org', 'json']:
+            raise Exception("Unrecognized format")
+
+        printer = __import__(fmt + 'printer')
+        printer.file = file
+
+        if all:
+            self._export_all(printer, concluded, verbose)
+        elif task:
+            self._export_task(printer, group, subgroup, task, concluded, verbose)
+        elif subgroup is not None:
+            self._export_subgroup(printer, group, subgroup, concluded, verbose)
+        elif group is not None:
+            self._export_group(printer, group, concluded, verbose)
+        else:
+            print("Nothing to do")
+
+        file.close()
 
     # ===========================================
     # Main
