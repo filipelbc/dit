@@ -46,21 +46,22 @@ Usage:
       Prints an overview of the situation for the specified group, subgroup,
       or task. If none specified, the current task is used.
 
-    list [--all, -a] [--concluded, -c] [--verbose, -v] [<gid> | <gname>]
-      Lists a group, subgroup, or task. If none specified, lists current subgroup.
-      --all, -a
-        Lists all groups and subgroups.
+    list
+      This is a convenience alias for 'export'
+
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
+        [<gid> | <gname>]
+      Exports data to the specified format. Exports current subgroup unless
+      something is specified.
       --concluded, -a
         Include concluded tasks in the listing.
+      --all, -a
+        Exports all groups and subgroups.
       --verbose, -v
         More information is printed.
-
-    export [--output, -o "file"] [<gid> | <gname>]
-      Exports data to the specified format. Exports everything unless something
-      is specified.
       --output, -o
-        File to which export. Format is taken from file extension. Defaults to
-        'dit.org'.
+        File to which to export. Defaults to "stdout".
+        Format is deduced from file extension if present.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
 
@@ -319,7 +320,7 @@ class Dit:
 
     def _export_all(self, printer, concluded, verbose):
         for i in range(len(self.index)):
-            printer.group(group, i)
+            printer.group(self.index[i][0], i)
             for j in range(len(self.index[i][1])):
                 self._export_tasks(printer, i, j, concluded, verbose)
 
@@ -505,6 +506,9 @@ class Dit:
         pass
         # TODO
 
+    def list(self, argv):
+        self.export(argv)
+
     def export(self, argv):
         all = False
         concluded = False
@@ -554,6 +558,8 @@ class Dit:
             self._export_subgroup(printer, group, subgroup, concluded, verbose)
         elif group is not None:
             self._export_group(printer, group, concluded, verbose)
+        else:
+            print("Nothing to do")
 
         file.close()
 
