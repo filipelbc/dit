@@ -155,17 +155,17 @@ class Dit:
         self._save_index()
 
     @staticmethod
-    def _get_task_data_fn(fn):
-        if not os.path.isfile(fn):
-            raise Exception("Is not a file: %s" % fn)
+    def _get_task_data_fp(fp):
+        if not os.path.isfile(fp):
+            raise Exception("Is not a file: %s" % fp)
 
-        with open(fn, 'r') as f:
+        with open(fp, 'r') as f:
             return json.load(f)
 
     def _get_task_data(self, group, subgroup, task):
-        fn = self._task_path(group, subgroup, task)
+        fp = self._task_path(group, subgroup, task)
 
-        return self._get_task_data_fn(fn)
+        return self._get_task_data_fp(fp)
 
     def _save_task(self, group, subgroup, task, data):
         fn = self._task_path(group, subgroup, task)
@@ -229,11 +229,11 @@ class Dit:
                 self.index = json.load(f)
 
     @staticmethod
-    def _print_task(task, data, verbose):
-        print("\n~ %s" % task)
+    def _print_task(task, task_id, data, verbose):
+        print("\n~ (%d) %s" % (task_id, task,))
 
         description = data['description']
-        print("  `%s`" % description)
+        print("\n  `%s`" % description)
 
         notes = data['notes']
         if notes:
@@ -247,27 +247,43 @@ class Dit:
         for prop in props:
             print("    * %s" % prop)
 
-    def _list_task(self, subgroup_path, task, concluded, verbose=False):
-        fn = os.path.join(subgroup_path, task)
-        data = self._get_task_data_fn(fn)
+    def _list_tasks(self, group_id, subgroup_id, concluded, verbose):
+        n_tasks = len(self.index[group_id][1][subgroup_id][1])
 
-        if not data.get('concluded_at', None) or concluded:
-            self._print_task(task, data, verbose)
+        if n_tasks > 0:
+            group = self.index[group_id][0]
+            subgroup = self.index[group_id][1][subgroup_id][0]
 
-    def _list(self, group, subgroup, concluded):
+            print("\n# (%d.%d) \"%s\"/\"%s\"" % (
+                group_id, subgroup_id, group if group else "---",
+                subgroup if subgroup else "---",))
 
-        subgroup_path = self._subgroup_path(group, subgroup)
+            for i in range(n_tasks):
+                task = self.index[group_id][1][subgroup_id][1][i]
 
-        print("# %s/%s" % (group, subgroup))
+                task_fp = self._task_path(group, subgroup, task)
+                data = self._get_task_data_fp(task_fp)
 
-        for task in os.listdir(subgroup_path):
-            self._list_task(subgroup_path, task, concluded)
+                if not data.get('concluded_at', None) or concluded:
+                    self._print_task(task, i, data, verbose)
 
-    # def _list_all(concluded):
-    #     subgroups = []
-    #     for x in os.listdir(group_path):
-    #         if os.path.isdir(os.path.join(group_path, x))
-    #             subgroups.append(x)
+    def _list_all(self, concluded, verbose):
+        for i in range(len(self.index)):
+            for j in range(len(self.index[i][1])):
+                self._list_tasks(i, j, concluded, verbose)
+
+    def _list_group(self, group, concluded, verbose):
+        for i in range(len(self.index)):
+            if self.index[i][0] == group:
+                for j in range(len(self.index[i][1])):
+                    self._list_tasks(i, j, concluded, verbose)
+
+    def _list_subgroup(self, group, subgroup, concluded, verbose):
+        for i in range(len(self.index)):
+            if self.index[i][0] == group:
+                for j in range(len(self.index[i][1])):
+                    if self.index[i][1][j][0] == subgroup:
+                        self._list_tasks(i, j, concluded, verbose)
 
     # ===========================================
     # Checks
@@ -447,9 +463,9 @@ class Dit:
     def list(self, argv):
         all = False
         concluded = False
-
-        group = self.current_group
-        subgroup = self.current_subgroup
+        verbose = False
+        group = None
+        subgroup = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
@@ -468,8 +484,13 @@ class Dit:
 
         if all:
             self._list_all(concluded, verbose)
+        elif group is None:
+            self._list_subgroup(self.current_group, self.current_subgroup,
+                                concluded, verbose)
+        elif subgroup is None:
+            self._list_group(group, concluded, verbose)
         else:
-            self._list(group, subgroup, concluded, verbose)
+            self._list_subgroup(group, subgroup, concluded, verbose)
 
     def export(self, argv):
         # TODO
