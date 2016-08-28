@@ -384,8 +384,10 @@ class Dit:
         ids = [None] * (3 - len(ids)) + ids
         group_id, subgroup_id, task_id = ids
 
-        group = self.index[group_id][0]
-        subgroup = self.index[group_id][1][subgroup_id][0]
+        if group:
+            group = self.index[group_id][0]
+        if subgroup:
+            subgroup = self.index[group_id][1][subgroup_id][0]
         task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
