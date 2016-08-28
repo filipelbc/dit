@@ -2,30 +2,40 @@
 # -*- coding: utf-8 -*-
 #
 # Author:        Filipe L B Correia <filipelbc@gmail.com>
-# Last Change:   2016 Ago 27 19:06:00
+# Contributor:   Daniel Moraes <daniel.b.moraes@gmail.com>
 #
 # About:         Command line work time tracking and todo list
 #
 # =============================================================================
 
 """
-Usage: dit [--verbose] [--directory "path"] <command>
+Usage:
 
-    new "id" [--group "id"] [--subgroup "id"]
+    dit [--verbose, -v] [--directory, -d "path"] <command>
 
-    workon [--new] "id" [--group "id"] [--subgroup "id"]
+  Commands:
 
-    halt
+    new <name>
 
-    switchto [--new] "id" [--group "id"] [--subgroup "id"]
+    workon <id> | --new, -n <name>
 
-    conclude ["id"]  [--group "id"] [--subgroup "id"]
+    halt [<id> | <name>]
 
-    list [--group "id"] [--subgroup "id"] [--all]
+    switchto <id> | --new, -n <name>
 
-    status
+    conclude [<id> | <name>]
+
+    status [<id> | <name>]
+
+    list [<id> | <name>]
 
     export [org]
+
+  ID:
+      [name.][name.]name
+
+  Name:
+      [id.][id.]id
 """
 
 import sys
