@@ -46,7 +46,7 @@ Usage:
       Prints an overview of the situation for the specified group, subgroup,
       or task. If none specified, the current task is used.
 
-    list [<gid> | <gname>] [--all, -a] [--concluded, -c] [--verbose, -v]
+    list [--all, -a] [--concluded, -c] [--verbose, -v] [<gid> | <gname>]
       Lists a group, subgroup, or task. If none specified, lists current subgroup.
       --all, -a
         Lists all groups and subgroups.
@@ -55,7 +55,12 @@ Usage:
       --verbose, -v
         More information is printed.
 
-    export [org]
+    export [--output, -o "file"] [<gid> | <gname>]
+      Exports data to the specified format. Exports everything unless something
+      is specified.
+      --output, -o
+        File to which export. Format is taken from file extension. Defaults to
+        'dit.org'.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
 
@@ -354,10 +359,21 @@ class Dit:
         data['concluded_at'] = self._now()
 
     # ===========================================
+    # Iterator
+
+    # ===========================================
     # Parsers
 
+    def _gid_parse(self, argv):
+        # TODO
+
+        group = None
+        subgroup = None
+        task = None
+
+        return (group, subgroup, task)
+
     def _id_parse(self, argv):
-        ids = argv.pop(0).split(self.separator)
         # TODO
 
         group = None
@@ -383,6 +399,23 @@ class Dit:
     #     task = s
 
     #     return (group, subgroup, task)
+
+    def _gname_parse(self, argv):
+        names = argv.pop(0).split(self.separator)
+
+        if len(names) >:
+            group = names.pop(0)
+        else:
+            group = self.current_group
+
+        if len(names) == 2:
+            subgroup = names.pop(0)
+        else:
+            subgroup = self.current_subgroup
+
+        task = names.pop(0)
+
+        return (group, subgroup, task)
 
     def _name_parse(self, argv):
         names = argv.pop(0).split(self.separator)
@@ -486,44 +519,70 @@ class Dit:
         self.halt(argv, also_conclude=True)
 
     def status(self, argv):
+        if len(argv) > 0:
+            opt = argv.pop(0)
+            if opt in ["--id", '-i']:
+                (group, subgroup, task) = self._gid_parse(argv)
+            else:
+                (group, subgroup, task) = self._gname_parse(argv)
+        else:
+            group = self.current_group
+            subgroup = self.current_subgroup
+            task = self.current_task
+
         # TODO
-        pass
 
     def list(self, argv):
         all = False
         concluded = False
         verbose = False
-        group = None
-        subgroup = None
+
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
-            if opt in ["--group", "-g"]:
-                group = argv.pop(0)
-            elif opt in ["--subgroup", "-s"]:
-                subgroup = argv.pop(0)
-            elif opt in ["--concluded", "-c"]:
+            if opt in ["--concluded", "-c"]:
                 concluded = True
             elif opt in ["--all", "-a"]:
                 all = True
             elif opt in ["--verbose", "-v"]:
                 verbose = True
+            elif opt in ["--id", '-i']:
+                (group, subgroup, task) = self._gid_parse(argv)
             else:
                 raise Exception("No such option: %s" % opt)
 
-        if all:
-            self._list_all(concluded, verbose)
-        elif group is None:
-            self._list_subgroup(self.current_group, self.current_subgroup,
-                                concluded, verbose)
-        elif subgroup is None:
-            self._list_group(group, concluded, verbose)
-        else:
-            self._list_subgroup(group, subgroup, concluded, verbose)
+        if len(argv) > 0:
+            (group, subgroup, task) = self._gname_parse(argv)
+
+        # TODO
 
     def export(self, argv):
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = None
+        output = "dit.org"
+
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--output", "-o"]:
+                output = argv.pop(0)
+            elif opt in ["--id", '-i']:
+                (group, subgroup, task) = self._gid_parse(argv)
+            else:
+                raise Exception("No such option: %s" % opt)
+
+        if len(argv) > 0:
+            (group, subgroup, task) = self._gname_parse(argv)
+
+        fmt = output.split(".")[-1]
+
+        if fmt not in ['org']:
+            raise Exception("Unrecognized format")
+
         # TODO
-        pass
 
     # ===========================================
     # Main
