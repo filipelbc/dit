@@ -228,6 +228,35 @@ class Dit:
             with open(index_fp, 'r') as f:
                 self.index = json.load(f)
 
+    def _rebuild_index(self):
+        self.index = [[None, [[None, []]]]]
+        c_group = None
+        c_subgroup = None
+        for root, dirs, files in os.walk(self._base_path()):
+            for f in files:
+                if f in ["CURRENT", "INDEX"]:
+                    continue
+                p = root[len(self._base_path()) + 1:].split("/")
+                p = [i for i in p if i]
+                if len(p) == 0:
+                    group, subgroup = None, None
+                elif len(p) == 1:
+                    group, subgroup = None, p[0]
+                else:
+                    group, subgroup = p
+
+                if group != c_group:
+                    c_group = group
+                    self.index.append([group, [[None, []]]])
+
+                if subgroup != c_subgroup:
+                    c_subgroup = subgroup
+                    self.index[-1][1].append([subgroup, []])
+
+                self.index[-1][1][-1][1].append(f)
+
+        self._save_index()
+
     @staticmethod
     def _print_task(task, task_id, data, verbose):
         print("\n~ (%d) %s" % (task_id, task,))
