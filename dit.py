@@ -57,15 +57,15 @@ Usage:
 
     export [org]
 
-  <name>: ["group-name".]["subgroup-name".]"task-name"
+  <name>: ["group-name"/]["subgroup-name"/]"task-name"
 
-  <id>: --id, -i ["group-id".]["subgroup-id".]"task-id"
+  <id>: --id, -i ["group-id"/]["subgroup-id"/]"task-id"
 
       Uses current group and current subgroup if they are not specified.
 
-  <gname>: "group-name"[."subgroup-name"][."task-name"]
+  <gname>: "group-name"[/"subgroup-name"][/"task-name"]
 
-  <gid>: --id, -i "group-id"[."subgroup-id"][."task-id"]
+  <gid>: --id, -i "group-id"[/"subgroup-id"][/"task-id"]
 """
 
 import sys
@@ -82,6 +82,7 @@ class Dit:
     directory = "~/dit"
     current_fn = "CURRENT"
     index_fn = "INDEX"
+    separator = "/"
 
     current_group = None
     current_subgroup = None
@@ -311,7 +312,7 @@ class Dit:
     # Parsers
 
     def _id_parse(self, argv):
-        ids = argv.pop(0).split('.')
+        ids = argv.pop(0).split(self.separator)
         # TODO
 
         group = None
@@ -339,7 +340,7 @@ class Dit:
     #     return (group, subgroup, task)
 
     def _name_parse(self, argv):
-        names = argv.pop(0).split('.')
+        names = argv.pop(0).split(self.separator)
 
         if len(names) in [3, 2]:
             group = names.pop(0)
