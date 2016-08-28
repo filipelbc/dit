@@ -6,7 +6,7 @@
 #
 # About:         Command line work time tracking and todo list
 #
-# ==============================================================================
+# =============================================================================
 
 """
 Usage: dit [--verbose] [--directory "path"] <command>
@@ -43,11 +43,14 @@ pprint = PrettyPrinter(indent=4).pprint
 
 class Dit:
     directory = "~/dit"
-    current = "CURRENT"
+    current_fn = "CURRENT"
+    index_fn = "INDEX"
 
     current_group = None
     current_subgroup = None
     current_task = None
+
+    index = []
 
     # ========================
     # Paths and files names
@@ -60,7 +63,11 @@ class Dit:
 
     def _current_path(self):
         path = self._base_path()
-        return os.path.join(path, self.current)
+        return os.path.join(path, self.current_fn)
+
+    def _index_path(self):
+        path = self._base_path()
+        return os.path.join(path, self.index_fn)
 
     def _subgroup_path(self, group, subgroup):
         if not group:
@@ -99,6 +106,9 @@ class Dit:
         if os.path.isfile(fn):
             raise Exception("Already exists: %s" % fn)
 
+        self.index.append(os.path.join(group, subgroup, task))
+        self._save_index()
+
         if not description:
             description = input("Description: ")
 
@@ -136,18 +146,29 @@ class Dit:
             'subgroup': self.current_subgroup,
             'task': self.current_task
         }
-        cfn = self._current_path()
-        with open(cfn, 'w') as f:
+        current_fp = self._current_path()
+        with open(current_fp, 'w') as f:
             json.dump(current, f)
 
     def _load_current(self):
-        cfn = self._current_path()
-        if os.path.isfile(cfn):
-            with open(cfn, 'r') as f:
+        current_fp = self._current_path()
+        if os.path.isfile(current_fp):
+            with open(current_fp, 'r') as f:
                 current = json.load(f)
             self._set_current(current['group'],
                               current['subgroup'],
                               current['task'])
+
+    def _save_index(self):
+        index_fp = self._index_path()
+        with open(index_fp, 'w') as f:
+            json.dump(self.index, f)
+
+    def _load_index(self):
+        index_fp = self._index_path()
+        if os.path.isfile(index_fp):
+            with open(index_fp, 'r') as f:
+                self.index = json.load(f)
 
     @staticmethod
     def _print_task(task, data, verbose):
@@ -377,20 +398,18 @@ class Dit:
     # Main
 
     def configure(self, argv):
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--verbose", "-v"]:
-                    dit.verbose = True
-                elif opt in ["--directory", "-d"]:
-                    dit.directory = argv.pop(0)
-                elif opt in ["--help", "-h"]:
-                    print(__doc__)
-                else:
-                    raise Exception("No such option: %s" % opt)
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--verbose", "-v"]:
+                dit.verbose = True
+            elif opt in ["--directory", "-d"]:
+                dit.directory = argv.pop(0)
+            elif opt in ["--help", "-h"]:
+                print(__doc__)
             else:
-                break
+                raise Exception("No such option: %s" % opt)
         self._load_current()
+        self._load_index()
 
     def interpret(self, argv):
         if len(argv) > 0:
