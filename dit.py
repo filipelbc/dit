@@ -378,26 +378,48 @@ class Dit:
 
     def _gid_parse(self, argv):
         ids = list(map(int, argv.pop(0).split(self.separator)))
+        if len(ids) > 3:
+            raise Exception("Invalid GID format")
         ids = ids + [None] * (3 - len(ids))
         group_id, subgroup_id, task_id = ids
 
-        if group:
-            group = self.index[group_id][0]
-        if subgroup:
+        group = self.index[group_id][0]
+
+        subgroup, task = None, None
+
+        if subgroup_id:
             subgroup = self.index[group_id][1][subgroup_id][0]
-        task = self.index[group_id][1][subgroup_id][1][task_id]
+
+        if task_id:
+            task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
 
     def _id_parse(self, argv):
         ids = list(map(int, argv.pop(0).split(self.separator)))
+        if len(ids) > 3:
+            raise Exception("Invalid GID format")
         ids = [None] * (3 - len(ids)) + ids
         group_id, subgroup_id, task_id = ids
 
-        if group:
+        if group_id:
             group = self.index[group_id][0]
-        if subgroup:
+        else:
+            group = self.current_group
+            for i in range(len(self.index)):
+                if self.index[i][0] == group:
+                    group_id = i
+                    break
+
+        if subgroup_id:
             subgroup = self.index[group_id][1][subgroup_id][0]
+        else:
+            subgroup = self.current_subgroup
+            for i in range(len(self.index[group_id][1])):
+                if self.index[group_id][1][i][0] == subgroup:
+                    subgroup_id = i
+                    break
+
         task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
