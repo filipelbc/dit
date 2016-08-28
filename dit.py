@@ -134,6 +134,16 @@ class Dit:
         return str(datetime.now())
 
     @staticmethod
+    def _is_valid_name(name):
+        if name is not None:
+            prohibited_names = ["CURRENT", "INDEX"]
+            if name in prohibited_names:
+                return False
+            if not name[0].isalpha():
+                return False
+        return True
+
+    @staticmethod
     def _new_task(description=None):
         return {
             "description": description,
@@ -243,7 +253,7 @@ class Dit:
         c_subgroup = None
         for root, dirs, files in os.walk(self._base_path()):
             for f in files:
-                if f in ["CURRENT", "INDEX"]:
+                if not self._is_valid_name(f):
                     continue
                 p = root[len(self._base_path()) + 1:].split("/")
                 p = [i for i in p if i]
@@ -399,6 +409,10 @@ class Dit:
         else:
             task = None
 
+        for name in [group, subgroup, task]:
+            if not self._is_valid_name(name):
+                raise Exception("Invalid name %s" % name)
+
         return (group, subgroup, task)
 
     def _name_parse(self, argv):
@@ -415,6 +429,10 @@ class Dit:
             subgroup = self.current_subgroup
 
         task = names.pop(0)
+
+        for name in [group, subgroup, task]:
+            if not self._is_valid_name(name):
+                raise Exception("Invalid name %s" % name)
 
         return (group, subgroup, task)
 
@@ -503,8 +521,8 @@ class Dit:
         self.halt(argv, also_conclude=True)
 
     def status(self, argv):
-        pass
         # TODO
+        pass
 
     def list(self, argv):
         self.export(argv)
