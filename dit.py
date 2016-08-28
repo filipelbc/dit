@@ -201,6 +201,9 @@ class Dit:
                               current['subgroup'],
                               current['task'])
 
+    # ===========================================
+    # Index
+
     def _add_to_index(self, group, subgroup, task):
         group_id = -1
         for i in range(len(self.index)):
@@ -261,6 +264,9 @@ class Dit:
                 self.index[-1][1][-1][1].append(f)
 
         self._save_index()
+
+    # ===========================================
+    # Listing
 
     @staticmethod
     def _print_task(task, task_id, data, verbose):
