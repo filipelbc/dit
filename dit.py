@@ -42,15 +42,18 @@ Usage:
       Concludes the specified task or the current one. Note that there is an
       implicit 'halt'
 
-    status [<id> | <name>]
-      Prints current task.
+    status [<gid> | <gname>]
+      Prints an overview of the situation for the specified group, subgroup,
+      or task. If none specified, the current task is used.
 
-    list [<id> | <name>] [--all, -a] [--concluded, -c]
+    list [<gid> | <gname>] [--all, -a] [--concluded, -c] [--verbose, -v]
       Lists a group, subgroup, or task. If none specified, lists current subgroup.
       --all, -a
         Lists all groups and subgroups.
       --concluded, -a
         Include concluded tasks in the listing.
+      --verbose, -v
+        More information is printed.
 
     export [org]
 
@@ -59,6 +62,10 @@ Usage:
   <id>: --id, -i ["group-id".]["subgroup-id".]"task-id"
 
       Uses current group and current subgroup if they are not specified.
+
+  <gname>: "group-name"[."subgroup-name"][."task-name"]
+
+  <gid>: --id, -i "group-id"[."subgroup-id"][."task-id"]
 """
 
 import sys
