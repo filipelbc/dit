@@ -50,7 +50,7 @@ class Dit:
     current_subgroup = None
     current_task = None
 
-    index = []
+    index = [["", [["", []]]]]
 
     # ========================
     # Paths and files names
@@ -106,9 +106,6 @@ class Dit:
         if os.path.isfile(fn):
             raise Exception("Already exists: %s" % fn)
 
-        self.index.append(os.path.join(group, subgroup, task))
-        self._save_index()
-
         if not description:
             description = input("Description: ")
 
@@ -116,6 +113,9 @@ class Dit:
 
         with open(fn, 'w') as f:
             f.write(json.dumps(data))
+
+        self._add_to_index(group, subgroup, task)
+        self._save_index()
 
     @staticmethod
     def _get_task_data_fn(fn):
@@ -158,6 +158,27 @@ class Dit:
             self._set_current(current['group'],
                               current['subgroup'],
                               current['task'])
+
+    def _add_to_index(self, group, subgroup, task):
+        group_id = -1
+        for i in range(len(self.index)):
+            if self.index[i][0] == group:
+                group_id = i
+                break
+        if group_id == -1:
+            group_id = len(self.index)
+            self.index.append([group, [["", []]]])
+
+        subgroup_id = -1
+        for i in range(len(self.index[group_id][1])):
+            if self.index[group_id][1][i][0] == subgroup:
+                subgroup_id = i
+                break
+        if subgroup_id == -1:
+            subgroup_id = len(self.index[group_id][1])
+            self.index[group_id][1].append([subgroup, []])
+
+        self.index[group_id][1][subgroup_id][1].append(task)
 
     def _save_index(self):
         index_fp = self._index_path()
