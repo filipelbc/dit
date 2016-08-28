@@ -382,38 +382,20 @@ class Dit:
 
         return (group, subgroup, task)
 
-    #     if len(ids) in [3, 2]:
-    #         group_id = ids.pop(0)
-    #         group = self.index[group_id][0]
-    #     else:
-    #         group = self.current_group
-    #         group_id =
-
-    #     if len(ids) == 2:
-    #         subgroup_id = ids.pop(0)
-    #         subgroup = self.index[group_id][0]
-    #     else:
-    #         subgroup = self.current_subgroup
-
-    #     task_id = ids.pop(0)
-    #     task = s
-
-    #     return (group, subgroup, task)
-
     def _gname_parse(self, argv):
         names = argv.pop(0).split(self.separator)
 
-        if len(names) >:
-            group = names.pop(0)
-        else:
-            group = self.current_group
+        group = names.pop(0)
 
-        if len(names) == 2:
+        if len(names) > 0:
             subgroup = names.pop(0)
         else:
-            subgroup = self.current_subgroup
+            subgroup = None
 
-        task = names.pop(0)
+        if len(names) > 0:
+            task = names.pop(0)
+        else:
+            task = None
 
         return (group, subgroup, task)
 
