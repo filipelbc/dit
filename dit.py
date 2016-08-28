@@ -237,19 +237,16 @@ class Dit:
 
         description = None
 
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--group", "-g"]:
-                    group = argv.pop(0)
-                elif opt in ["--subgroup", "-s"]:
-                    subgroup = argv.pop(0)
-                elif opt in ["--description", "-d"]:
-                    description = argv.pop(0)
-                else:
-                    raise Exception("No such option: %s" % opt)
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--group", "-g"]:
+                group = argv.pop(0)
+            elif opt in ["--subgroup", "-s"]:
+                subgroup = argv.pop(0)
+            elif opt in ["--description", "-d"]:
+                description = argv.pop(0)
             else:
-                break
+                raise Exception("No such option: %s" % opt)
 
         self._create_task(group, subgroup, task, description)
 
@@ -267,17 +264,14 @@ class Dit:
             self.new(argv)
 
         else:
-            while True:
-                if len(argv) > 0 and argv[0].startswith("-"):
-                    opt = argv.pop(0)
-                    if opt in ["--group", "-g"]:
-                        group = argv.pop(0)
-                    elif opt in ["--subgroup", "-s"]:
-                        subgroup = argv.pop(0)
-                    else:
-                        raise Exception("No such option: %s" % opt)
+            while len(argv) > 0 and argv[0].startswith("-"):
+                opt = argv.pop(0)
+                if opt in ["--group", "-g"]:
+                    group = argv.pop(0)
+                elif opt in ["--subgroup", "-s"]:
+                    subgroup = argv.pop(0)
                 else:
-                    break
+                    raise Exception("No such option: %s" % opt)
 
         data = self._get_task_data(group, subgroup, task)
 
@@ -321,17 +315,14 @@ class Dit:
         if len(argv) > 0:
             task = argv.pop(0)
 
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--group", "-g"]:
-                    group = argv.pop(0)
-                elif opt in ["--subgroup", "-s"]:
-                    subgroup = argv.pop(0)
-                else:
-                    raise Exception("No such option: %s" % opt)
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--group", "-g"]:
+                group = argv.pop(0)
+            elif opt in ["--subgroup", "-s"]:
+                subgroup = argv.pop(0)
             else:
-                break
+                raise Exception("No such option: %s" % opt)
 
         data = self._get_task_data(group, subgroup, task)
 
@@ -350,23 +341,20 @@ class Dit:
         group = self.current_group
         subgroup = self.current_subgroup
 
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--group", "-g"]:
-                    group = argv.pop(0)
-                elif opt in ["--subgroup", "-s"]:
-                    subgroup = argv.pop(0)
-                elif opt in ["--concluded", "-c"]:
-                    concluded = True
-                elif opt in ["--all", "-a"]:
-                    all = True
-                elif opt in ["--verbose", "-v"]:
-                    verbose = True
-                else:
-                    raise Exception("No such option: %s" % opt)
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--group", "-g"]:
+                group = argv.pop(0)
+            elif opt in ["--subgroup", "-s"]:
+                subgroup = argv.pop(0)
+            elif opt in ["--concluded", "-c"]:
+                concluded = True
+            elif opt in ["--all", "-a"]:
+                all = True
+            elif opt in ["--verbose", "-v"]:
+                verbose = True
             else:
-                break
+                raise Exception("No such option: %s" % opt)
 
         if all:
             self._list_all(concluded, verbose)
@@ -377,19 +365,16 @@ class Dit:
     # Main
 
     def configure(self, argv):
-        while True:
-            if len(argv) > 0 and argv[0].startswith("-"):
-                opt = argv.pop(0)
-                if opt in ["--verbose", "-v"]:
-                    dit.verbose = True
-                elif opt in ["--directory", "-d"]:
-                    dit.directory = argv.pop(0)
-                elif opt in ["--help", "-h"]:
-                    print(__doc__)
-                else:
-                    raise Exception("No such option: %s" % opt)
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--verbose", "-v"]:
+                dit.verbose = True
+            elif opt in ["--directory", "-d"]:
+                dit.directory = argv.pop(0)
+            elif opt in ["--help", "-h"]:
+                print(__doc__)
             else:
-                break
+                raise Exception("No such option: %s" % opt)
         self._load_current()
 
     def interpret(self, argv):
