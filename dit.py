@@ -210,7 +210,7 @@ class Dit:
         for prop in props:
             print("    * %s" % prop)
 
-    def _list_tasks(self, group_id, subgroup_id, verbose):
+    def _list_tasks(self, group_id, subgroup_id, concluded, verbose):
         n_tasks = len(self.index[group_id][1][subgroup_id][1])
 
         if n_tasks > 0:
@@ -218,8 +218,8 @@ class Dit:
             subgroup = self.index[group_id][1][subgroup_id][0]
 
             print("\n# (%d.%d) \"%s\"/\"%s\"" % (
-                group_id, subgroup_id, group if group != "" else "---",
-                subgroup if subgroup != "" else "---",))
+                group_id, subgroup_id, group if group else "---",
+                subgroup if subgroup else "---",))
 
             for i in range(n_tasks):
                 task = self.index[group_id][1][subgroup_id][1][i]
@@ -233,20 +233,20 @@ class Dit:
     def _list_all(self, concluded, verbose):
         for i in range(len(self.index)):
             for j in range(len(self.index[i][1])):
-                self._list_tasks(i, j, verbose)
+                self._list_tasks(i, j, concluded, verbose)
 
     def _list_group(self, group, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
                 for j in range(len(self.index[i][1])):
-                    self._list_tasks(i, j, verbose)
+                    self._list_tasks(i, j, concluded, verbose)
 
     def _list_subgroup(self, group, subgroup, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
                 for j in range(len(self.index[i][1])):
                     if self.index[i][1][j][0] == subgroup:
-                        self._list_tasks(i, j, verbose)
+                        self._list_tasks(i, j, concluded, verbose)
 
     # ==========
     # Clock
