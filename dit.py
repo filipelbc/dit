@@ -96,6 +96,8 @@ class Dit:
 
     index = [[None, [[None, []]]]]
 
+    printer = None
+
     # ===========================================
     # Paths and files names
 
@@ -279,60 +281,60 @@ class Dit:
     # ===========================================
     # Export
 
-    def _export_task_(self, printer, group, subgroup, task, task_id, concluded, verbose):
+    def _export_task_(self, group, subgroup, task, task_id, concluded, verbose):
         data = self._get_task_data(group, subgroup, task)
 
         if not data.get('concluded_at', None) or concluded:
-            printer.task(group, subgroup, task, task_id, data, verbose)
+            self.printer.task(group, subgroup, task, task_id, data, verbose)
 
-    def _export_task(self, printer, group, subgroup, task, concluded, verbose):
+    def _export_task(self, group, subgroup, task, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
                 for j in range(len(self.index[i][1])):
                     if self.index[i][1][j][0] == subgroup:
                         for k in range(self.index[i][1][j][1]):
                             if self.index[i][1][j][1][k] == task:
-                                self._export_task_(printer,
-                                                   group,
-                                                   subgroup,
-                                                   task,
-                                                   k,
-                                                   concluded,
-                                                   verbose)
+                                self._export_task_(group,     i,
+                                                   subgroup,  j,
+                                                   task,      k,
+                                                   concluded, verbose)
 
-    def _export_tasks(self, printer, group_id, subgroup_id, concluded, verbose):
+    def _export_tasks(self, group_id, subgroup_id, concluded, verbose):
         n_tasks = len(self.index[group_id][1][subgroup_id][1])
 
         if n_tasks > 0:
             group = self.index[group_id][0]
             subgroup = self.index[group_id][1][subgroup_id][0]
 
-            printer.subgroup(group, group_id, subgroup, subgroup_id, verbose)
+            self.printer.subgroup(group, group_id, subgroup, subgroup_id, verbose)
 
             for i in range(n_tasks):
                 task = self.index[group_id][1][subgroup_id][1][i]
-                self._export_task_(group, subgroup, task, i, concluded, verbose)
+                self._export_task_(group,    group_id,
+                                   subgroup, subgroup_id,
+                                   task,     i,
+                                   concluded, verbose)
 
-    def _export_subgroup(self, printer, group, subgroup, concluded, verbose):
+    def _export_subgroup(self, group, subgroup, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
-                printer.group(group, i)
+                self.printer.group(group, i)
                 for j in range(len(self.index[i][1])):
                     if self.index[i][1][j][0] == subgroup:
                         self._export_tasks(i, j, concluded, verbose)
 
-    def _export_group(self, printer, group, concluded, verbose):
+    def _export_group(self, group, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
-                printer.group(group, i)
+                self.printer.group(group, i)
                 for j in range(len(self.index[i][1])):
                     self._export_tasks(i, j, concluded, verbose)
 
-    def _export_all(self, printer, concluded, verbose):
+    def _export_all(self, concluded, verbose):
         for i in range(len(self.index)):
-            printer.group(self.index[i][0], i)
+            self.printer.group(self.index[i][0], i)
             for j in range(len(self.index[i][1])):
-                self._export_tasks(printer, i, j, concluded, verbose)
+                self._export_tasks(i, j, concluded, verbose)
 
     # ===========================================
     # Checks
@@ -478,32 +480,44 @@ class Dit:
         if len(argv) < 1:
             raise Exception("Missing argument")
 
-        opt = argv.pop(0)
-        if opt in ["--new", "-n"]:
-            (group, subgroup, task) = self.new(argv)
-        elif opt in ["--id", '-i']:
-            (group, subgroup, task) = self._id_parse(argv)
-        else:
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = None
+
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--new", "-n"]:
+                (group, subgroup, task) = self.new(argv)
+            elif opt in ["--id", '-i']:
+                (group, subgroup, task) = self._id_parse(argv)
+            else:
+                raise Exception("No such option: %s" % opt)
+        if len(argv) > 0:
             (group, subgroup, task) = self._name_parse(argv)
 
-        data = self._get_task_data(group, subgroup, task)
+        if task:
+            data = self._get_task_data(group, subgroup, task)
 
-        self._clock_in(data)
-        self._save_task(group, subgroup, task, data)
-        self._set_current(group, subgroup, task)
-        self._save_current()
+            self._clock_in(data)
+            self._save_task(group, subgroup, task, data)
+            self._set_current(group, subgroup, task)
+            self._save_current()
+        else:
+            print("No task specified")
 
     def halt(self, argv, also_conclude=False):
-        if len(argv) > 0:
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = self.current_task
+
+        while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--id", '-i']:
                 (group, subgroup, task) = self._id_parse(argv)
             else:
-                (group, subgroup, task) = self._name_parse(argv)
-        else:
-            group = self.current_group
-            subgroup = self.current_subgroup
-            task = self.current_task
+                raise Exception("No such option: %s" % opt)
+        if len(argv) > 0:
+            (group, subgroup, task) = self._name_parse(argv)
 
         if not task:
             if also_conclude:
@@ -561,7 +575,6 @@ class Dit:
                 (group, subgroup, task) = self._gid_parse(argv)
             else:
                 raise Exception("No such option: %s" % opt)
-
         if len(argv) > 0:
             (group, subgroup, task) = self._gname_parse(argv)
 
@@ -575,17 +588,17 @@ class Dit:
         if fmt not in ['dit', 'org', 'json']:
             raise Exception("Unrecognized format")
 
-        printer = __import__(fmt + 'printer')
-        printer.file = file
+        self.printer = __import__(fmt + 'printer')
+        self.printer.file = file
 
         if all:
-            self._export_all(printer, concluded, verbose)
+            self._export_all(concluded, verbose)
         elif task:
-            self._export_task(printer, group, subgroup, task, concluded, verbose)
+            self._export_task(group, subgroup, task, concluded, verbose)
         elif subgroup is not None:
-            self._export_subgroup(printer, group, subgroup, concluded, verbose)
+            self._export_subgroup(group, subgroup, concluded, verbose)
         elif group is not None:
-            self._export_group(printer, group, concluded, verbose)
+            self._export_group(group, concluded, verbose)
         else:
             print("Nothing to do")
 

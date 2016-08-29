@@ -19,7 +19,7 @@ def subgroup(group, group_id, subgroup, subgroup_id, verbose):
     file.write("\n** %s\n" % subgroup)
 
 
-def task(group, subgroup, task, task_id, data, verbose):
+def task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose):
     description = data['description']
     file.write("\n*** %s" % description)
 
