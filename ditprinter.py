@@ -20,19 +20,19 @@ def subgroup(group, group_id, subgroup, subgroup_id, verbose):
 
 
 def task(group, subgroup, task, task_id, data, verbose):
-    print("\n(%d) %s" % (task_id, task))
+    file.write("\n(%d) %s" % (task_id, task))
 
     description = data['description']
-    print("\n%s" % description)
+    file.write("\n%s" % description)
 
     notes = data['notes']
     if notes:
-        print("  Notes:")
+        file.write("  Notes:")
     for note in notes:
-        print("  * %s" % note)
+        file.write("  * %s" % note['value'])
 
     props = data['properties']
     if props:
-        print("  Properties:")
+        file.write("  Properties:")
     for prop in props:
-        print("  * %s" % prop)
+        file.write("  * %s: %s" % (prop['name'], prop['value']))
