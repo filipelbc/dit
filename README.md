@@ -2,20 +2,68 @@
 
 Command line work time tracking and todo list
 
+## Usage
+
 ```
-Usage: dit [--verbose] [--directory "path"] <command>
+  dit [--verbose, -v] [--directory, -d "path"] <command>
 
-    new "id" [--group "id"] [--subgroup "id"]
+  --directory, -d
+    Specifies the directory where the tasks are stored. Defaults to '~/.dit'.
 
-    halt ["id"]  [--group "id"] [--subgroup "id"]
+  --verbose, -v
+    Prints detailed information of what is done.
 
-    workon [--new] "id" [--group "id"] [--subgroup "id"]
+  --help, -h
+    Prints this message and quits.
 
-    switchto [--new] "id" [--group "id"] [--subgroup "id"]
+  <command>:
 
-    conclude ["id"]  [--group "id"] [--subgroup "id"]
+    new <name> [-d "description"]
+      Creates a new task.
 
-    list [--group "id"] [--subgroup "id"] [--all]
+    workon <id> | --new, -n <name> [-d "description"]
+      Clocks in the specified task.
+      --new, -n
+        Same as 'new' followed by 'workon'.
 
-    export [org]
+    halt [<id> | <name>]
+      Clocks out of the specified task or the current one.
+
+    switchto <id> | --new, -n <name> [-d "description"]
+      Same as 'halt' followed by 'workon'
+
+    conclude [<id> | <name>]
+      Concludes the specified task or the current one. Note that there is an
+      implicit 'halt'
+
+    status [<gid> | <gname>]
+      Prints an overview of the situation for the specified group, subgroup,
+      or task. If none specified, the current task is used.
+
+    list
+      This is a convenience alias for 'export'
+
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
+        [<gid> | <gname>]
+      Exports data to the specified format. Exports current subgroup unless
+      something is specified.
+      --concluded, -a
+        Include concluded tasks in the listing.
+      --all, -a
+        Exports all groups and subgroups.
+      --verbose, -v
+        More information is printed.
+      --output, -o
+        File to which to export. Defaults to "stdout".
+        Format is deduced from file extension if present.
+
+  <name>: ["group-name"/]["subgroup-name"/]"task-name"
+
+  <id>: --id, -i ["group-id"/]["subgroup-id"/]"task-id"
+
+      Uses current group and current subgroup if they are not specified.
+
+  <gname>: "group-name"[/"subgroup-name"][/"task-name"]
+
+  <gid>: --id, -i "group-id"[/"subgroup-id"][/"task-id"]
 ```
