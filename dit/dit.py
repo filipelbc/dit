@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# Author:        Filipe L B Correia <filipelbc@gmail.com>
-# Contributor:   Daniel Moraes <daniel.b.moraes@gmail.com>
-#
-# About:         Command line work time tracking and todo list
-#
-# =============================================================================
 
 """
 Usage:
@@ -49,8 +42,7 @@ Usage:
     list
       This is a convenience alias for 'export'
 
-    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
-        [<gid> | <gname>]
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
       Exports data to the specified format. Exports current subgroup unless
       something is specified.
       --concluded, -a
@@ -79,9 +71,6 @@ import json
 import os
 
 from datetime import datetime
-
-# ==============
-# Options
 
 
 class Dit:
@@ -637,9 +626,9 @@ class Dit:
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
-                dit.verbose = True
+                self.verbose = True
             elif opt in ["--directory", "-d"]:
-                dit.directory = argv.pop(0)
+                self.directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
                 print(__doc__)
                 return False
@@ -676,8 +665,8 @@ class Dit:
 # ===========================================
 # Main
 
-if __name__ == "__main__":
 
+def main():
     argv = sys.argv
     argv.pop(0)
 
@@ -685,3 +674,8 @@ if __name__ == "__main__":
 
     if dit.configure(argv):
         dit.interpret(argv)
+    else:
+        print(__doc__)
+
+if __name__ == "__main__":
+    main()
