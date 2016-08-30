@@ -70,6 +70,7 @@ import sys
 import json
 import os
 
+from importlib import import_module
 from datetime import datetime
 
 
@@ -600,11 +601,11 @@ class Dit:
             file = open(output, 'w')
             fmt = output.split(".")[-1]
 
-        if fmt not in ['dit', 'org', 'json']:
+        if fmt not in ['dit', 'org']:
             raise Exception("Unrecognized format")
 
-        self.printer = __import__(fmt + 'printer')
-        self.printer.file = file
+        printer = import_module('dit.' + fmt + 'printer')
+        printer.file = file
 
         if all:
             self._export_all(concluded, verbose)
@@ -674,8 +675,6 @@ def main():
 
     if dit.configure(argv):
         dit.interpret(argv)
-    else:
-        print(__doc__)
 
 if __name__ == "__main__":
     main()
