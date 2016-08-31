@@ -139,7 +139,7 @@ class Dit:
             prohibited_names = ["CURRENT", "INDEX"]
             if name in prohibited_names:
                 return False
-            if not name[0].isalpha():
+            if len(name) > 0 and not name[0].isalpha():
                 return False
         return True
 
@@ -377,7 +377,8 @@ class Dit:
     # Parsers
 
     def _gid_parse(self, argv):
-        ids = list(map(int, argv.pop(0).split(self.separator)))
+        ids = argv.pop(0).split(self.separator)
+        ids = list(map(int, [i if i else "0" for i in ids]))
         if len(ids) > 3:
             raise Exception("Invalid GID format")
         ids = ids + [None] * (3 - len(ids))
@@ -385,41 +386,46 @@ class Dit:
 
         group = self.index[group_id][0]
 
-        subgroup, task = None, None
+        if subgroup_id is None:
+            subgroup_id = 0
+            for i in range(len(self.index[group_id][1])):
+                if self.index[group_id][1][i][0] == self.current_subgroup:
+                    subgroup_id = i
+                    break
 
-        if subgroup_id:
-            subgroup = self.index[group_id][1][subgroup_id][0]
+        subgroup = self.index[group_id][1][subgroup_id][0]
 
         if task_id:
             task = self.index[group_id][1][subgroup_id][1][task_id]
+        else:
+            task = None
 
         return (group, subgroup, task)
 
     def _id_parse(self, argv):
-        ids = list(map(int, argv.pop(0).split(self.separator)))
+        ids = argv.pop(0).split(self.separator)
+        ids = list(map(int, [i if i else "0" for i in ids]))
         if len(ids) > 3:
             raise Exception("Invalid GID format")
         ids = [None] * (3 - len(ids)) + ids
         group_id, subgroup_id, task_id = ids
 
-        if group_id:
-            group = self.index[group_id][0]
-        else:
-            group = self.current_group
+        if group_id is None:
+            group_id = 0
             for i in range(len(self.index)):
-                if self.index[i][0] == group:
+                if self.index[i][0] == self.current_group:
                     group_id = i
                     break
 
-        if subgroup_id:
-            subgroup = self.index[group_id][1][subgroup_id][0]
-        else:
-            subgroup = self.current_subgroup
+        if subgroup_id is None:
+            subgroup_id = 0
             for i in range(len(self.index[group_id][1])):
-                if self.index[group_id][1][i][0] == subgroup:
+                if self.index[group_id][1][i][0] == self.current_subgroup:
                     subgroup_id = i
                     break
 
+        group = self.index[group_id][0]
+        subgroup = self.index[group_id][1][subgroup_id][0]
         task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
@@ -428,6 +434,16 @@ class Dit:
         names = argv.pop(0).split(self.separator)
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
+
+        if group is None:
+            group = self.current_group
+        elif group == "":
+            group = None
+
+        if subgroup is None:
+            subgroup = self.current_subgroup
+        elif subgroup == "":
+            subgroup = None
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
@@ -439,6 +455,16 @@ class Dit:
         names = argv.pop(0).split(self.separator)
         names = [None] * (3 - len(names)) + names
         group, subgroup, task = names
+
+        if group is None:
+            group = self.current_group
+        elif group == "":
+            group = None
+
+        if subgroup is None:
+            subgroup = self.current_subgroup
+        elif subgroup == "":
+            subgroup = None
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
