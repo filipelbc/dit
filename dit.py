@@ -426,7 +426,7 @@ class Dit:
 
     def _gname_parse(self, argv):
         names = argv.pop(0).split(self.separator)
-        names = ids + [None] * (3 - len(names))
+        names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
         for name in [group, subgroup, task]:
