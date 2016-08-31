@@ -281,18 +281,18 @@ class Dit:
     # ===========================================
     # Export
 
-    def _export_task_(self, group, subgroup, task, task_id, concluded, verbose):
+    def _export_task_(self, group, group_id, subgroup, subgroup_id, task, task_id, concluded, verbose):
         data = self._get_task_data(group, subgroup, task)
 
         if not data.get('concluded_at', None) or concluded:
-            self.printer.task(group, subgroup, task, task_id, data, verbose)
+            self.printer.task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose)
 
     def _export_task(self, group, subgroup, task, concluded, verbose):
         for i in range(len(self.index)):
             if self.index[i][0] == group:
                 for j in range(len(self.index[i][1])):
                     if self.index[i][1][j][0] == subgroup:
-                        for k in range(self.index[i][1][j][1]):
+                        for k in range(len(self.index[i][1][j][1])):
                             if self.index[i][1][j][1][k] == task:
                                 self._export_task_(group,     i,
                                                    subgroup,  j,
