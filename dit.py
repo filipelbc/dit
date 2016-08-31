@@ -377,37 +377,57 @@ class Dit:
     # Parsers
 
     def _gid_parse(self, argv):
-        # TODO
+        ids = list(map(int, argv.pop(0).split(self.separator)))
+        if len(ids) > 3:
+            raise Exception("Invalid GID format")
+        ids = ids + [None] * (3 - len(ids))
+        group_id, subgroup_id, task_id = ids
 
-        group = None
-        subgroup = None
-        task = None
+        group = self.index[group_id][0]
+
+        subgroup, task = None, None
+
+        if subgroup_id:
+            subgroup = self.index[group_id][1][subgroup_id][0]
+
+        if task_id:
+            task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
 
     def _id_parse(self, argv):
-        # TODO
+        ids = list(map(int, argv.pop(0).split(self.separator)))
+        if len(ids) > 3:
+            raise Exception("Invalid GID format")
+        ids = [None] * (3 - len(ids)) + ids
+        group_id, subgroup_id, task_id = ids
 
-        group = None
-        subgroup = None
-        task = None
+        if group_id:
+            group = self.index[group_id][0]
+        else:
+            group = self.current_group
+            for i in range(len(self.index)):
+                if self.index[i][0] == group:
+                    group_id = i
+                    break
+
+        if subgroup_id:
+            subgroup = self.index[group_id][1][subgroup_id][0]
+        else:
+            subgroup = self.current_subgroup
+            for i in range(len(self.index[group_id][1])):
+                if self.index[group_id][1][i][0] == subgroup:
+                    subgroup_id = i
+                    break
+
+        task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
 
     def _gname_parse(self, argv):
         names = argv.pop(0).split(self.separator)
-
-        group = names.pop(0)
-
-        if len(names) > 0:
-            subgroup = names.pop(0)
-        else:
-            subgroup = None
-
-        if len(names) > 0:
-            task = names.pop(0)
-        else:
-            task = None
+        names = names + [None] * (3 - len(names))
+        group, subgroup, task = names
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
@@ -417,18 +437,8 @@ class Dit:
 
     def _name_parse(self, argv):
         names = argv.pop(0).split(self.separator)
-
-        if len(names) in [3, 2]:
-            group = names.pop(0)
-        else:
-            group = self.current_group
-
-        if len(names) == 2:
-            subgroup = names.pop(0)
-        else:
-            subgroup = self.current_subgroup
-
-        task = names.pop(0)
+        names = [None] * (3 - len(names)) + names
+        group, subgroup, task = names
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
