@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# Author:        Filipe L B Correia <filipelbc@gmail.com>
-# Contributor:   Daniel Moraes <daniel.b.moraes@gmail.com>
-#
-# About:         Command line work time tracking and todo list
-#
-# =============================================================================
 
 """
 Usage:
@@ -49,8 +42,7 @@ Usage:
     list
       This is a convenience alias for 'export'
 
-    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
-        [<gid> | <gname>]
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
       Exports data to the specified format. Exports current subgroup unless
       something is specified.
       --concluded, -a
@@ -78,10 +70,8 @@ import sys
 import json
 import os
 
+from importlib import import_module
 from datetime import datetime
-
-# ==============
-# Options
 
 
 class Dit:
@@ -611,11 +601,11 @@ class Dit:
             file = open(output, 'w')
             fmt = output.split(".")[-1]
 
-        if fmt not in ['dit', 'org', 'json']:
+        if fmt not in ['dit', 'org']:
             raise Exception("Unrecognized format")
 
-        self.printer = __import__(fmt + 'printer')
-        self.printer.file = file
+        printer = import_module('dit.' + fmt + 'printer')
+        printer.file = file
 
         if all:
             self._export_all(concluded, verbose)
@@ -637,9 +627,9 @@ class Dit:
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
-                dit.verbose = True
+                self.verbose = True
             elif opt in ["--directory", "-d"]:
-                dit.directory = argv.pop(0)
+                self.directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
                 print(__doc__)
                 return False
@@ -676,8 +666,8 @@ class Dit:
 # ===========================================
 # Main
 
-if __name__ == "__main__":
 
+def main():
     argv = sys.argv
     argv.pop(0)
 
@@ -685,3 +675,6 @@ if __name__ == "__main__":
 
     if dit.configure(argv):
         dit.interpret(argv)
+
+if __name__ == "__main__":
+    main()
