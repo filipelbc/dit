@@ -12,29 +12,35 @@ file = None
 
 
 def group(group, group_id):
-    file.write("\n(%s) %s\n" % (group_id, group))
+    file.write("\n* %s\n" % group)
 
 
 def subgroup(group, group_id, subgroup, subgroup_id, verbose):
-    file.write("\n(%s/%s) %s / %s\n" % (group_id, subgroup_id, group, subgroup))
+    file.write("\n** %s\n" % subgroup)
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose):
-    file.write("\n(%s/%s/%s) %s" % (group_id, subgroup_id, task_id, task))
-
     description = data['description']
-    file.write("\n%s" % description)
+    file.write("\n*** %s" % description)
 
     notes = data['notes']
-    if notes:
-        file.write("  Notes:")
     for note in notes:
-        file.write("  * %s" % note['value'])
+        file.write("\n  - %s" % note['value'])
 
     props = data['properties']
     if props:
-        file.write("  Properties:")
+        file.write("\n:PROPERTIES:")
     for prop in props:
-        file.write("  * %s: %s" % (prop['name'], prop['value']))
+        file.write("\n:%s: %s" % (prop['name'], prop['value']))
+    if props:
+        file.write("\n:END:")
+
+    logbook = data['logbook']
+    if logbook:
+        file.write("\n:LOGBOOK:")
+    for log in logbook:
+        file.write("\nCLOCK: [%s]--[%s]" % (log['in'], log['out']))
+    if logbook:
+        file.write("\n:END:")
 
     file.write("\n")
