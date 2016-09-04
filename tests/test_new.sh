@@ -19,6 +19,8 @@ rm -rf $ditdir
 
 tree $ditdir
 
-./ditcmd list ""
+./ditcmd list "."
 
 ./ditcmd list "goo"
+
+./ditcmd list "goo/."

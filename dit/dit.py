@@ -115,11 +115,12 @@ def _now():
 
 
 class Dit:
-    directory = "~/dit"
+    directory = "~/.dit"
     current_fn = "CURRENT"
     index_fn = "INDEX"
     separator = "/"
     root_name = ""
+    root_name_cmd = "."
 
     current_group = None
     current_subgroup = None
@@ -440,6 +441,7 @@ class Dit:
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
             raise Exception("Invalid gname format")
+        names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
@@ -453,14 +455,22 @@ class Dit:
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
             raise Exception("Invalid name format")
+        names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
+
         group, subgroup, task = names
 
         if group is None:
-            group = self.current_group
+            if self.current_group is not None:
+                group = self.current_group
+            else:
+                group = self.root_name
 
         if subgroup is None:
-            subgroup = self.current_subgroup
+            if self.current_subgroup is not None:
+                subgroup = self.current_subgroup
+            else:
+                subgroup = self.root_name
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
@@ -605,8 +615,8 @@ class Dit:
         if fmt not in ['dit', 'org']:
             raise Exception("Unrecognized format: %s", fmt)
 
-        printer = import_module('dit.' + fmt + 'printer')
-        printer.file = file
+        self.printer = import_module('dit.' + fmt + 'printer')
+        self.printer.file = file
 
         if all:
             self._export_all(concluded, verbose)
