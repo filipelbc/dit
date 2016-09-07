@@ -20,7 +20,7 @@ Usage:
     new <name> [-d "description"]
       Creates a new task.
 
-    workon <id> | --new, -n <name> [-d "description"]
+    workon <id> | <name> | --new, -n <name> [-d "description"]
       Clocks in the specified task.
       --new, -n
         Same as 'new' followed by 'workon'.
@@ -28,12 +28,12 @@ Usage:
     halt [<id> | <name>]
       Clocks out of the specified task or the current one.
 
-    switchto <id> | --new, -n <name> [-d "description"]
+    switchto <id> | <name> | --new, -n <name> [-d "description"]
       Same as 'halt' followed by 'workon'
 
     conclude [<id> | <name>]
       Concludes the specified task or the current one. Note that there is an
-      implicit 'halt'
+      implicit 'halt'.
 
     status [<gid> | <gname>]
       Prints an overview of the situation for the specified group, subgroup,
@@ -56,14 +56,44 @@ Usage:
         Format is deduced from file extension if present.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
+    "a"
+        task "a" in current group/subgroup
+    "b/a"
+        task "a" in subgroup "b" in current group
+    "c/b/a"
+        task "a" in subgroup "b" in group "c"
+
+    Note that "b" and "c" can be empty strings.
 
   <id>: --id, -i ["group-id"/]["subgroup-id"/]"task-id"
+    "a"
+        task "id a" in current subgroup in current group
+    "b/a"
+        task "id a" in subgroup "id b" in current group
+    "c/b/a"
+        task "id a" in subgroup "id b" in group "id c"
 
-      Uses current group and current subgroup if they are not specified.
+    Note that "b" and "c" can be empty strings, which map to "id 0".
 
   <gname>: "group-name"[/"subgroup-name"][/"task-name"]
+    "a"
+        group "a"
+    "a/b"
+        subgroup "b" in group "a"
+    "a/b/c"
+        task "c" in subgroup "b" in group "a"
+
+    Note that "a" and "b" can be empty strings.
 
   <gid>: --id, -i "group-id"[/"subgroup-id"][/"task-id"]
+    "a"
+        group "id a"
+    "a/b"
+        subgroup "id b" in group "id a"
+    "a/b/c"
+        task "id c" in subgroup "id b" in group "id a"
+
+    Note that "a" and "b" can be empty strings, which map to "id 0".
 """
 
 import sys
@@ -73,18 +103,30 @@ import os
 from importlib import import_module
 from datetime import datetime
 
+# ===========================================
+# Auxiliary
+
+
+def _now():
+    return str(datetime.now())
+
+# ===========================================
+# Main
+
 
 class Dit:
-    directory = "~/dit"
+    directory = "~/.dit"
     current_fn = "CURRENT"
     index_fn = "INDEX"
     separator = "/"
+    root_name = ""
+    root_name_cmd = "."
 
     current_group = None
     current_subgroup = None
     current_task = None
 
-    index = [[None, [[None, []]]]]
+    index = [[root_name, [[root_name, []]]]]
 
     printer = None
 
@@ -104,10 +146,6 @@ class Dit:
         return os.path.join(self._base_path(), self.index_fn)
 
     def _subgroup_path(self, group, subgroup):
-        if not group:
-            group = ""
-        if not subgroup:
-            subgroup = ""
         path = os.path.join(self._base_path(), group, subgroup)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -119,66 +157,57 @@ class Dit:
         return os.path.join(self._subgroup_path(group, subgroup), task)
 
     # ===========================================
-    # Auxiliary
+    # Checks
+
+    def _is_current(self, group, subgroup, task):
+        return (task == self.current_tas and
+                subgroup == self.current_subgroup and
+                group == self.current_group)
+
+    def _is_valid_name(self, name):
+        return ((name == self.root_name) or
+                (name[0].isalpha() and
+                 name not in [self.current_fn, self.index_fn]))
+
+    # ===========================================
+    # Task management
 
     @staticmethod
-    def _now():
-        return str(datetime.now())
-
-    @staticmethod
-    def _is_valid_name(name):
-        if name is not None:
-            prohibited_names = ["CURRENT", "INDEX"]
-            if name in prohibited_names:
-                return False
-            if len(name) > 0 and not name[0].isalpha():
-                return False
-        return True
-
-    @staticmethod
-    def _new_task(description=None):
+    def _new_task_data(description=None):
         return {
             "description": description,
             "logbook": [],
             "properties": [],
             "notes": [],
-            "created_at": Dit._now()
+            "created_at": _now()
         }
 
     def _create_task(self, group, subgroup, task, description):
         fn = self._task_path(group, subgroup, task)
-
         if os.path.isfile(fn):
             raise Exception("Already exists: %s" % fn)
-
         if not description:
             description = input("Description: ")
-
-        data = self._new_task(description)
-
+        data = self._new_task_data(description)
         with open(fn, 'w') as f:
             f.write(json.dumps(data))
-
         self._add_to_index(group, subgroup, task)
         self._save_index()
 
-    @staticmethod
-    def _get_task_data_fp(fp):
-        if not os.path.isfile(fp):
-            raise Exception("Is not a file: %s" % fp)
-
-        with open(fp, 'r') as f:
+    def _load_task_data(self, group, subgroup, task):
+        task_fp = self._task_path(group, subgroup, task)
+        if not os.path.isfile(task_fp):
+            raise Exception("Is not a file: %s" % task_fp)
+        with open(task_fp, 'r') as f:
             return json.load(f)
-
-    def _get_task_data(self, group, subgroup, task):
-        fp = self._task_path(group, subgroup, task)
-
-        return self._get_task_data_fp(fp)
 
     def _save_task(self, group, subgroup, task, data):
         fn = self._task_path(group, subgroup, task)
+        data['updated_at'] = _now()
         with open(fn, 'w') as f:
             f.write(json.dumps(data))
+
+    # Current Task
 
     def _set_current(self, group, subgroup, task):
         self.current_group = group
@@ -215,7 +244,7 @@ class Dit:
                 break
         if group_id == -1:
             group_id = len(self.index)
-            self.index.append([group, [[None, []]]])
+            self.index.append([group, [[self.root_name, []]]])
 
         subgroup_id = -1
         for i in range(len(self.index[group_id][1])):
@@ -240,25 +269,28 @@ class Dit:
                 self.index = json.load(f)
 
     def _rebuild_index(self):
-        self.index = [[None, [[None, []]]]]
+        self.index = [[self.root_name, [[self.root_name, []]]]]
         c_group = None
         c_subgroup = None
-        for root, dirs, files in os.walk(self._base_path()):
+        base_path = self._base_path()
+        for root, dirs, files in os.walk(base_path):
             for f in files:
                 if not self._is_valid_name(f):
                     continue
-                p = root[len(self._base_path()) + 1:].split("/")
+                p = root[len(base_path) + 1:].split("/")
                 p = [i for i in p if i]
                 if len(p) == 0:
-                    group, subgroup = None, None
+                    group, subgroup = self.root_name, self.root_name
                 elif len(p) == 1:
-                    group, subgroup = None, p[0]
-                else:
+                    group, subgroup = self.root_name, p[0]
+                elif len(p) == 2:
                     group, subgroup = p
+                else:
+                    continue
 
                 if group != c_group:
                     c_group = group
-                    self.index.append([group, [[None, []]]])
+                    self.index.append([group, [[self.root_name, []]]])
 
                 if subgroup != c_subgroup:
                     c_subgroup = subgroup
@@ -272,7 +304,7 @@ class Dit:
     # Export
 
     def _export_task_(self, group, group_id, subgroup, subgroup_id, task, task_id, concluded, verbose):
-        data = self._get_task_data(group, subgroup, task)
+        data = self._load_task_data(group, subgroup, task)
 
         if not data.get('concluded_at', None) or concluded:
             self.printer.task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose)
@@ -327,90 +359,73 @@ class Dit:
                 self._export_tasks(i, j, concluded, verbose)
 
     # ===========================================
-    # Checks
-
-    def _is_current(self, group, subgroup, task):
-        if task != self.current_task \
-                or subgroup != self.current_subgroup \
-                or group != self.current_group:
-            return False
-        return True
-
-    # ===========================================
     # Clock
 
     def _clock_in(self, data):
-        if data['logbook']:
-            last = data['logbook'][-1]
+        logbook = data.get('logbook', [])
+        if len(logbook) > 0:
+            last = logbook[-1]
             if not last['out']:
                 print("Already clocked in")
                 return
-
-        data['logbook'] += [{'in': self._now(), 'out': None}]
+        data['logbook'] = logbook + [{'in': _now(), 'out': None}]
 
     def _clock_out(self, data):
-        if not data['logbook']:
+        logbook = data.get('logbook', [])
+        if len(logbook) == 0:
             print("Already clocked out")
             return
-        last = data['logbook'][-1]
+        last = logbook[-1]
         if last['out']:
             print("Already clocked out")
             return
-
-        last['out'] = self._now()
+        last['out'] = _now()
+        data['logbook'] = logbook
 
     def _conclude(self, data):
         if data.get('concluded_at', None):
             print("Already concluded")
             return
-        data['concluded_at'] = self._now()
+        data['concluded_at'] = _now()
 
     # ===========================================
     # Parsers
 
     def _gid_parse(self, argv):
         ids = argv.pop(0).split(self.separator)
-        ids = list(map(int, [i if i else "0" for i in ids]))
         if len(ids) > 3:
-            raise Exception("Invalid GID format")
+            raise Exception("Invalid gID format")
+        ids = [int(i) if i else "0" for i in ids]
         ids = ids + [None] * (3 - len(ids))
         group_id, subgroup_id, task_id = ids
 
         group = self.index[group_id][0]
 
-        if subgroup_id is None:
-            subgroup_id = 0
-            for i in range(len(self.index[group_id][1])):
-                if self.index[group_id][1][i][0] == self.current_subgroup:
-                    subgroup_id = i
-                    break
+        subgroup = None
+        task = None
 
-        subgroup = self.index[group_id][1][subgroup_id][0]
-
-        if task_id:
-            task = self.index[group_id][1][subgroup_id][1][task_id]
-        else:
-            task = None
+        if subgroup_id:
+            subgroup = self.index[group_id][1][subgroup_id][0]
+            if task_id:
+                task = self.index[group_id][1][subgroup_id][1][task_id]
 
         return (group, subgroup, task)
 
     def _id_parse(self, argv):
         ids = argv.pop(0).split(self.separator)
-        ids = list(map(int, [i if i else "0" for i in ids]))
         if len(ids) > 3:
-            raise Exception("Invalid GID format")
+            raise Exception("Invalid ID format")
+        ids = [int(i) if i else "0" for i in ids]
         ids = [None] * (3 - len(ids)) + ids
         group_id, subgroup_id, task_id = ids
 
         if group_id is None:
-            group_id = 0
             for i in range(len(self.index)):
                 if self.index[i][0] == self.current_group:
                     group_id = i
                     break
 
         if subgroup_id is None:
-            subgroup_id = 0
             for i in range(len(self.index[group_id][1])):
                 if self.index[group_id][1][i][0] == self.current_subgroup:
                     subgroup_id = i
@@ -424,47 +439,52 @@ class Dit:
 
     def _gname_parse(self, argv):
         names = argv.pop(0).split(self.separator)
+        if len(names) > 3:
+            raise Exception("Invalid gname format")
+        names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
-        if group is None:
-            group = self.current_group
-        elif group == "":
-            group = None
-
-        if subgroup is None:
-            subgroup = self.current_subgroup
-        elif subgroup == "":
-            subgroup = None
-
         for name in [group, subgroup, task]:
-            if not self._is_valid_name(name):
-                raise Exception("Invalid name %s" % name)
+            if name and not self._is_valid_name(name):
+                raise Exception("Invalid name: %s" % name)
 
         return (group, subgroup, task)
 
     def _name_parse(self, argv):
         names = argv.pop(0).split(self.separator)
+        if len(names) > 3:
+            raise Exception("Invalid name format")
+        names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
+
         group, subgroup, task = names
 
         if group is None:
-            group = self.current_group
-        elif group == "":
-            group = None
+            if self.current_group is not None:
+                group = self.current_group
+            else:
+                group = self.root_name
 
         if subgroup is None:
-            subgroup = self.current_subgroup
-        elif subgroup == "":
-            subgroup = None
+            if self.current_subgroup is not None:
+                subgroup = self.current_subgroup
+            else:
+                subgroup = self.root_name
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
-                raise Exception("Invalid name %s" % name)
+                raise Exception("Invalid name: %s" % name)
 
         return (group, subgroup, task)
 
-    def _new_parse(self, argv):
+    # ===========================================
+    # Commands
+
+    def new(self, argv):
+        if len(argv) < 1:
+            raise Exception("Missing argument")
+
         (group, subgroup, task) = self._name_parse(argv)
 
         description = None
@@ -477,17 +497,6 @@ class Dit:
         if not description:
             description = input("Description: ")
 
-        return (group, subgroup, task, description)
-
-    # ===========================================
-    # Commands
-
-    def new(self, argv):
-        if len(argv) < 1:
-            raise Exception("Missing argument")
-
-        (group, subgroup, task, description) = self._new_parse(argv)
-
         self._create_task(group, subgroup, task, description)
 
         return (group, subgroup, task)
@@ -498,7 +507,7 @@ class Dit:
 
         group = self.current_group
         subgroup = self.current_subgroup
-        task = None
+        task = self.current_task
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
@@ -512,14 +521,14 @@ class Dit:
             (group, subgroup, task) = self._name_parse(argv)
 
         if task:
-            data = self._get_task_data(group, subgroup, task)
+            data = self._load_task_data(group, subgroup, task)
 
             self._clock_in(data)
             self._save_task(group, subgroup, task, data)
             self._set_current(group, subgroup, task)
             self._save_current()
         else:
-            print("No task specified")
+            raise Exception("No task specified")
 
     def halt(self, argv, also_conclude=False):
         group = self.current_group
@@ -537,12 +546,12 @@ class Dit:
 
         if not task:
             if also_conclude:
-                print("No task specified")
+                raise Exception("No task specified")
             else:
                 print("Not working on any task")
             return
 
-        data = self._get_task_data(group, subgroup, task)
+        data = self._load_task_data(group, subgroup, task)
 
         self._clock_out(data)
         if also_conclude:
@@ -565,9 +574,9 @@ class Dit:
         pass
 
     def list(self, argv):
-        self.export(argv)
+        self.export(argv, listing=True)
 
-    def export(self, argv):
+    def export(self, argv, listing=False):
         all = False
         concluded = False
         verbose = False
@@ -586,6 +595,8 @@ class Dit:
             elif opt in ["--verbose", "-v"]:
                 verbose = True
             elif opt in ["--output", "-o"]:
+                if listing:
+                    raise Exception("No such option: %s" % opt)
                 output = argv.pop(0)
             elif opt in ["--id", '-i']:
                 (group, subgroup, task) = self._gid_parse(argv)
@@ -602,10 +613,10 @@ class Dit:
             fmt = output.split(".")[-1]
 
         if fmt not in ['dit', 'org']:
-            raise Exception("Unrecognized format")
+            raise Exception("Unrecognized format: %s", fmt)
 
-        printer = import_module('dit.' + fmt + 'printer')
-        printer.file = file
+        self.printer = import_module('dit.' + fmt + 'printer')
+        self.printer.file = file
 
         if all:
             self._export_all(concluded, verbose)
@@ -661,7 +672,7 @@ class Dit:
             else:
                 raise Exception("No such command: %s" % cmd)
         else:
-            print("Missing command")
+            raise Exception("Missing command")
 
 # ===========================================
 # Main

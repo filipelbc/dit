@@ -7,4 +7,4 @@ venv:
 	pip3 install -r requirements.txt
 
 clean:
-	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/
+	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/ tests/ditdir

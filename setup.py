@@ -26,7 +26,7 @@ setup(
 
     keywords='clocking todo',
 
-    packages=[],
+    packages=['dit'],
 
     install_requires=[],
 
