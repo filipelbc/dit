@@ -37,10 +37,10 @@ $ dit -v -d ./ditdir list --concluded /
   test
   * Created at: 2016-09-10 18:58:59
 
-[0/0/3] t2
+[0/0/3] t10
   test
   * Created at: 2016-09-10 18:59:29
-  * Concluded at: 2016-09-10 19:02:09
+  * Concluded at: 2016-09-10 19:02:19
   ~ Time spent: 40s
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
@@ -48,4 +48,4 @@ $ dit -v -d ./ditdir status
 [0/0/2] t7
   test
   * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:02:39
+  * Updated at: 2016-09-10 19:02:59
