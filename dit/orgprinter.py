@@ -1,33 +1,47 @@
 # -*- coding: utf-8 -*-
-#
-# Python file
-#
-# Author:        Filipe L B Correia <filipelbc@gmail.com>
-#
-# About:         Dit printer plugin
-#
-# =============================================================================
 
 file = None
+statussing = False
+listing = False
+options = {}
+
+
+def setup(_file, _options, _statussing, _listing):
+    global file, options, statussing, listing
+    file = _file
+    options = _options
+    listing = _listing
+    statussing = _statussing
+
+
+def begin():
+    pass
+
+
+def end():
+    pass
 
 
 def group(group, group_id):
     file.write("\n* %s\n" % group)
 
 
-def subgroup(group, group_id, subgroup, subgroup_id, verbose):
+def subgroup(group, group_id, subgroup, subgroup_id):
     file.write("\n** %s\n" % subgroup)
 
 
-def task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose):
-    description = data['description']
+def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
+    if data.get('concluded_at', None) and not options.get('concluded', False):
+        return
+
+    description = data.get('description', None)
     file.write("\n*** %s" % description)
 
-    notes = data['notes']
+    notes = data.get('notes', [])
     for note in notes:
-        file.write("\n  - %s" % note['value'])
+        file.write("\n  + %s" % note)
 
-    props = data['properties']
+    props = data.get('properties', [])
     if props:
         file.write("\n:PROPERTIES:")
     for prop in props:
@@ -35,7 +49,7 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data, verbose):
     if props:
         file.write("\n:END:")
 
-    logbook = data['logbook']
+    logbook = data.get('logbook', [])
     if logbook:
         file.write("\n:LOGBOOK:")
     for log in logbook:
