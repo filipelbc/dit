@@ -6,3 +6,4 @@ build/
 tests/ditdir
 tests/*.diff
 tests/*.out
+tests/DIT_TESTING
