@@ -4,3 +4,5 @@ dist/
 dit.egg-info/
 build/
 tests/ditdir
+tests/*.diff
+tests/*.out

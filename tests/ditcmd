@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
 
-echo '#======================'
-echo '# dir '$@
-dit -v -d ./ditdir $@
+./step dit -v -d ./ditdir "$@"
