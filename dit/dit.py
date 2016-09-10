@@ -481,9 +481,12 @@ class Dit:
     # ===========================================
     # Commands
 
+    def usage():
+        print(__doc__)
+
     def new(self, argv):
         if len(argv) < 1:
-            raise Exception("Missing argument")
+            raise InvalidArgumentsError("Missing argument")
 
         (group, subgroup, task) = self._name_parse(argv)
 
@@ -493,7 +496,7 @@ class Dit:
             if opt in ["--description", "-d"]:
                 description = argv.pop(0)
             else:
-                raise Exception("No such option: %s" % opt)
+                raise InvalidArgumentsError("No such option: %s" % opt)
         if not description:
             description = input("Description: ")
 
@@ -503,7 +506,7 @@ class Dit:
 
     def workon(self, argv):
         if len(argv) < 1:
-            raise Exception("Missing argument")
+            raise InvalidArgumentsError("Missing argument")
 
         group = self.current_group
         subgroup = self.current_subgroup
@@ -516,7 +519,7 @@ class Dit:
             elif opt in ["--id", '-i']:
                 (group, subgroup, task) = self._id_parse(argv)
             else:
-                raise Exception("No such option: %s" % opt)
+                raise InvalidArgumentsError("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._name_parse(argv)
 
@@ -528,7 +531,7 @@ class Dit:
             self._set_current(group, subgroup, task)
             self._save_current()
         else:
-            raise Exception("No task specified")
+            raise InvalidArgumentsError("No task specified")
 
     def halt(self, argv, also_conclude=False):
         group = self.current_group
@@ -540,13 +543,13 @@ class Dit:
             if opt in ["--id", '-i']:
                 (group, subgroup, task) = self._id_parse(argv)
             else:
-                raise Exception("No such option: %s" % opt)
+                raise InvalidArgumentsError("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._name_parse(argv)
 
         if not task:
             if also_conclude:
-                raise Exception("No task specified")
+                raise InvalidArgumentsError("No task specified")
             else:
                 print("Not working on any task")
             return
@@ -596,12 +599,12 @@ class Dit:
                 verbose = True
             elif opt in ["--output", "-o"]:
                 if listing:
-                    raise Exception("No such option: %s" % opt)
+                    raise InvalidArgumentsError("No such option: %s" % opt)
                 output = argv.pop(0)
             elif opt in ["--id", '-i']:
                 (group, subgroup, task) = self._gid_parse(argv)
             else:
-                raise Exception("No such option: %s" % opt)
+                raise InvalidArgumentsError("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._gname_parse(argv)
 
@@ -642,10 +645,10 @@ class Dit:
             elif opt in ["--directory", "-d"]:
                 self.directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
-                print(__doc__)
+                usage()
                 return False
             else:
-                raise Exception("No such option: %s" % opt)
+                raise InvalidArgumentsError("No such option: %s" % opt)
         self._load_current()
         self._load_index()
         return True
@@ -670,9 +673,16 @@ class Dit:
             elif cmd in ["export", "e"]:
                 self.export(argv)
             else:
-                raise Exception("No such command: %s" % cmd)
+                raise InvalidArgumentsError("No such command: %s" % cmd)
         else:
-            raise Exception("Missing command")
+            raise InvalidArgumentsError("Missing command")
+
+# ===========================================
+# Exceptions
+
+
+class InvalidArgumentsError(Exception):
+    pass
 
 # ===========================================
 # Main
@@ -682,10 +692,13 @@ def main():
     argv = sys.argv
     argv.pop(0)
 
-    dit = Dit()
-
-    if dit.configure(argv):
-        dit.interpret(argv)
+    try:
+        dit = Dit()
+        if dit.configure(argv):
+            dit.interpret(argv)
+    except InvalidArgumentsError as err:
+        print(err)
+        usage()
 
 if __name__ == "__main__":
     main()
