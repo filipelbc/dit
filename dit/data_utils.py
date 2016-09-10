@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 
-# Auxialiary
+# Auxiliary
 
 _fmt = r'%Y-%m-%d %H:%M:%S'
 
