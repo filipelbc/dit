@@ -10,6 +10,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   --verbose, -v
     Prints detailed information of what is being done.
 
+  --rebuild-index
+    Rebuild the INDEX file. For use in case of manual modification of the
+    contents of "--directory".
+
   --help, -h
     Prints this message and quits.
 
@@ -648,17 +652,25 @@ class Dit:
     # Main
 
     def configure(self, argv):
+        rebuild_index = False
+
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 self.verbose = True
             elif opt in ["--directory", "-d"]:
                 self.directory = argv.pop(0)
+            elif opt in ["--rebuild-index"]:
+                rebuild_index = True
             elif opt in ["--help", "-h"]:
                 self.usage()
                 return False
             else:
                 raise InvalidArgumentsError("No such option: %s" % opt)
+
+        if rebuild_index:
+            self._rebuild_index()
+
         self._load_current()
         self._load_index()
         return True
