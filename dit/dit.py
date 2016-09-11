@@ -277,19 +277,21 @@ class Dit:
 
     def _rebuild_index(self):
         self.index = [[self.root_name, [[self.root_name, []]]]]
-        c_group = None
-        c_subgroup = None
+        c_group = self.root_name
+        c_subgroup = self.root_name
         base_path = self._base_path()
         for root, dirs, files in os.walk(base_path):
-            for f in files:
+            dirs.sort()
+            for f in sorted(files):
                 if not self._is_valid_name(f):
                     continue
                 p = root[len(base_path) + 1:].split("/")
+
                 p = [i for i in p if i]
                 if len(p) == 0:
                     group, subgroup = self.root_name, self.root_name
                 elif len(p) == 1:
-                    group, subgroup = self.root_name, p[0]
+                    group, subgroup = p[0], self.root_name
                 elif len(p) == 2:
                     group, subgroup = p
                 else:
@@ -297,6 +299,7 @@ class Dit:
 
                 if group != c_group:
                     c_group = group
+                    c_subgroup = self.root_name
                     self.index.append([group, [[self.root_name, []]]])
 
                 if subgroup != c_subgroup:
