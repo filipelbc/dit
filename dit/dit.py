@@ -159,8 +159,6 @@ class Dit:
         return path
 
     def _task_path(self, group, subgroup, task):
-        if not task:
-            raise DitException("Invalid task")
         return os.path.join(self._subgroup_path(group, subgroup), task)
 
     # ===========================================
