@@ -22,4 +22,8 @@
 
 ./ditcmd new t10 -d 'test'
 
+./ditcmd new :abu -d 'invalid task name'
+
+./ditcmd new .bo/bar -d 'invalid group name'
+
 ./step tree './ditdir'

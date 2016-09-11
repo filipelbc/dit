@@ -457,9 +457,9 @@ class Dit:
 
         for name in [group, subgroup]:
             if name and not self._is_valid_group_name(name):
-                raise DitException("Invalid name: %s" % name)
+                raise DitException("Invalid group name: %s" % name)
         if task and not self._is_valid_task_name(task):
-            raise DitException("Invalid name: %s" % name)
+            raise DitException("Invalid task name: %s" % task)
 
         return (group, subgroup, task)
 
@@ -486,9 +486,9 @@ class Dit:
 
         for name in [group, subgroup]:
             if not self._is_valid_group_name(name):
-                raise DitException("Invalid name: %s" % name)
+                raise DitException("Invalid group name: %s" % name)
         if not self._is_valid_task_name(task):
-            raise DitException("Invalid name: %s" % name)
+            raise DitException("Invalid task name: %s" % task)
 
         return (group, subgroup, task)
 
