@@ -18,14 +18,8 @@ $ dit -v -d ./ditdir new g2/s4/t8 -d test
 $ dit -v -d ./ditdir new g2//t7 -d test
 ---------------------------------------------------
 $ dit -v -d ./ditdir new //t7 -d fail, already exists
-Traceback (most recent call last):
-  File "/files/Dropbox/dit/venv/bin/dit", line 11, in <module>
-    load_entry_point('dit==0.1a0', 'console_scripts', 'dit')()
-  File "/files/Dropbox/dit/venv/lib/python3.5/site-packages/dit-0.1a0-py3.5.egg/dit/dit.py", line 687, in main
-  File "/files/Dropbox/dit/venv/lib/python3.5/site-packages/dit-0.1a0-py3.5.egg/dit/dit.py", line 656, in interpret
-  File "/files/Dropbox/dit/venv/lib/python3.5/site-packages/dit-0.1a0-py3.5.egg/dit/dit.py", line 488, in new
-  File "/files/Dropbox/dit/venv/lib/python3.5/site-packages/dit-0.1a0-py3.5.egg/dit/dit.py", line 180, in _create_task
-Exception: Already exists: ./ditdir/t7
+Error: Already exists: ./ditdir/t7
+Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t2 -d test
 ---------------------------------------------------

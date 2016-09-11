@@ -103,7 +103,18 @@ from importlib import import_module
 from .data_utils import now
 
 # ===========================================
-# Dit
+# Custom Exceptions
+
+
+class DitException(Exception):
+    pass
+
+
+class InvalidArgumentsError(DitException):
+    pass
+
+# ===========================================
+# Dit Class
 
 
 class Dit:
@@ -145,7 +156,7 @@ class Dit:
 
     def _task_path(self, group, subgroup, task):
         if not task:
-            raise Exception("Invalid task")
+            raise DitException("Invalid task")
         return os.path.join(self._subgroup_path(group, subgroup), task)
 
     # ===========================================
@@ -177,7 +188,7 @@ class Dit:
     def _create_task(self, group, subgroup, task, description):
         fn = self._task_path(group, subgroup, task)
         if os.path.isfile(fn):
-            raise Exception("Already exists: %s" % fn)
+            raise DitException("Already exists: %s" % fn)
         if not description:
             description = input("Description: ")
         data = self._new_task_data(description)
@@ -189,7 +200,7 @@ class Dit:
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._task_path(group, subgroup, task)
         if not os.path.isfile(task_fp):
-            raise Exception("Is not a file: %s" % task_fp)
+            raise DitException("Is not a file: %s" % task_fp)
         with open(task_fp, 'r') as f:
             return json.load(f)
 
@@ -382,7 +393,7 @@ class Dit:
     def _gid_parse(self, argv):
         ids = argv.pop(0).split(self.separator)
         if len(ids) > 3:
-            raise Exception("Invalid gID format")
+            raise DitException("Invalid gID format")
         ids = [int(i) if i else "0" for i in ids]
         ids = ids + [None] * (3 - len(ids))
         group_id, subgroup_id, task_id = ids
@@ -402,7 +413,7 @@ class Dit:
     def _id_parse(self, argv):
         ids = argv.pop(0).split(self.separator)
         if len(ids) > 3:
-            raise Exception("Invalid ID format")
+            raise DitException("Invalid ID format")
         ids = [int(i) if i else "0" for i in ids]
         ids = [None] * (3 - len(ids)) + ids
         group_id, subgroup_id, task_id = ids
@@ -428,21 +439,21 @@ class Dit:
     def _gname_parse(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise Exception("Invalid gname format")
+            raise DitException("Invalid gname format")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
         for name in [group, subgroup, task]:
             if name and not self._is_valid_name(name):
-                raise Exception("Invalid name: %s" % name)
+                raise DitException("Invalid name: %s" % name)
 
         return (group, subgroup, task)
 
     def _name_parse(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise Exception("Invalid name format")
+            raise DitException("Invalid name format")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
 
@@ -462,7 +473,7 @@ class Dit:
 
         for name in [group, subgroup, task]:
             if not self._is_valid_name(name):
-                raise Exception("Invalid name: %s" % name)
+                raise DitException("Invalid name: %s" % name)
 
         return (group, subgroup, task)
 
@@ -611,7 +622,7 @@ class Dit:
             fmt = output.split(".")[-1]
 
         if fmt not in ['dit', 'org']:
-            raise Exception("Unrecognized format: %s", fmt)
+            raise DitException("Unrecognized format: %s", fmt)
 
         self.printer = import_module('dit.' + fmt + 'printer')
         self.printer.setup(file, options, statussing, listing)
@@ -644,7 +655,7 @@ class Dit:
             elif opt in ["--directory", "-d"]:
                 self.directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
-                usage()
+                self.usage()
                 return False
             else:
                 raise InvalidArgumentsError("No such option: %s" % opt)
@@ -677,13 +688,6 @@ class Dit:
             raise InvalidArgumentsError("Missing command")
 
 # ===========================================
-# Exceptions
-
-
-class InvalidArgumentsError(Exception):
-    pass
-
-# ===========================================
 # Main
 
 
@@ -695,9 +699,9 @@ def main():
         dit = Dit()
         if dit.configure(argv):
             dit.interpret(argv)
-    except InvalidArgumentsError as err:
-        print(err)
-        usage()
+    except DitException as err:
+        print("Error: %s" % err)
+        print("Type 'dit --help' for usage details.")
 
 if __name__ == "__main__":
     main()

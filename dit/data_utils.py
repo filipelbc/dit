@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import os
 from datetime import datetime, timedelta
 
-# Auxialiary
+# Auxiliary
 
 _fmt = r'%Y-%m-%d %H:%M:%S'
 
@@ -27,7 +28,7 @@ def _to_timedelta(log):
     t_out = datetime.strptime(log['out'], _fmt)
     return t_out - t_in
 
-# Main
+# Main Utilities
 
 
 def time_spent_on(logbook):
@@ -37,6 +38,22 @@ def time_spent_on(logbook):
             d += _to_timedelta(logentry)
     return _timedelta_to_str(d)
 
+# The function `now` needs to be mocked when running tests
+# In order to have progressing time, we maintain a file with an incrementing
+# integer
+if os.path.isfile('DIT_TESTING'):
 
-def now():
-    return datetime.now().strftime(_fmt)
+    _base_now = datetime(2016, 9, 10, 18, 57, 49, 0)
+
+    def now():
+        with open('DIT_TESTING', 'r') as f:
+            _DIT_TESTING = int(f.read())
+        now = _base_now + timedelta(seconds=(_DIT_TESTING * 10))
+        with open('DIT_TESTING', 'w') as f:
+            f.write(str(_DIT_TESTING + 1))
+        return now.strftime(_fmt)
+
+else:
+
+    def now():
+        return datetime.now().strftime(_fmt)
