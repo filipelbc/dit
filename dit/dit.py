@@ -159,8 +159,6 @@ class Dit:
         return path
 
     def _task_path(self, group, subgroup, task):
-        if not task:
-            raise DitException("Invalid task")
         return os.path.join(self._subgroup_path(group, subgroup), task)
 
     # ===========================================
@@ -171,10 +169,16 @@ class Dit:
                 subgroup == self.current_subgroup and
                 group == self.current_group)
 
-    def _is_valid_name(self, name):
+    def _is_valid_group_name(self, name):
         return ((name == self.root_name) or
-                (name[0].isalpha() and
+                (len(name) > 0 and
+                 name[0].isalpha() and
                  name not in [self.current_fn, self.index_fn]))
+
+    def _is_valid_task_name(self, name):
+        return (len(name) > 0 and
+                name[0].isalpha() and
+                name not in [self.current_fn, self.index_fn])
 
     # ===========================================
     # Task management
@@ -283,7 +287,7 @@ class Dit:
         for root, dirs, files in os.walk(base_path):
             dirs.sort()
             for f in sorted(files):
-                if not self._is_valid_name(f):
+                if not self._is_valid_task_name(f):
                     continue
                 p = root[len(base_path) + 1:].split("/")
 
@@ -451,9 +455,11 @@ class Dit:
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
-        for name in [group, subgroup, task]:
-            if name and not self._is_valid_name(name):
-                raise DitException("Invalid name: %s" % name)
+        for name in [group, subgroup]:
+            if name and not self._is_valid_group_name(name):
+                raise DitException("Invalid group name: %s" % name)
+        if task and not self._is_valid_task_name(task):
+            raise DitException("Invalid task name: %s" % task)
 
         return (group, subgroup, task)
 
@@ -478,9 +484,11 @@ class Dit:
             else:
                 subgroup = self.root_name
 
-        for name in [group, subgroup, task]:
-            if not self._is_valid_name(name):
-                raise DitException("Invalid name: %s" % name)
+        for name in [group, subgroup]:
+            if not self._is_valid_group_name(name):
+                raise DitException("Invalid group name: %s" % name)
+        if not self._is_valid_task_name(task):
+            raise DitException("Invalid task name: %s" % task)
 
         return (group, subgroup, task)
 

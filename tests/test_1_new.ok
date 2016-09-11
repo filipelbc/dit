@@ -23,6 +23,14 @@ Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t10 -d test
 ---------------------------------------------------
+$ dit -v -d ./ditdir new :abu -d invalid task name
+Error: Invalid task name: :abu
+Type 'dit --help' for usage details.
+---------------------------------------------------
+$ dit -v -d ./ditdir new .bo/bar -d invalid group name
+Error: Invalid group name: .bo
+Type 'dit --help' for usage details.
+---------------------------------------------------
 $ tree ./ditdir
 ./ditdir
 ├── g1
