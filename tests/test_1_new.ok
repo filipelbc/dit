@@ -1,45 +1,45 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t1 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new s1/t2 -d test
+$ dit -v -d ./ditdir new g1/t2 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g1/s2/t3 -d test
+$ dit -v -d ./ditdir new g2/g3/t3 -d test
 ---------------------------------------------------
 $ dit -v -d ./ditdir new /t4 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new /s3/t5 -d test
+$ dit -v -d ./ditdir new /g4/t5 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g2//t6 -d test
+$ dit -v -d ./ditdir new g5//t6 -d test
 ---------------------------------------------------
 $ dit -v -d ./ditdir new //t7 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g2/s4/t8 -d test
+$ dit -v -d ./ditdir new g5/s4/t8 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g2//t7 -d test
+$ dit -v -d ./ditdir new g5//t9 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new //t7 -d fail, already exists
+$ dit -v -d ./ditdir new ././t7 -d fail, already exists
 Error: Already exists: ./ditdir/t7
 Type 'dit --help' for usage details.
 ---------------------------------------------------
-$ dit -v -d ./ditdir new t2 -d test
+$ dit -v -d ./ditdir new t10 -d test
 ---------------------------------------------------
 $ tree ./ditdir
 ./ditdir
 ├── g1
-│   └── s2
-│       └── t3
+│   └── t2
 ├── g2
+│   └── g3
+│       └── t3
+├── g4
+│   └── t5
+├── g5
 │   ├── s4
 │   │   └── t8
 │   ├── t6
-│   └── t7
+│   └── t9
 ├── INDEX
-├── s1
-│   └── t2
-├── s3
-│   └── t5
 ├── t1
-├── t2
+├── t10
 ├── t4
 └── t7
 

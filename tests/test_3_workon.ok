@@ -7,12 +7,21 @@ $ dit -v -d ./ditdir workon t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 ---------------------------------------------------
-$ dit -v -d ./ditdir workon t2
+$ dit -v -d ./ditdir halt
+Not working on any task
+---------------------------------------------------
+$ dit -v -d ./ditdir halt t1
+Already clocked out
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 ---------------------------------------------------
-$ dit -v -d ./ditdir workon t2
+$ dit -v -d ./ditdir workon t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir conclude
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t7
+Already clocked in
