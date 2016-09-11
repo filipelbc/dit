@@ -495,7 +495,7 @@ class Dit:
     # ===========================================
     # Commands
 
-    def usage():
+    def usage(self):
         print(__doc__)
 
     def new(self, argv):
