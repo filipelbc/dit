@@ -13,7 +13,7 @@ $ dit -v -d ./ditdir new g5//t6 -d test
 ---------------------------------------------------
 $ dit -v -d ./ditdir new //t7 -d test
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5/s4/t8 -d test
+$ dit -v -d ./ditdir new g5/g6/t8 -d test
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g5//t9 -d test
 ---------------------------------------------------
@@ -31,24 +31,15 @@ $ dit -v -d ./ditdir new .bo/bar -d invalid group name
 Error: Invalid group name: .bo
 Type 'dit --help' for usage details.
 ---------------------------------------------------
-$ tree ./ditdir
-./ditdir
-├── g1
-│   └── t2
-├── g2
-│   └── g3
-│       └── t3
-├── g4
-│   └── t5
-├── g5
-│   ├── s4
-│   │   └── t8
-│   ├── t6
-│   └── t9
-├── INDEX
-├── t1
-├── t10
-├── t4
-└── t7
-
-6 directories, 11 files
+$ find ./ditdir -type f
+./ditdir/g1/t2
+./ditdir/t1
+./ditdir/g4/t5
+./ditdir/g2/g3/t3
+./ditdir/g5/g6/t8
+./ditdir/g5/t6
+./ditdir/g5/t9
+./ditdir/INDEX
+./ditdir/t7
+./ditdir/t4
+./ditdir/t10

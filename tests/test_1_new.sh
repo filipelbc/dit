@@ -14,7 +14,7 @@
 
 ./ditcmd new //t7 -d 'test'
 
-./ditcmd new g5/s4/t8 -d 'test'
+./ditcmd new g5/g6/t8 -d 'test'
 
 ./ditcmd new g5//t9 -d 'test'
 
@@ -26,4 +26,4 @@
 
 ./ditcmd new .bo/bar -d 'invalid group name'
 
-./step tree './ditdir'
+./step find './ditdir' -type f
