@@ -19,10 +19,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   <command>:
 
-    new <name> [-d "description"]
+    new <name> [-: "description"]
       Creates a new task.
 
-    workon <id> | <name> | --new, -n <name> [-d "description"]
+    workon <id> | <name> | --new, -n <name> [-: "description"]
       Clocks in the specified task.
       --new, -n
         Same as 'new' followed by 'workon'.
@@ -30,7 +30,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     halt [<id> | <name>]
       Clocks out of the current task or the specified one.
 
-    switchto <id> | <name> | --new, -n <name> [-d "description"]
+    switchto <id> | <name> | --new, -n <name> [-: "description"]
       Same as 'halt' followed by 'workon'.
 
     conclude [<id> | <name>]
@@ -39,23 +39,39 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
     status [<gid> | <gname>]
       Prints an overview of the situation for the specified group, subgroup,
-      or task. Exports current task or subgroup unless something is specified.
+      or task. Prints information about current task or subgroup unless
+      something is specified.
 
     list
       This is a convenience alias for 'export', with "--output stdout".
 
     export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
-      Exports data to the specified format. Exports current subgroup unless
+      Exports data to the specified file. Exports current subgroup unless
       something is specified.
       --concluded, -a
         Include concluded tasks in the listing.
       --all, -a
         Exports all groups and subgroups.
       --verbose, -v
-        More information is printed.
+        More information is exported.
       --output, -o
-        File to which to export. Defaults to "stdout".
-        Format is deduced from file extension if present.
+        File to which to export. Defaults to "stdout". Format is deduced from
+        file extension if present.
+
+    note [<name> | <id>] [-: "text"]
+      Adds a note to the current task or the specified one.
+
+    set [<name> | <id>] [-: "name" ["value"]]
+      Sets a property to the current task or the specified one. The format
+      of properties are pairs of strings (name, value).
+      If editing in a file, the first line will be the name.
+
+  "-:"
+    Arguments preceeded by "-:" are necessary and if omited one of the
+    following option will take place:
+    a) if the $EDITOR environment variable is set, a text file will be open for
+    editing the argument;
+    b) otherwise, a simple prompt will be used.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
     "a"
@@ -101,6 +117,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 import sys
 import json
 import os
+import subprocess
 
 from importlib import import_module
 
@@ -197,8 +214,6 @@ class Dit:
         fn = self._task_path(group, subgroup, task)
         if os.path.isfile(fn):
             raise DitException("Already exists: %s" % fn)
-        if not description:
-            description = input("Description: ")
         data = self._new_task_data(description)
         with open(fn, 'w') as f:
             f.write(json.dumps(data))
@@ -217,6 +232,24 @@ class Dit:
         data['updated_at'] = now()
         with open(fn, 'w') as f:
             f.write(json.dumps(data))
+
+    @staticmethod
+    def _add_note(data, note_text):
+        if 'notes' not in data:
+            data['notes'] = []
+        data['notes'].append(note_text)
+
+    @staticmethod
+    def _set_property(data, prop_name, prop_value):
+        if 'properties' not in data:
+            data['properties'] = []
+
+        properties = data['properties']
+        for prop in properties:
+            if prop_name == prop['name']:
+                prop['value'] = prop_value
+                return
+        properties.append({'name': prop_name, 'value': prop_value})
 
     # Current Task
 
@@ -492,6 +525,42 @@ class Dit:
 
         return (group, subgroup, task)
 
+    def _parse_or_current(self, argv):
+        group = self.current_group
+        subgroup = self.current_subgroup
+        task = self.current_task
+
+        if len(argv) > 0:
+            arg = argv[0]
+
+            if arg in ["--id", '-i']:
+                argv.pop(0)
+                (group, subgroup, task) = self._id_parse(argv)
+            elif not arg.startswith('-'):
+                (group, subgroup, task) = self._name_parse(argv)
+
+        return (group, subgroup, task)
+
+    # ===========================================
+    # Input
+
+    def _prompt(self, heading):
+        # FIXME properly choose file
+        input_fp = '/tmp/dit_input.txt'
+
+        with open(input_fp, 'w') as f:
+            f.write('# ' + heading + '\n')
+
+        editor = os.environ.get('EDITOR', None)
+        if editor:
+            subprocess.run([editor, input_fp])
+            with open(input_fp, 'r') as f:
+                lines = [line for line in f.readlines() if not line.startswith('#')]
+            return (''.join(lines)).strip()
+
+        else:
+            return input(heading + ': ').strip()
+
     # ===========================================
     # Commands
 
@@ -505,14 +574,15 @@ class Dit:
         (group, subgroup, task) = self._name_parse(argv)
 
         description = None
-        while len(argv) > 0 and argv[0].startswith("-"):
-            opt = argv.pop(0)
-            if opt in ["--description", "-d"]:
-                description = argv.pop(0)
-            else:
-                raise InvalidArgumentsError("No such option: %s" % opt)
-        if not description:
-            description = input("Description: ")
+        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
+            argv.pop(0)
+            description = argv.pop(0)
+
+        if len(argv) > 0:
+            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+
+        if description is None:
+            description = self._prompt('Description')
 
         self._create_task(group, subgroup, task, description)
 
@@ -522,44 +592,29 @@ class Dit:
         if len(argv) < 1:
             raise InvalidArgumentsError("Missing argument")
 
-        group = self.current_group
-        subgroup = self.current_subgroup
-        task = self.current_task
-
-        while len(argv) > 0 and argv[0].startswith("-"):
-            opt = argv.pop(0)
-            if opt in ["--new", "-n"]:
-                (group, subgroup, task) = self.new(argv)
-            elif opt in ["--id", '-i']:
-                (group, subgroup, task) = self._id_parse(argv)
-            else:
-                raise InvalidArgumentsError("No such option: %s" % opt)
-        if len(argv) > 0:
-            (group, subgroup, task) = self._name_parse(argv)
-
-        if task:
-            data = self._load_task_data(group, subgroup, task)
-
-            self._clock_in(data)
-            self._save_task(group, subgroup, task, data)
-            self._set_current(group, subgroup, task)
-            self._save_current()
+        if argv[0] in ["--new", "-n"]:
+            argv.pop(0)
+            (group, subgroup, task) = self.new(argv)
         else:
+            (group, subgroup, task) = self._parse_or_current(argv)
+
+        if len(argv) > 0:
+            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+
+        if not task:
             raise InvalidArgumentsError("No task specified")
 
-    def halt(self, argv, also_conclude=False):
-        group = self.current_group
-        subgroup = self.current_subgroup
-        task = self.current_task
+        data = self._load_task_data(group, subgroup, task)
+        self._clock_in(data)
+        self._save_task(group, subgroup, task, data)
+        self._set_current(group, subgroup, task)
+        self._save_current()
 
-        while len(argv) > 0 and argv[0].startswith("-"):
-            opt = argv.pop(0)
-            if opt in ["--id", '-i']:
-                (group, subgroup, task) = self._id_parse(argv)
-            else:
-                raise InvalidArgumentsError("No such option: %s" % opt)
+    def halt(self, argv, also_conclude=False):
+        (group, subgroup, task) = self._parse_or_current(argv)
+
         if len(argv) > 0:
-            (group, subgroup, task) = self._name_parse(argv)
+            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
 
         if not task:
             if also_conclude:
@@ -580,7 +635,7 @@ class Dit:
             self._save_current()
 
     def switchto(self, argv):
-        self.halt()
+        self.halt([])
         self.workon(argv)
 
     def conclude(self, argv):
@@ -624,6 +679,9 @@ class Dit:
         if len(argv) > 0:
             (group, subgroup, task) = self._gname_parse(argv)
 
+        if len(argv) > 0:
+            raise InvalidArgumentsError("Unrecognized argument: %s" % opt)
+
         if statussing and group is None:
             group = self.current_group
             subgroup = self.current_subgroup
@@ -659,6 +717,57 @@ class Dit:
 
         file.close()
 
+    def note(self, argv):
+        group, subgroup, task = self._parse_or_current(argv)
+
+        if not task:
+            raise InvalidArgumentsError("No task specified")
+
+        note_text = None
+        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
+            argv.pop(0)
+            note_text = argv.pop(0)
+
+        if len(argv) > 0:
+            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+
+        if note_text is None:
+            note_text = self._prompt("Description")
+
+        data = self._load_task_data(group, subgroup, task)
+        self._add_note(data, note_text)
+        self._save_task(group, subgroup, task, data)
+
+    def set(self, argv):
+        group, subgroup, task = self._parse_or_current(argv)
+
+        if not task:
+            raise InvalidArgumentsError("No task specified")
+
+        prop_name = None
+        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
+            argv.pop(0)
+            prop_name = argv.pop(0)
+            if len(argv) > 0:
+                prop_value = argv.pop(0)
+            else:
+                prop_value = self._prompt("Value for '%s'" % prop_name)
+
+        if len(argv) > 0:
+            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+
+        if prop_name is None:
+            prop = self._prompt("Name and Value for property").split('\n', 1)
+            prop_name = prop[0].strip()
+            if len(prop) == 2:
+                prop_value = prop[1].strip()
+            else:
+                prop_value = ''
+
+        data = self._load_task_data(group, subgroup, task)
+        self._set_property(data, prop_name, prop_value)
+        self._save_task(group, subgroup, task, data)
+
     # ===========================================
     # Main
 
@@ -671,7 +780,7 @@ class Dit:
                 self.verbose = True
             elif opt in ["--directory", "-d"]:
                 self.directory = argv.pop(0)
-            elif opt in ["--rebuild-index"]:
+            elif opt in ["--rebuild-index", '-r']:
                 rebuild_index = True
             elif opt in ["--help", "-h"]:
                 self.usage()
@@ -705,6 +814,10 @@ class Dit:
                 self.list(argv)
             elif cmd in ["export", "e"]:
                 self.export(argv)
+            elif cmd in ["note", "t"]:
+                self.note(argv)
+            elif cmd in ["set", "p"]:
+                self.set(argv)
             else:
                 raise InvalidArgumentsError("No such command: %s" % cmd)
         else:
