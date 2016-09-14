@@ -83,15 +83,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
     Note that "b" and "c" can be empty strings.
 
-  <id>: --id, -i ["group-id"/]["subgroup-id"/]"task-id"
+  <id>: ["group-id"/]["subgroup-id"/]"task-id"
     "a"
         task "id a" in current subgroup in current group
     "b/a"
         task "id a" in subgroup "id b" in current group
     "c/b/a"
         task "id a" in subgroup "id b" in group "id c"
-
-    Note that "b" and "c" can be empty strings, which map to "id 0".
 
   <gname>: "group-name"[/"subgroup-name"][/"task-name"]
     "a"
@@ -103,15 +101,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
     Note that "a" and "b" can be empty strings, which means the same as ".".
 
-  <gid>: --id, -i "group-id"[/"subgroup-id"][/"task-id"]
+  <gid>: "group-id"[/"subgroup-id"][/"task-id"]
     "a"
         group "id a"
     "a/b"
         subgroup "id b" in group "id a"
     "a/b/c"
         task "id c" in subgroup "id b" in group "id a"
-
-    Note that "a" and "b" can be empty strings, which are mapped to "id 0".
 """
 
 import sys
@@ -453,7 +449,7 @@ class Dit:
     # ===========================================
     # Parsers
 
-    def _gid_parse(self, argv):
+    def _gid_parser(self, argv):
         ids = argv.pop(0).split(self.separator)
         if len(ids) > 3:
             raise DitException("Invalid gID format")
@@ -473,7 +469,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _id_parse(self, argv):
+    def _id_parser(self, argv):
         ids = argv.pop(0).split(self.separator)
         if len(ids) > 3:
             raise DitException("Invalid ID format")
@@ -499,7 +495,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _gname_parse(self, argv):
+    def _gname_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
             raise DitException("Invalid gname format")
@@ -518,7 +514,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _name_parse(self, argv):
+    def _name_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
             raise DitException("Invalid name format")
@@ -550,19 +546,15 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _parse_or_current(self, argv):
+    def _backward_parser(self, argv):
         group = self.current_group
         subgroup = self.current_subgroup
         task = self.current_task
-
         if len(argv) > 0:
-            arg = argv[0]
-
-            if arg in ["--id", '-i']:
-                argv.pop(0)
-                (group, subgroup, task) = self._id_parse(argv)
-            elif not arg.startswith('-'):
-                (group, subgroup, task) = self._name_parse(argv)
+            if argv[0][0].isdigit():
+                (group, subgroup, task) = self._id_parser(argv)
+            elif not argv[0].startswith("-"):
+                (group, subgroup, task) = self._name_parser(argv)
 
         self._trace_selection(group, subgroup, task)
 
@@ -570,6 +562,12 @@ class Dit:
             raise NoTaskSpecifiedError("No task specified")
 
         return (group, subgroup, task)
+
+    def _forward_parser(self, argv):
+        if argv[0][0].isdigit():
+            return self._gid_parser(argv)
+        elif not argv[0].startswith("-"):
+            return self._gname_parser(argv)
 
     # ===========================================
     # Input
@@ -601,7 +599,7 @@ class Dit:
         if len(argv) < 1:
             raise InvalidArgumentError("Missing argument")
 
-        (group, subgroup, task) = self._name_parse(argv)
+        (group, subgroup, task) = self._name_parser(argv)
         self._trace_selection(group, subgroup, task)
 
         description = None
@@ -627,7 +625,7 @@ class Dit:
             argv.pop(0)
             (group, subgroup, task) = self.new(argv)
         else:
-            (group, subgroup, task) = self._parse_or_current(argv)
+            (group, subgroup, task) = self._backward_parser(argv)
 
         if len(argv) > 0:
             raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
@@ -640,7 +638,7 @@ class Dit:
 
     def halt(self, argv, conclude=False, verb=True):
         try:
-            (group, subgroup, task) = self._parse_or_current(argv)
+            (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedError as ex:
             if verb:
                 print('Not working on any task')
@@ -698,12 +696,10 @@ class Dit:
                 all = True
             elif opt in ["--output", "-o"] and not (listing or statussing):
                 output = argv.pop(0)
-            elif opt in ["--id", '-i']:
-                (group, subgroup, task) = self._gid_parse(argv)
             else:
                 raise InvalidArgumentError("No such option: %s" % opt)
         if len(argv) > 0:
-            (group, subgroup, task) = self._gname_parse(argv)
+            (group, subgroup, task) = self._forward_parser(argv)
 
         if len(argv) > 0:
             raise InvalidArgumentError("Unrecognized argument: %s" % opt)
@@ -746,7 +742,7 @@ class Dit:
         file.close()
 
     def note(self, argv):
-        group, subgroup, task = self._parse_or_current(argv)
+        group, subgroup, task = self._backward_parser(argv)
 
         note_text = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -764,7 +760,7 @@ class Dit:
         self._save_task(group, subgroup, task, data)
 
     def set(self, argv):
-        group, subgroup, task = self._parse_or_current(argv)
+        group, subgroup, task = self._backward_parser(argv)
 
         prop_name = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
