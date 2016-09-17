@@ -79,7 +79,7 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         if notes:
             file.write("\n  Notes:")
         for note in notes:
-            file.write("  * %s" % note)
+            file.write("\n  * %s" % note)
 
         if props:
             file.write("\n  Properties:")

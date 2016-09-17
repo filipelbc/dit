@@ -1,27 +1,143 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
+Selection: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Selection: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
+Selection: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Selection: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Selection: ././None
 Not working on any task
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
+Selection: ././t1
 Already clocked out
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
+Selection: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Selection: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: ././None
+
+[0] 
+
+[0/0] 
+
+[0/0/0] t1
+  . . t1
+  * Created at: 2016-09-10 18:57:59
+  * Updated at: 2016-09-10 19:00:59
+  ~ Time spent: 40s
+
+[0/0/1] t4
+  . . t4
+  * Created at: 2016-09-10 18:58:29
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+
+[0/0/3] t10
+  . . t10
+  * Created at: 2016-09-10 18:59:29
+  * Updated at: 2016-09-10 19:01:39
+  ~ Time spent: 20s
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
+Selection: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir conclude
+Selection: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: ././None
+
+[0] 
+
+[0/0] 
+
+[0/0/0] t1
+  . . t1
+  * Created at: 2016-09-10 18:57:59
+  * Updated at: 2016-09-10 19:00:59
+  ~ Time spent: 40s
+
+[0/0/1] t4
+  . . t4
+  * Created at: 2016-09-10 18:58:29
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
+Selection: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
+Selection: ././t7
 Already clocked in
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: ././t7
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+  * Updated at: 2016-09-10 19:02:59
+---------------------------------------------------
+$ dit -v -d ./ditdir switchto g5/t6
+Selection: ././t7
+Selection: g5/./t6
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: g5/./t6
+
+[4/0/0] t6
+  g5 . t6
+  * Created at: 2016-09-10 18:58:49
+  * Updated at: 2016-09-10 19:03:39
+---------------------------------------------------
+$ dit -v -d ./ditdir halt
+Selection: g5/./t6
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: g5/./None
+
+[4] g5
+
+[4/0] 
+
+[4/0/0] t6
+  g5 . t6
+  * Created at: 2016-09-10 18:58:49
+  * Updated at: 2016-09-10 19:03:59
+  ~ Time spent: 20s
+
+[4/0/1] t9
+  g5 . t9
+  * Created at: 2016-09-10 18:59:19
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t10
+Selection: g5/./t10
+Error: No such task file: ./ditdir/g5/t10
+Type 'dit --help' for usage details.
+---------------------------------------------------
+$ dit -v -d ./ditdir workon /t10
+Selection: g5/./t10
+Error: No such task file: ./ditdir/g5/t10
+Type 'dit --help' for usage details.
+---------------------------------------------------
+$ dit -v -d ./ditdir workon //t10
+Selection: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selection: ././t10
