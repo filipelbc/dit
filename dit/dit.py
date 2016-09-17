@@ -223,7 +223,7 @@ class Dit:
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._task_path(group, subgroup, task)
         if not os.path.isfile(task_fp):
-            raise DitException("Is not a file: %s" % task_fp)
+            raise DitException("No such task file: %s" % task_fp)
         with open(task_fp, 'r') as f:
             return json.load(f)
 
@@ -707,6 +707,8 @@ class Dit:
         self.printer.setup(file, options, statussing, listing)
 
         self.printer.begin()
+
+        print([group, subgroup, task])
 
         if all:
             self._export_all()
