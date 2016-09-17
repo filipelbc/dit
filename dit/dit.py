@@ -449,56 +449,76 @@ class Dit:
     # ===========================================
     # Parsers
 
+    def _current_idxs(self):
+        group_idx, subgroup_idx = None, None
+
+        if self.current_group is not None:
+            index = self.index
+            for i in range(len(index)):
+                if index[i][0] == self.current_group:
+                    group_idx = i
+                    break
+            if self.current_subgroup is not None:
+                index = self.index[group_idx][1]
+                for i in range(len(index)):
+                    if self.index[i][0] == self.current_subgroup:
+                        subgroup_idx = i
+                        break
+        return group_idx, subgroup_idx
+
+    @staticmethod
+    def _idxs_to_names(idxs, index):
+        if len(idxs) < 3:
+            raise DitException("Invalid index format.")
+
+        names = [None] * 3
+
+        try:
+            for i, idx in enumerate(idxs):
+                if idx is None:  # we can no longer navigate the index; stop
+                    break
+                idx = int(idx)
+                if i < 2:                     # its a group or subgroup
+                    names[i] = index[idx][0]
+                    index = index[idx][1]     # navigate the index further
+                else:                         # its a task
+                    names[i] = index[idx]
+
+        except ValueError:
+            raise DitException("Invalid index format.")
+        except IndexError:
+            raise DitException("Invalid index: %d" % idx)
+
+        return names
+
     def _gid_parser(self, argv):
-        ids = argv.pop(0).split(self.separator)
-        if len(ids) > 3:
-            raise DitException("Invalid gID format")
-        ids = [int(i) if i else "0" for i in ids]
-        ids = ids + [None] * (3 - len(ids))
-        group_id, subgroup_id, task_id = ids
+        idxs = argv.pop(0).split(self.separator)
+        if len(idxs) > 3:
+            raise DitException("Invalid <gid> format")
 
-        group = self.index[group_id][0]
+        # replaces missing subgroup or task with None
+        idxs = idxs + [None] * (3 - len(idxs))
 
-        subgroup = None
-        task = None
-
-        if subgroup_id:
-            subgroup = self.index[group_id][1][subgroup_id][0]
-            if task_id:
-                task = self.index[group_id][1][subgroup_id][1][task_id]
-
-        return (group, subgroup, task)
+        return self._idxs_to_names(idxs, self.index)
 
     def _id_parser(self, argv):
-        ids = argv.pop(0).split(self.separator)
-        if len(ids) > 3:
-            raise DitException("Invalid ID format")
-        ids = [int(i) if i else "0" for i in ids]
-        ids = [None] * (3 - len(ids)) + ids
-        group_id, subgroup_id, task_id = ids
+        idxs = argv.pop(0).split(self.separator)
+        if len(idxs) > 3:
+            raise DitException("Invalid <id> format")
 
-        if group_id is None:
-            for i in range(len(self.index)):
-                if self.index[i][0] == self.current_group:
-                    group_id = i
-                    break
+        # replaces missing group or subgroup with current
+        group_idx, subgroup_idx = self._current_idxs()
+        if len(idxs) == 1:
+            idxs = [group_idx, subgroup_idx] + idxs
+        elif len(idxs) == 2:
+            idxs = [group_idx] + idxs
 
-        if subgroup_id is None:
-            for i in range(len(self.index[group_id][1])):
-                if self.index[group_id][1][i][0] == self.current_subgroup:
-                    subgroup_id = i
-                    break
-
-        group = self.index[group_id][0]
-        subgroup = self.index[group_id][1][subgroup_id][0]
-        task = self.index[group_id][1][subgroup_id][1][task_id]
-
-        return (group, subgroup, task)
+        return self._idxs_to_names(idxs, self.index)
 
     def _gname_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise DitException("Invalid gname format")
+            raise DitException("Invalid <gname> format")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
@@ -517,7 +537,7 @@ class Dit:
     def _name_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise DitException("Invalid name format")
+            raise DitException("Invalid <name> format")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
 
