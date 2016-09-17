@@ -26,4 +26,4 @@
 
 ./ditcmd new .bo/bar -: 'fails: invalid group name'
 
-./step find './ditdir' -type f
+./list

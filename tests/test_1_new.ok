@@ -43,14 +43,15 @@ Error: Invalid group name: .bo
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ find ./ditdir -type f
+$ sort
 ./ditdir/g1/t2
-./ditdir/t1
-./ditdir/g4/t5
 ./ditdir/g2/g3/t3
+./ditdir/g4/t5
 ./ditdir/g5/g6/t8
 ./ditdir/g5/t6
 ./ditdir/g5/t9
 ./ditdir/INDEX
-./ditdir/t7
-./ditdir/t4
+./ditdir/t1
 ./ditdir/t10
+./ditdir/t4
+./ditdir/t7
