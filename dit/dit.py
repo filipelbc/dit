@@ -494,6 +494,9 @@ class Dit:
         if task and not self._is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
 
+        if group == self.root_name and subgroup:
+            group, subgroup = subgroup, (self.root_name if task else None)
+
         return (group, subgroup, task)
 
     def _name_parse(self, argv):
@@ -522,6 +525,9 @@ class Dit:
                 raise DitException("Invalid group name: %s" % name)
         if not self._is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
+
+        if group == self.root_name and subgroup:
+            group, subgroup = subgroup, group
 
         return (group, subgroup, task)
 
@@ -711,7 +717,7 @@ class Dit:
         elif group is not None:
             self._export_group(group)
         else:
-            print("Nothing to do")
+            self._export_all()
 
         self.printer.end()
 
