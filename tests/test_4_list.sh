@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-./ditcmd list '/'
+./ditcmd list
 
-./ditcmd list --concluded '/'
-
-./ditcmd status
+./ditcmd list --concluded

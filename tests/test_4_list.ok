@@ -1,51 +1,48 @@
 ---------------------------------------------------
-$ dit -v -d ./ditdir list /
+$ dit -v -d ./ditdir list
+Selection: ././None
 
 [0] 
 
 [0/0] 
 
 [0/0/0] t1
-  test
+  . . t1
   * Created at: 2016-09-10 18:57:59
   ~ Time spent: 40s
 
 [0/0/1] t4
-  test
+  . . t4
   * Created at: 2016-09-10 18:58:29
 
 [0/0/2] t7
-  test
+  . . t7
   * Created at: 2016-09-10 18:58:59
+  ~ Time spent: 30s
 ---------------------------------------------------
-$ dit -v -d ./ditdir list --concluded /
+$ dit -v -d ./ditdir list --concluded
+Selection: ././None
 
 [0] 
 
 [0/0] 
 
 [0/0/0] t1
-  test
+  . . t1
   * Created at: 2016-09-10 18:57:59
   ~ Time spent: 40s
 
 [0/0/1] t4
-  test
+  . . t4
   * Created at: 2016-09-10 18:58:29
 
 [0/0/2] t7
-  test
+  . . t7
   * Created at: 2016-09-10 18:58:59
+  ~ Time spent: 30s
 
 [0/0/3] t10
-  test
+  . . t10
   * Created at: 2016-09-10 18:59:29
   * Concluded at: 2016-09-10 19:02:19
   ~ Time spent: 40s
----------------------------------------------------
-$ dit -v -d ./ditdir status
-
-[0/0/2] t7
-  test
-  * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:02:59

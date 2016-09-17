@@ -1,33 +1,44 @@
 ---------------------------------------------------
-$ dit -v -d ./ditdir new t1 -d test
+$ dit -v -d ./ditdir new t1 -: '. . t1'
+Selection: ././t1
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g1/t2 -d test
+$ dit -v -d ./ditdir new g1/t2 -: 'g1 . t2'
+Selection: g1/./t2
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g2/g3/t3 -d test
+$ dit -v -d ./ditdir new g2/g3/t3 -: 'g2 g3 t3'
+Selection: g2/g3/t3
 ---------------------------------------------------
-$ dit -v -d ./ditdir new /t4 -d test
+$ dit -v -d ./ditdir new /t4 -: '. . t4'
+Selection: ././t4
 ---------------------------------------------------
-$ dit -v -d ./ditdir new /g4/t5 -d test
+$ dit -v -d ./ditdir new /g4/t5 -: 'g4 . t5'
+Selection: g4/./t5
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5//t6 -d test
+$ dit -v -d ./ditdir new g5//t6 -: 'g5 . t6'
+Selection: g5/./t6
 ---------------------------------------------------
-$ dit -v -d ./ditdir new //t7 -d test
+$ dit -v -d ./ditdir new //t7 -: '. . t7'
+Selection: ././t7
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5/g6/t8 -d test
+$ dit -v -d ./ditdir new g5/g6/t8 -: 'g5 g6 t8'
+Selection: g5/g6/t8
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5//t9 -d test
+$ dit -v -d ./ditdir new g5//t9 -: 'g5 . t9'
+Selection: g5/./t9
 ---------------------------------------------------
-$ dit -v -d ./ditdir new ././t7 -d fail, already exists
+$ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
+Selection: ././t7
 Error: Already exists: ./ditdir/t7
 Type 'dit --help' for usage details.
 ---------------------------------------------------
-$ dit -v -d ./ditdir new t10 -d test
+$ dit -v -d ./ditdir new t10 -: '. . t10'
+Selection: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir new :abu -d invalid task name
+$ dit -v -d ./ditdir new :abu -: 'fails: invalid task name'
 Error: Invalid task name: :abu
 Type 'dit --help' for usage details.
 ---------------------------------------------------
-$ dit -v -d ./ditdir new .bo/bar -d invalid group name
+$ dit -v -d ./ditdir new .bo/bar -: 'fails: invalid group name'
 Error: Invalid group name: .bo
 Type 'dit --help' for usage details.
 ---------------------------------------------------
