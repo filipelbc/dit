@@ -154,6 +154,21 @@ class Dit:
 
     printer = None
 
+    verbose = False
+
+    # ===========================================
+    # Trace and Verbosity
+
+    def _printable(self, name):
+        if name == self.root_name:
+            return self.root_name_cmd
+        return name
+
+    def _trace_selection(self, group, subgroup, task):
+        if self.verbose:
+            print("Selection: %s/%s/%s" %
+                  (self._printable(group), self._printable(subgroup), task))
+
     # ===========================================
     # Paths and files names
 
@@ -545,6 +560,7 @@ class Dit:
             elif not arg.startswith('-'):
                 (group, subgroup, task) = self._name_parse(argv)
 
+        self._trace_selection(group, subgroup, task)
         return (group, subgroup, task)
 
     # ===========================================
@@ -578,6 +594,7 @@ class Dit:
             raise InvalidArgumentsError("Missing argument")
 
         (group, subgroup, task) = self._name_parse(argv)
+        self._trace_selection(group, subgroup, task)
 
         description = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -693,6 +710,8 @@ class Dit:
             subgroup = self.current_subgroup
             task = self.current_task
 
+        self._trace_selection(group, subgroup, task)
+
         if output in [None, "stdout"]:
             file = sys.stdout
             fmt = 'dit'
@@ -707,8 +726,6 @@ class Dit:
         self.printer.setup(file, options, statussing, listing)
 
         self.printer.begin()
-
-        print([group, subgroup, task])
 
         if all:
             self._export_all()
