@@ -131,7 +131,11 @@ class DitException(Exception):
     pass
 
 
-class InvalidArgumentsError(DitException):
+class InvalidArgumentError(DitException):
+    pass
+
+
+class NoTaskSpecifiedError(DitException):
     pass
 
 # ===========================================
@@ -561,6 +565,10 @@ class Dit:
                 (group, subgroup, task) = self._name_parse(argv)
 
         self._trace_selection(group, subgroup, task)
+
+        if not task:
+            raise NoTaskSpecifiedError("No task specified")
+
         return (group, subgroup, task)
 
     # ===========================================
@@ -591,7 +599,7 @@ class Dit:
 
     def new(self, argv):
         if len(argv) < 1:
-            raise InvalidArgumentsError("Missing argument")
+            raise InvalidArgumentError("Missing argument")
 
         (group, subgroup, task) = self._name_parse(argv)
         self._trace_selection(group, subgroup, task)
@@ -602,7 +610,7 @@ class Dit:
             description = argv.pop(0)
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
 
         if description is None:
             description = self._prompt('Description')
@@ -613,7 +621,7 @@ class Dit:
 
     def workon(self, argv):
         if len(argv) < 1:
-            raise InvalidArgumentsError("Missing argument")
+            raise InvalidArgumentError("Missing argument")
 
         if argv[0] in ["--new", "-n"]:
             argv.pop(0)
@@ -622,10 +630,7 @@ class Dit:
             (group, subgroup, task) = self._parse_or_current(argv)
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
-
-        if not task:
-            raise InvalidArgumentsError("No task specified")
+            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
@@ -633,23 +638,21 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    def halt(self, argv, also_conclude=False):
-        (group, subgroup, task) = self._parse_or_current(argv)
+    def halt(self, argv, conclude=False, verb=True):
+        try:
+            (group, subgroup, task) = self._parse_or_current(argv)
+        except NoTaskSpecifiedError as ex:
+            if verb:
+                print('Not working on any task')
+            return
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
-
-        if not task:
-            if also_conclude:
-                raise InvalidArgumentsError("No task specified")
-            else:
-                print("Not working on any task")
-            return
+            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
 
         self._clock_out(data)
-        if also_conclude:
+        if conclude:
             self._conclude(data)
         self._save_task(group, subgroup, task, data)
 
@@ -658,11 +661,11 @@ class Dit:
             self._save_current()
 
     def switchto(self, argv):
-        self.halt([])
+        self.halt([], verb=False)
         self.workon(argv)
 
     def conclude(self, argv):
-        self.halt(argv, also_conclude=True)
+        self.halt(argv, conclude=True)
 
     def status(self, argv):
         self.export(argv, statussing=True)
@@ -698,12 +701,12 @@ class Dit:
             elif opt in ["--id", '-i']:
                 (group, subgroup, task) = self._gid_parse(argv)
             else:
-                raise InvalidArgumentsError("No such option: %s" % opt)
+                raise InvalidArgumentError("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._gname_parse(argv)
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % opt)
+            raise InvalidArgumentError("Unrecognized argument: %s" % opt)
 
         if statussing and group is None:
             group = self.current_group
@@ -745,16 +748,13 @@ class Dit:
     def note(self, argv):
         group, subgroup, task = self._parse_or_current(argv)
 
-        if not task:
-            raise InvalidArgumentsError("No task specified")
-
         note_text = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
             argv.pop(0)
             note_text = argv.pop(0)
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
 
         if note_text is None:
             note_text = self._prompt("Description")
@@ -766,9 +766,6 @@ class Dit:
     def set(self, argv):
         group, subgroup, task = self._parse_or_current(argv)
 
-        if not task:
-            raise InvalidArgumentsError("No task specified")
-
         prop_name = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
             argv.pop(0)
@@ -779,7 +776,7 @@ class Dit:
                 prop_value = self._prompt("Value for '%s'" % prop_name)
 
         if len(argv) > 0:
-            raise InvalidArgumentsError("Unrecognized argument: %s" % argv[0])
+            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
 
         if prop_name is None:
             prop = self._prompt("Name and Value for property").split('\n', 1)
@@ -811,7 +808,7 @@ class Dit:
                 self.usage()
                 return False
             else:
-                raise InvalidArgumentsError("No such option: %s" % opt)
+                raise InvalidArgumentError("No such option: %s" % opt)
 
         if rebuild_index:
             self._rebuild_index()
@@ -844,9 +841,9 @@ class Dit:
             elif cmd in ["set", "p"]:
                 self.set(argv)
             else:
-                raise InvalidArgumentsError("No such command: %s" % cmd)
+                raise InvalidArgumentError("No such command: %s" % cmd)
         else:
-            raise InvalidArgumentsError("Missing command")
+            raise InvalidArgumentError("Missing command")
 
 # ===========================================
 # Main
