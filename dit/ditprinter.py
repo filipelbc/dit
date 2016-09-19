@@ -86,10 +86,12 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         for prop in props:
             file.write("\n  * %s: %s" % (prop['name'], prop['value']))
 
-    if verbose and not statussing:
+    if not statussing:
         if logbook:
             file.write("\n  Logbook:")
-        for log in logbook:
+
+        i = 0 if verbose else -3
+        for log in logbook[i:]:
             file.write("\n  + [%s]--[%s]" % (log['in'], log['out']))
 
     file.write("\n")
