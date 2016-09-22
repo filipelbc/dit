@@ -27,7 +27,7 @@ Selection: ./None/None
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  ~ Time spent: 40s
+  ~ Time spent: 1m20s
   Notes:
   * this is another note
   Properties:
@@ -36,7 +36,7 @@ Selection: ./None/None
 [0/0/1] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
-  * Concluded at: 2016-09-10 19:02:19
+  * Concluded at: 2016-09-10 19:03:39
   ~ Time spent: 40s
   Notes:
   * this is a note
@@ -46,11 +46,11 @@ Selection: ./None/None
 [0/0/2] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
+  ~ Time spent: 20s
 
 [0/0/3] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
-  ~ Time spent: 30s
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5//t6
 Selection: g5/./t6
