@@ -117,6 +117,7 @@ import subprocess
 
 from importlib import import_module
 
+from .utils import make_tmp_fp
 from .data_utils import now
 
 # ===========================================
@@ -139,12 +140,12 @@ class NoTaskSpecifiedError(DitException):
 
 
 class Dit:
-    directory = "~/.dit"
     current_fn = "CURRENT"
     index_fn = "INDEX"
     separator = "/"
     root_name = ""
     root_name_cmd = "."
+    default_directory = "~/.dit"
 
     current_group = None
     current_subgroup = None
@@ -152,8 +153,8 @@ class Dit:
 
     index = [[root_name, [[root_name, []]]]]
 
+    base_path = None
     printer = None
-
     verbose = False
 
     # ===========================================
@@ -172,26 +173,29 @@ class Dit:
     # ===========================================
     # Paths and files names
 
-    def _base_path(self):
-        path = os.path.expanduser(os.path.join(self.directory))
+    def _setup_base_path(self, directory):
+        path = os.path.expanduser(directory)
         if not os.path.exists(path):
             os.makedirs(path)
-        return path
+        self.base_path = path
 
     def _current_path(self):
-        return os.path.join(self._base_path(), self.current_fn)
+        return os.path.join(self.base_path, self.current_fn)
 
     def _index_path(self):
-        return os.path.join(self._base_path(), self.index_fn)
+        return os.path.join(self.base_path, self.index_fn)
 
-    def _subgroup_path(self, group, subgroup):
-        path = os.path.join(self._base_path(), group, subgroup)
-        if not os.path.exists(path):
-            os.makedirs(path)
+    def _get_task_path(self, group, subgroup, task):
+        path = os.path.join(self.base_path, group, subgroup, task)
+        if not os.path.isfile(path):
+            raise DitException("No such task file: %s" % path)
         return path
 
-    def _task_path(self, group, subgroup, task):
-        return os.path.join(self._subgroup_path(group, subgroup), task)
+    def _make_task_path(self, group, subgroup, task):
+        path = os.path.join(self.base_path, group, subgroup)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return os.path.join(path, task)
 
     # ===========================================
     # Checks
@@ -226,26 +230,24 @@ class Dit:
         }
 
     def _create_task(self, group, subgroup, task, description):
-        fn = self._task_path(group, subgroup, task)
-        if os.path.isfile(fn):
-            raise DitException("Already exists: %s" % fn)
+        task_fp = self._make_task_path(group, subgroup, task)
+        if os.path.isfile(task_fp):
+            raise DitException("Already exists: %s" % task_fp)
         data = self._new_task_data(description)
-        with open(fn, 'w') as f:
+        with open(task_fp, 'w') as f:
             f.write(json.dumps(data))
         self._add_to_index(group, subgroup, task)
         self._save_index()
 
     def _load_task_data(self, group, subgroup, task):
-        task_fp = self._task_path(group, subgroup, task)
-        if not os.path.isfile(task_fp):
-            raise DitException("No such task file: %s" % task_fp)
+        task_fp = self._get_task_path(group, subgroup, task)
         with open(task_fp, 'r') as f:
             return json.load(f)
 
     def _save_task(self, group, subgroup, task, data):
-        fn = self._task_path(group, subgroup, task)
+        task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
-        with open(fn, 'w') as f:
+        with open(task_fp, 'w') as f:
             f.write(json.dumps(data))
 
     @staticmethod
@@ -331,13 +333,12 @@ class Dit:
         self.index = [[self.root_name, [[self.root_name, []]]]]
         c_group = self.root_name
         c_subgroup = self.root_name
-        base_path = self._base_path()
-        for root, dirs, files in os.walk(base_path):
+        for root, dirs, files in os.walk(self.base_path):
             dirs.sort()
             for f in sorted(files):
                 if not self._is_valid_task_name(f):
                     continue
-                p = root[len(base_path) + 1:].split("/")
+                p = root[len(self.base_path) + 1:].split("/")
 
                 p = [i for i in p if i]
                 if len(p) == 0:
@@ -593,14 +594,11 @@ class Dit:
     # Input
 
     def _prompt(self, heading):
-        # FIXME properly choose file
-        input_fp = '/tmp/dit_input.txt'
-
-        with open(input_fp, 'w') as f:
-            f.write('# ' + heading + '\n')
-
         editor = os.environ.get('EDITOR', None)
         if editor:
+            input_fp = make_tmp_fp(heading)
+            with open(input_fp, 'w') as f:
+                f.write('# ' + heading + '\n')
             subprocess.run([editor, input_fp])
             with open(input_fp, 'r') as f:
                 lines = [line for line in f.readlines() if not line.startswith('#')]
@@ -811,13 +809,14 @@ class Dit:
 
     def configure(self, argv):
         rebuild_index = False
+        directory = self.default_directory
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 self.verbose = True
             elif opt in ["--directory", "-d"]:
-                self.directory = argv.pop(0)
+                directory = argv.pop(0)
             elif opt in ["--rebuild-index", '-r']:
                 rebuild_index = True
             elif opt in ["--help", "-h"]:
@@ -826,9 +825,9 @@ class Dit:
             else:
                 raise InvalidArgumentError("No such option: %s" % opt)
 
+        self._setup_base_path(directory)
         if rebuild_index:
             self._rebuild_index()
-
         self._load_current()
         self._load_index()
         return True
