@@ -471,16 +471,14 @@ class Dit:
         group_idx, subgroup_idx = None, None
 
         if self.current_group is not None:
-            index = self.index
-            for i in range(len(index)):
-                if index[i][0] == self.current_group:
+            for i, g in enumerate(self.index):
+                if g[0] == self.current_group:
                     group_idx = i
                     break
             if self.current_subgroup is not None:
-                index = self.index[group_idx][1]
-                for i in range(len(index)):
-                    if self.index[i][0] == self.current_subgroup:
-                        subgroup_idx = i
+                for j, s in enumerate(g[1]):
+                    if s[0] == self.current_subgroup:
+                        subgroup_idx = j
                         break
         return group_idx, subgroup_idx
 
