@@ -149,6 +149,7 @@ class Dit:
     separator = "/"
     root_name = ""
     root_name_cmd = "."
+    default_directory = "~/.dit"
 
     current_group = None
     current_subgroup = None
@@ -176,7 +177,7 @@ class Dit:
     # ===========================================
     # Paths and files names
 
-    def _make_base_path(self, directory):
+    def _setup_base_path(self, directory):
         path = os.path.expanduser(directory)
         if not os.path.exists(path):
             os.makedirs(path)
@@ -792,7 +793,7 @@ class Dit:
 
     def configure(self, argv):
         rebuild_index = False
-        directory = "~/.dit"
+        directory = self.default_directory
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
@@ -808,7 +809,7 @@ class Dit:
             else:
                 raise InvalidArgumentError("No such option: %s" % opt)
 
-        self._make_base_path(directory)
+        self._setup_base_path(directory)
         if rebuild_index:
             self._rebuild_index()
         self._load_current()
