@@ -366,56 +366,73 @@ class Dit:
     # ===========================================
     # Export
 
-    def _export_task_(self, group, group_id, subgroup, subgroup_id, task, task_id):
-        data = self._load_task_data(group, subgroup, task)
-        self.printer.task(group, group_id, subgroup, subgroup_id, task, task_id, data)
+    # these are for internal use
 
-    def _export_task(self, group, subgroup, task):
-        for i in range(len(self.index)):
-            if self.index[i][0] == group:
-                for j in range(len(self.index[i][1])):
-                    if self.index[i][1][j][0] == subgroup:
-                        for k in range(len(self.index[i][1][j][1])):
-                            if self.index[i][1][j][1][k] == task:
-                                self._export_task_(group,     i,
-                                                   subgroup,  j,
-                                                   task,      k)
+    def _export_t_k(self, g, i, s, j, t, k, force_header=False):
+        if force_header:
+            if i > 0:
+                self.printer.group(g[0], i)
+            if j > 0:
+                self.printer.subgroup(g[0], i, s[0], j)
 
-    def _export_tasks(self, group_id, subgroup_id):
-        n_tasks = len(self.index[group_id][1][subgroup_id][1])
+        data = self._load_task_data(g[0], s[0], t)
+        self.printer.task(g[0], i, s[0], j, t, k, data)
 
-        if n_tasks > 0:
-            group = self.index[group_id][0]
-            subgroup = self.index[group_id][1][subgroup_id][0]
+    def _export_s_j(self, g, i, s, j, force_header=False):
+        if force_header and i > 0:
+            self.printer.group(g[0], i)
 
-            self.printer.subgroup(group, group_id, subgroup, subgroup_id)
+        if j > 0:
+            self.printer.subgroup(g[0], i, s[0], j)
+        for k, t in enumerate(s[1]):
+            self._export_t_k(g, i,
+                             s, j,
+                             t, k)
 
-            for i in range(n_tasks):
-                task = self.index[group_id][1][subgroup_id][1][i]
-                self._export_task_(group,    group_id,
-                                   subgroup, subgroup_id,
-                                   task,     i)
+    def _export_g_i(self, g, i):
+        if i > 0:
+            self.printer.group(g[0], i)
+        for j, s in enumerate(g[1]):
+            self._export_s_j(g, i,
+                             s, j)
 
-    def _export_subgroup(self, group, subgroup):
-        for i in range(len(self.index)):
-            if self.index[i][0] == group:
-                self.printer.group(group, i)
-                for j in range(len(self.index[i][1])):
-                    if self.index[i][1][j][0] == subgroup:
-                        self._export_tasks(i, j)
-
-    def _export_group(self, group):
-        for i in range(len(self.index)):
-            if self.index[i][0] == group:
-                self.printer.group(group, i)
-                for j in range(len(self.index[i][1])):
-                    self._export_tasks(i, j)
+    # these are for external use
 
     def _export_all(self):
-        for i in range(len(self.index)):
-            self.printer.group(self.index[i][0], i)
-            for j in range(len(self.index[i][1])):
-                self._export_tasks(i, j)
+        for i, g in enumerate(self.index):
+            self._export_g_i(g, i)
+
+    def _export_group(self, group):
+        for i, g in enumerate(self.index):
+            if g[0] == group:
+                self._export_g_i(g, i)
+                break
+
+    def _export_subgroup(self, group, subgroup):
+        for i, g in enumerate(self.index):
+            if g[0] == group:
+                for j, s in enumerate(g[1]):
+                    if s[0] == subgroup:
+                        self._export_s_j(g, i,
+                                         s, j,
+                                         True)
+                        break
+                break
+
+    def _export_task(self, group, subgroup, task):
+        for i, g in enumerate(self.index):
+            if g[0] == group:
+                for j, s in enumerate(g[1]):
+                    if s[0] == subgroup:
+                        for k, t in enumerate(s[1]):
+                            if t == task:
+                                self._export_t_k(g, i,
+                                                 s, j,
+                                                 t, k,
+                                                 True)
+                                break
+                        break
+                break
 
     # ===========================================
     # Clock
