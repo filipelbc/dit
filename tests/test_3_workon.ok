@@ -40,10 +40,6 @@ Selection: ././t4
 $ dit -v -d ./ditdir status
 Selection: ././None
 
-[0] 
-
-[0/0] 
-
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
@@ -74,10 +70,6 @@ Selection: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selection: ././None
-
-[0] 
-
-[0/0] 
 
 [0/0/0] t1
   . . t1
@@ -136,6 +128,10 @@ Selection: g5/g6/t8
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selection: g5/g6/t8
+
+[4] g5
+
+[4/1] g6
 
 [4/1/0] t8
   g5 g6 t8
