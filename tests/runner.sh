@@ -9,7 +9,7 @@ for i in test_*.sh; do
     diff $out $ok > $diff
     if [ -s $diff ]; then
         echo "fail"
-        break
+        exit 1
     else
         echo "pass"
     fi

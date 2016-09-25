@@ -1,5 +1,5 @@
 
-all: clean is_venv set_env
+all: is_venv clean set_env
 	make -C .. install
 	./runner.sh
 
@@ -14,4 +14,7 @@ ok: clean is_venv set_env
 	./oker.sh
 
 set_env:
-	$(file > DIT_TESTING,1)
+	@echo "1" > DIT_TESTING
+
+ci-tests: clean set_env
+	./runner.sh

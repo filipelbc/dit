@@ -4,7 +4,11 @@ install:
 
 venv:
 	python3 -m virtualenv -p python3 venv
-	pip3 install -r requirements.txt
+	venv/bin/pip3 install -r requirements.txt
 
 clean:
-	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/ tests/ditdir
+	make -C tests clean
+	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/
+
+ci-tests: install
+	make -C tests ci-tests
