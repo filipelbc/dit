@@ -128,15 +128,19 @@ from .data_utils import now
 # Custom Exceptions
 
 
-class DitException(Exception):
+class DitError(Exception):
     pass
 
 
-class InvalidArgumentError(DitException):
+class InvalidArgumentError(DitError):
     pass
 
 
-class NoTaskSpecifiedError(DitException):
+class DitMessage(Exception):
+    pass
+
+
+class NoTaskSpecified(DitMessage):
     pass
 
 # ===========================================
@@ -165,9 +169,7 @@ class Dit:
     # Trace and Verbosity
 
     def _printable(self, name):
-        if name == self.root_name:
-            return self.root_name_cmd
-        return name
+        return self.root_name_cmd if name == self.root_name else name
 
     def _trace_selection(self, group, subgroup, task):
         if self.verbose:
@@ -192,7 +194,7 @@ class Dit:
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
         if not os.path.isfile(path):
-            raise DitException("No such task file: %s" % path)
+            raise DitError("No such task file: %s" % path)
         return path
 
     def _make_task_path(self, group, subgroup, task):
@@ -236,7 +238,7 @@ class Dit:
     def _create_task(self, group, subgroup, task, description):
         task_fp = self._make_task_path(group, subgroup, task)
         if os.path.isfile(task_fp):
-            raise DitException("Already exists: %s" % task_fp)
+            raise DitError("Already exists: %s" % task_fp)
         data = self._new_task_data(description)
         with open(task_fp, 'w') as f:
             f.write(json.dumps(data))
@@ -489,7 +491,7 @@ class Dit:
     @staticmethod
     def _idxs_to_names(idxs, index):
         if len(idxs) < 3:
-            raise DitException("Invalid index format.")
+            raise DitError("Invalid index format.")
 
         names = [None] * 3
 
@@ -505,16 +507,16 @@ class Dit:
                     names[i] = index[idx]
 
         except ValueError:
-            raise DitException("Invalid index format.")
+            raise DitError("Invalid index format.")
         except IndexError:
-            raise DitException("Invalid index: %d" % idx)
+            raise DitError("Invalid index: %d" % idx)
 
         return names
 
     def _gid_parser(self, argv):
         idxs = argv.pop(0).split(self.separator)
         if len(idxs) > 3:
-            raise DitException("Invalid <gid> format")
+            raise DitError("Invalid <gid> format")
 
         # replaces missing subgroup or task with None
         idxs = idxs + [None] * (3 - len(idxs))
@@ -524,7 +526,7 @@ class Dit:
     def _id_parser(self, argv):
         idxs = argv.pop(0).split(self.separator)
         if len(idxs) > 3:
-            raise DitException("Invalid <id> format")
+            raise DitError("Invalid <id> format")
 
         # replaces missing group or subgroup with current
         group_idx, subgroup_idx = self._current_idxs()
@@ -538,16 +540,16 @@ class Dit:
     def _gname_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise DitException("Invalid <gname> format")
+            raise DitError("Invalid <gname> format")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
         for name in [group, subgroup]:
             if name and not self._is_valid_group_name(name):
-                raise DitException("Invalid group name: %s" % name)
+                raise DitError("Invalid group name: %s" % name)
         if task and not self._is_valid_task_name(task):
-            raise DitException("Invalid task name: %s" % task)
+            raise DitError("Invalid task name: %s" % task)
 
         if group == self.root_name and subgroup:
             group, subgroup = subgroup, (self.root_name if task else None)
@@ -556,9 +558,12 @@ class Dit:
 
     def _name_parser(self, argv):
         names = argv.pop(0).split(self.separator)
+
         if len(names) > 3:
-            raise DitException("Invalid <name> format")
-        names = [name if name != self.root_name_cmd else self.root_name for name in names]
+            raise DitError("Invalid <name> format")
+
+        names = [name if name != self.root_name_cmd
+                      else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
 
         group, subgroup, task = names
@@ -577,9 +582,9 @@ class Dit:
 
         for name in [group, subgroup]:
             if not self._is_valid_group_name(name):
-                raise DitException("Invalid group name: %s" % name)
+                raise DitError("Invalid group name: %s" % name)
         if not self._is_valid_task_name(task):
-            raise DitException("Invalid task name: %s" % task)
+            raise DitError("Invalid task name: %s" % task)
 
         if group == self.root_name and subgroup:
             group, subgroup = subgroup, group
@@ -599,7 +604,7 @@ class Dit:
         self._trace_selection(group, subgroup, task)
 
         if not task:
-            raise NoTaskSpecifiedError("No task specified")
+            raise NoTaskSpecified("Not working on any task")
 
         return (group, subgroup, task)
 
@@ -627,15 +632,17 @@ class Dit:
 
         elif not initial:
             return input(header + ': ').strip()
+        else:
+            raise DitError("$EDITOR environment variable is not set")
 
     # ===========================================
     # Commands
 
     def usage(self):
-        print(__doc__)
+        raise DitMessage(__doc__)
 
     def new(self, argv):
-        if len(argv) < 1:
+        if len(argv) == 0:
             raise InvalidArgumentError("Missing argument")
 
         (group, subgroup, task) = self._name_parser(argv)
@@ -657,7 +664,7 @@ class Dit:
         return (group, subgroup, task)
 
     def workon(self, argv):
-        if len(argv) < 1:
+        if len(argv) == 0:
             raise InvalidArgumentError("Missing argument")
 
         if argv[0] in ["--new", "-n"]:
@@ -675,13 +682,8 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    def halt(self, argv, conclude=False, verb=True):
-        try:
-            (group, subgroup, task) = self._backward_parser(argv)
-        except NoTaskSpecifiedError as ex:
-            if verb:
-                print('Not working on any task')
-            return
+    def halt(self, argv, conclude=False):
+        (group, subgroup, task) = self._backward_parser(argv)
 
         if len(argv) > 0:
             raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
@@ -698,7 +700,10 @@ class Dit:
             self._save_current()
 
     def switchto(self, argv):
-        self.halt([], verb=False)
+        try:
+            self.halt([])
+        except NoTaskSpecified:
+            pass
         self.workon(argv)
 
     def conclude(self, argv):
@@ -758,7 +763,7 @@ class Dit:
             fmt = output.split(".")[-1]
 
         if fmt not in ['dit', 'org']:
-            raise DitException("Unrecognized format: %s", fmt)
+            raise DitError("Unrecognized format: %s", fmt)
 
         self.printer = import_module('dit.' + fmt + 'printer')
         self.printer.setup(file, options, statussing, listing)
@@ -833,17 +838,17 @@ class Dit:
         header = "Editing: " + group + '/' + subgroup + '/' + task
         new_data_raw = self._prompt(header, data_pretty, "json")
 
-        if new_data_raw:
+        if new_data_raw == "":
             try:
                 new_data = json.loads(new_data_raw)
             except json.decoder.JSONDecodeError:
-                print("Invalid JSON")
-                return
+                raise DitMessage("Invalid JSON")
+
             if new_data:
                 if isinstance(new_data, dict):
                     self._save_task(group, subgroup, task, new_data)
                 else:
-                    print("Wrong data type, should be a Dictionary.")
+                    raise DitMessage("Wrong data type, should be a Dictionary")
             else:
                 print("Cancelled")
         else:
@@ -866,7 +871,6 @@ class Dit:
                 rebuild_index = True
             elif opt in ["--help", "-h"]:
                 self.usage()
-                return False
             else:
                 raise InvalidArgumentError("No such option: %s" % opt)
 
@@ -875,7 +879,6 @@ class Dit:
             self._rebuild_index()
         self._load_current()
         self._load_index()
-        return True
 
     def interpret(self, argv):
         if len(argv) > 0:
@@ -917,11 +920,13 @@ def main():
 
     try:
         dit = Dit()
-        if dit.configure(argv):
-            dit.interpret(argv)
-    except DitException as err:
+        dit.configure(argv)
+        dit.interpret(argv)
+    except DitError as err:
         print("Error: %s" % err)
         print("Type 'dit --help' for usage details.")
+    except DitMessage as msg:
+        print(msg)
 
 if __name__ == "__main__":
     main()
