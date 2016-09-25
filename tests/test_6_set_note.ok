@@ -20,10 +20,6 @@ Selection: g5/./t6
 $ dit -v -d ./ditdir list --concluded .
 Selection: ./None/None
 
-[0] 
-
-[0/0] 
-
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
@@ -32,6 +28,10 @@ Selection: ./None/None
   * this is another note
   Properties:
   * abu: din
+  Logbook:
+  + [2016-09-10 19:00:19]--[2016-09-10 19:00:39]
+  + [2016-09-10 19:00:59]--[2016-09-10 19:01:19]
+  + [2016-09-10 19:04:29]--[2016-09-10 19:04:49]
 
 [0/0/1] t10
   . . t10
@@ -42,18 +42,28 @@ Selection: ./None/None
   * this is a note
   Properties:
   * foo: bar
+  Logbook:
+  + [2016-09-10 19:01:49]--[2016-09-10 19:02:09]
+  + [2016-09-10 19:03:09]--[2016-09-10 19:03:29]
+  + [2016-09-10 19:07:09]--[None]
 
 [0/0/2] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
   ~ Time spent: 20s
+  Logbook:
+  + [2016-09-10 19:02:29]--[2016-09-10 19:02:49]
 
 [0/0/3] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
+  Logbook:
+  + [2016-09-10 19:03:59]--[None]
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5//t6
 Selection: g5/./t6
+
+[4] g5
 
 [4/0/0] t6
   g5 . t6
@@ -63,3 +73,5 @@ Selection: g5/./t6
   * note note note
   Properties:
   * jas: min
+  Logbook:
+  + [2016-09-10 19:05:49]--[2016-09-10 19:06:09]

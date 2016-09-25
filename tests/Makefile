@@ -1,5 +1,6 @@
 
 all: clean is_venv set_env
+	make -C .. install
 	./runner.sh
 
 is_venv:
