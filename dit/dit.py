@@ -66,6 +66,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       of properties are pairs of strings (name, value).
       If editing in a file, the first line will be the name.
 
+    edit [<name> | <id>]
+      Opens the specified task for manual editing. Uses current task if none is
+      specified. If $EDITOR environment variable is not set it does nothing.
+
   "-:"
     Arguments preceeded by "-:" are necessary and if omited one of the
     following option will take place:
@@ -608,19 +612,21 @@ class Dit:
     # ===========================================
     # Input
 
-    def _prompt(self, heading):
+    def _prompt(self, header, initial=None, extension='txt'):
         editor = os.environ.get('EDITOR', None)
         if editor:
-            input_fp = make_tmp_fp(heading)
+            input_fp = make_tmp_fp(header, extension)
             with open(input_fp, 'w') as f:
-                f.write('# ' + heading + '\n')
+                f.write('# ' + header + '\n')
+                if initial:
+                    f.write(initial)
             subprocess.run([editor, input_fp])
             with open(input_fp, 'r') as f:
                 lines = [line for line in f.readlines() if not line.startswith('#')]
             return (''.join(lines)).strip()
 
-        else:
-            return input(heading + ': ').strip()
+        elif not initial:
+            return input(header + ': ').strip()
 
     # ===========================================
     # Commands
@@ -819,6 +825,30 @@ class Dit:
         self._set_property(data, prop_name, prop_value)
         self._save_task(group, subgroup, task, data)
 
+    def edit(self, argv):
+        group, subgroup, task = self._backward_parser(argv)
+
+        data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
+                                 indent=4)
+        header = "Editing: " + group + '/' + subgroup + '/' + task
+        new_data_raw = self._prompt(header, data_pretty, "json")
+
+        if new_data_raw:
+            try:
+                new_data = json.loads(new_data_raw)
+            except json.decoder.JSONDecodeError:
+                print("Invalid JSON")
+                return
+            if new_data:
+                if isinstance(new_data, dict):
+                    self._save_task(group, subgroup, task, new_data)
+                else:
+                    print("Wrong data type, should be a Dictionary.")
+            else:
+                print("Cancelled")
+        else:
+            print("Cancelled")
+
     # ===========================================
     # Main
 
@@ -870,6 +900,8 @@ class Dit:
                 self.note(argv)
             elif cmd in ["set", "p"]:
                 self.set(argv)
+            elif cmd in ["edit", "m"]:
+                self.edit(argv)
             else:
                 raise InvalidArgumentError("No such command: %s" % cmd)
         else:

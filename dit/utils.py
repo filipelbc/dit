@@ -7,8 +7,8 @@ from getpass import getuser
 from tempfile import gettempdir
 
 
-def make_tmp_fp(name):
-    name = re.sub(r'[^_A-Za-z0-9]', '_', name).strip('_') + '.txt'
+def make_tmp_fp(name, extension):
+    name = re.sub(r'[^_A-Za-z0-9]', '_', name).strip('_') + '.' + extension
 
     path = os.path.join(gettempdir(), getuser(), "dit")
     if not os.path.exists(path):
