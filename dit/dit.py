@@ -221,6 +221,17 @@ class Dit:
                 name not in [self.current_fn, self.index_fn])
 
     # ===========================================
+    # I/O
+
+    @staticmethod
+    def _load_json_file(fp):
+        if (os.path.isfile(fp)):
+            with open(fp, 'r') as f:
+                return json.load(f)
+        else:
+            return None
+
+    # ===========================================
     # Task management
 
     @staticmethod
@@ -232,6 +243,10 @@ class Dit:
             "notes": [],
             "created_at": now()
         }
+
+    @staticmethod
+    def _is_valid_task_data(data):
+        return isinstance(data, dict)
 
     def _create_task(self, group, subgroup, task, description):
         task_fp = self._make_task_path(group, subgroup, task)
@@ -245,8 +260,10 @@ class Dit:
 
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._get_task_path(group, subgroup, task)
-        with open(task_fp, 'r') as f:
-            return json.load(f)
+        task = self._load_json_file(task_fp)
+        if not self._is_valid_task_data(task):
+            raise DitError("Task file contains invalid data: %s" % task_fp)
+        return task
 
     def _save_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
@@ -291,9 +308,8 @@ class Dit:
 
     def _load_current(self):
         current_fp = self._current_path()
-        if os.path.isfile(current_fp):
-            with open(current_fp, 'r') as f:
-                current = json.load(f)
+        current = self._load_json_file(current_fp)
+        if current is not None:
             self._set_current(current['group'],
                               current['subgroup'],
                               current['task'])
@@ -329,9 +345,9 @@ class Dit:
 
     def _load_index(self):
         index_fp = self._index_path()
-        if os.path.isfile(index_fp):
-            with open(index_fp, 'r') as f:
-                self.index = json.load(f)
+        index = self._load_json_file(index_fp)
+        if index is not None:
+            self.index = index
 
     def _rebuild_index(self):
         self.index = [[self.root_name, [[self.root_name, []]]]]
