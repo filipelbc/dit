@@ -19,7 +19,7 @@ Selection: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selection: ././None
-Not working on any task
+Not working on any task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
 Selection: ././t1
@@ -156,16 +156,16 @@ Selection: g5/g6/None
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Selection: g5/g6/t10
-Error: No such task file: ./ditdir/g5/g6/t10
+ERROR: No such task file: ./ditdir/g5/g6/t10
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon /t10
 Selection: g5/./t10
-Error: No such task file: ./ditdir/g5/t10
+ERROR: No such task file: ./ditdir/g5/t10
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 2
-Error: Invalid index: 2
+ERROR: Invalid index: 2
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon //t10

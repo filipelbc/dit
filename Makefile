@@ -9,6 +9,3 @@ venv:
 clean:
 	make -C tests clean
 	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/
-
-ci-tests: install
-	make -C tests ci-tests

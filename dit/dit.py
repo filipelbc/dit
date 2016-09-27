@@ -20,7 +20,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   <command>:
 
     new <name> [-: "description"]
-      Creates a new task.
+      Creates a new task. You will be prompted for the "descroption" if it is
+      not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
       Clocks in the specified task.
@@ -34,48 +35,43 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       Same as 'halt' followed by 'workon'.
 
     conclude [<id> | <name>]
-      Concludes the current task or the specified one. Note that there is a
+      Concludes the current task or the selected one. Note that there is a
       implicit 'halt'.
 
     status [<gid> | <gname>]
-      Prints an overview of the situation for the specified group, subgroup,
-      or task. Prints information about current task or subgroup unless
-      something is specified.
+      Prints an overview of the data for the current task or subgroup, or
+      for the selected one.
 
     list
       This is a convenience alias for 'export', with "--output stdout".
 
     export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
-      Exports data to the specified file. Exports current subgroup unless
-      something is specified.
+      Prints most of the data for the current subgroup or the selected one.
       --concluded, -a
-        Include concluded tasks in the listing.
+        Include concluded tasks.
       --all, -a
-        Exports all groups and subgroups.
+        Select all groups and subgroups.
       --verbose, -v
-        More information is exported.
+        All information is exported.
       --output, -o
-        File to which to export. Defaults to "stdout". Format is deduced from
+        File to which to write. Defaults to "stdout". Format is deduced from
         file extension if present.
 
     note [<name> | <id>] [-: "text"]
       Adds a note to the current task or the specified one.
 
     set [<name> | <id>] [-: "name" ["value"]]
-      Sets a property to the current task or the specified one. The format
+      Sets a property for the current task or the specified one. The format
       of properties are pairs of strings (name, value).
-      If editing in a file, the first line will be the name.
 
     edit [<name> | <id>]
       Opens the specified task for manual editing. Uses current task if none is
       specified. If $EDITOR environment variable is not set it does nothing.
 
   "-:"
-    Arguments preceeded by "-:" are necessary and if omited one of the
-    following option will take place:
-    a) if the $EDITOR environment variable is set, a text file will be open for
-    editing the argument;
-    b) otherwise, a simple prompt will be used.
+    Arguments preceeded by "-:" are necessary. If omited, then: a) if the
+    $EDITOR environment variable is set, a text file will be open for
+    editing the argument; b) otherwise, a simple prompt will be used.
 
   <name>: ["group-name"/]["subgroup-name"/]"task-name"
     "a"
@@ -132,11 +128,11 @@ class DitException(Exception):
     pass
 
 
-class InvalidArgumentError(DitException):
+class ArgumentException(DitException):
     pass
 
 
-class NoTaskSpecifiedError(DitException):
+class NoTaskSpecifiedCondition(DitException):
     pass
 
 # ===========================================
@@ -164,15 +160,18 @@ class Dit:
     # ===========================================
     # Trace and Verbosity
 
+    # helpers
+
     def _printable(self, name):
-        if name == self.root_name:
-            return self.root_name_cmd
-        return name
+        return self.root_name_cmd if name == self.root_name else name
+
+    def _trace(self, message):
+        if self.verbose:
+            print(message)
 
     def _trace_selection(self, group, subgroup, task):
-        if self.verbose:
-            print("Selection: %s/%s/%s" %
-                  (self._printable(group), self._printable(subgroup), task))
+        self._trace("Selection: %s/%s/%s" %
+                    (self._printable(group), self._printable(subgroup), task))
 
     # ===========================================
     # Paths and files names
@@ -225,11 +224,15 @@ class Dit:
 
     @staticmethod
     def _load_json_file(fp):
-        if (os.path.isfile(fp)):
+        if os.path.isfile(fp):
             with open(fp, 'r') as f:
                 return json.load(f)
-        else:
-            return None
+        return None
+
+    @staticmethod
+    def _save_json_file(fp, data):
+        with open(fp, 'w') as f:
+            f.write(json.dumps(data))
 
     # ===========================================
     # Task management
@@ -251,10 +254,9 @@ class Dit:
     def _create_task(self, group, subgroup, task, description):
         task_fp = self._make_task_path(group, subgroup, task)
         if os.path.isfile(task_fp):
-            raise DitException("Already exists: %s" % task_fp)
+            raise DitException("Task file already exists: %s" % task_fp)
         data = self._new_task_data(description)
-        with open(task_fp, 'w') as f:
-            f.write(json.dumps(data))
+        self._save_json_file(task_fp, data)
         self._add_to_index(group, subgroup, task)
         self._save_index()
 
@@ -262,14 +264,13 @@ class Dit:
         task_fp = self._get_task_path(group, subgroup, task)
         task = self._load_json_file(task_fp)
         if not self._is_valid_task_data(task):
-            raise DitError("Task file contains invalid data: %s" % task_fp)
+            raise DitException("Task file contains invalid data: %s" % task_fp)
         return task
 
     def _save_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
-        with open(task_fp, 'w') as f:
-            f.write(json.dumps(data))
+        self._save_json_file(task_fp, data)
 
     @staticmethod
     def _add_note(data, note_text):
@@ -297,18 +298,15 @@ class Dit:
         self.current_task = task
 
     def _save_current(self):
-        current = {
+        current_data = {
             'group': self.current_group,
             'subgroup': self.current_subgroup,
             'task': self.current_task
         }
-        current_fp = self._current_path()
-        with open(current_fp, 'w') as f:
-            json.dump(current, f)
+        self._save_json_file(self._current_path(), current_data)
 
     def _load_current(self):
-        current_fp = self._current_path()
-        current = self._load_json_file(current_fp)
+        current = self._load_json_file(self._current_path())
         if current is not None:
             self._set_current(current['group'],
                               current['subgroup'],
@@ -339,9 +337,7 @@ class Dit:
         self.index[group_id][1][subgroup_id][1].append(task)
 
     def _save_index(self):
-        index_fp = self._index_path()
-        with open(index_fp, 'w') as f:
-            json.dump(self.index, f)
+        self._save_json_file(self._index_path(), self.index)
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -521,7 +517,7 @@ class Dit:
                     names[i] = index[idx]
 
         except ValueError:
-            raise DitException("Invalid index format.")
+            raise DitException("Invalid index format, must be an integer: %s" % idx)
         except IndexError:
             raise DitException("Invalid index: %d" % idx)
 
@@ -530,7 +526,7 @@ class Dit:
     def _gid_parser(self, argv):
         idxs = argv.pop(0).split(self.separator)
         if len(idxs) > 3:
-            raise DitException("Invalid <gid> format")
+            raise DitException("Invalid <gid> format.")
 
         # replaces missing subgroup or task with None
         idxs = idxs + [None] * (3 - len(idxs))
@@ -540,7 +536,7 @@ class Dit:
     def _id_parser(self, argv):
         idxs = argv.pop(0).split(self.separator)
         if len(idxs) > 3:
-            raise DitException("Invalid <id> format")
+            raise DitException("Invalid <id> format.")
 
         # replaces missing group or subgroup with current
         group_idx, subgroup_idx = self._current_idxs()
@@ -554,7 +550,7 @@ class Dit:
     def _gname_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise DitException("Invalid <gname> format")
+            raise DitException("Invalid <gname> format.")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
@@ -573,7 +569,7 @@ class Dit:
     def _name_parser(self, argv):
         names = argv.pop(0).split(self.separator)
         if len(names) > 3:
-            raise DitException("Invalid <name> format")
+            raise DitException("Invalid <name> format.")
         names = [name if name != self.root_name_cmd else self.root_name for name in names]
         names = [None] * (3 - len(names)) + names
 
@@ -615,7 +611,7 @@ class Dit:
         self._trace_selection(group, subgroup, task)
 
         if not task:
-            raise NoTaskSpecifiedError("No task specified")
+            raise NoTaskSpecifiedCondition("No task specified.")
 
         return (group, subgroup, task)
 
@@ -644,6 +640,9 @@ class Dit:
         elif not initial:
             return input(header + ': ').strip()
 
+        else:
+            raise DitException("$EDITOR environment variable is not set.")
+
     # ===========================================
     # Commands
 
@@ -652,7 +651,7 @@ class Dit:
 
     def new(self, argv):
         if len(argv) < 1:
-            raise InvalidArgumentError("Missing argument")
+            raise ArgumentException("Missing argument.")
 
         (group, subgroup, task) = self._name_parser(argv)
         self._trace_selection(group, subgroup, task)
@@ -663,7 +662,7 @@ class Dit:
             description = argv.pop(0)
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if description is None:
             description = self._prompt('Description')
@@ -674,7 +673,7 @@ class Dit:
 
     def workon(self, argv):
         if len(argv) < 1:
-            raise InvalidArgumentError("Missing argument")
+            raise ArgumentException("Missing argument.")
 
         if argv[0] in ["--new", "-n"]:
             argv.pop(0)
@@ -683,7 +682,7 @@ class Dit:
             (group, subgroup, task) = self._backward_parser(argv)
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
@@ -691,16 +690,15 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    def halt(self, argv, conclude=False, verb=True):
+    def halt(self, argv, conclude=False):
         try:
             (group, subgroup, task) = self._backward_parser(argv)
-        except NoTaskSpecifiedError as ex:
-            if verb:
-                print('Not working on any task')
+        except NoTaskSpecifiedCondition as ex:
+            self._trace('Not working on any task.')
             return
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
 
@@ -714,7 +712,7 @@ class Dit:
             self._save_current()
 
     def switchto(self, argv):
-        self.halt([], verb=False)
+        self.halt([])
         self.workon(argv)
 
     def conclude(self, argv):
@@ -752,12 +750,12 @@ class Dit:
             elif opt in ["--output", "-o"] and not (listing or statussing):
                 output = argv.pop(0)
             else:
-                raise InvalidArgumentError("No such option: %s" % opt)
+                raise ArgumentException("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % opt)
+            raise ArgumentException("Unrecognized argument: %s" % opt)
 
         if statussing and group is None:
             group = self.current_group
@@ -805,7 +803,7 @@ class Dit:
             note_text = argv.pop(0)
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if note_text is None:
             note_text = self._prompt("Description")
@@ -827,7 +825,7 @@ class Dit:
                 prop_value = self._prompt("Value for '%s'" % prop_name)
 
         if len(argv) > 0:
-            raise InvalidArgumentError("Unrecognized argument: %s" % argv[0])
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if prop_name is None:
             prop = self._prompt("Name and Value for property").split('\n', 1)
@@ -853,17 +851,14 @@ class Dit:
             try:
                 new_data = json.loads(new_data_raw)
             except json.decoder.JSONDecodeError:
-                print("Invalid JSON")
+                print("Invalid JSON.")
                 return
-            if new_data:
-                if isinstance(new_data, dict):
-                    self._save_task(group, subgroup, task, new_data)
-                else:
-                    print("Wrong data type, should be a Dictionary.")
+            if self._is_valid_task_data(new_data):
+                self._save_task(group, subgroup, task, new_data)
             else:
-                print("Cancelled")
+                print("Wrong data type, should be a Dictionary.")
         else:
-            print("Cancelled")
+            print("Cancelled.")
 
     # ===========================================
     # Main
@@ -884,7 +879,7 @@ class Dit:
                 self.usage()
                 return False
             else:
-                raise InvalidArgumentError("No such option: %s" % opt)
+                raise ArgumentException("No such option: %s" % opt)
 
         self._setup_base_path(directory)
         if rebuild_index:
@@ -919,9 +914,9 @@ class Dit:
             elif cmd in ["edit", "m"]:
                 self.edit(argv)
             else:
-                raise InvalidArgumentError("No such command: %s" % cmd)
+                raise ArgumentException("No such command: %s" % cmd)
         else:
-            raise InvalidArgumentError("Missing command")
+            raise ArgumentException("Missing command.")
 
 # ===========================================
 # Main
@@ -931,12 +926,16 @@ def main():
     argv = sys.argv
     argv.pop(0)
 
+    dit = Dit()
     try:
-        dit = Dit()
         if dit.configure(argv):
             dit.interpret(argv)
     except DitException as err:
-        print("Error: %s" % err)
+        print("ERROR: %s" % err)
+        print("Type 'dit --help' for usage details.")
+    except IndexError as err:
+        # this was probably caused by a pop on an empty argument list
+        print("ERROR: Missing argument.")
         print("Type 'dit --help' for usage details.")
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dit',
-    version='0.2.dev0',
+    version='0.2',
 
     description='Command line work time tracking and todo list',
 

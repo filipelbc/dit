@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
 echo '---------------------------------------------------'
-PS4='$ '
-set -x
+echo '$ find '"'"'./ditdir'"'"' -type f | sort'
 find './ditdir' -type f | sort

@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/filipelbc/dit.svg?branch=master)](https://travis-ci.org/filipelbc/dit)
+
 # dit
 
 Command line work time tracking and todo list
@@ -28,10 +30,11 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
 
 <command>:
 
-  new <name> [-d "description"]
-    Creates a new task.
+  new <name> [-: "description"]
+    Creates a new task. You will be prompted for the "descroption" if it is
+    not provided.
 
-  workon <id> | <name> | --new, -n <name> [-d "description"]
+  workon <id> | <name> | --new, -n <name> [-: "description"]
     Clocks in the specified task.
     --new, -n
       Same as 'new' followed by 'workon'.
@@ -39,32 +42,47 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
   halt [<id> | <name>]
     Clocks out of the current task or the specified one.
 
-  switchto <id> | <name> | --new, -n <name> [-d "description"]
+  switchto <id> | <name> | --new, -n <name> [-: "description"]
     Same as 'halt' followed by 'workon'.
 
   conclude [<id> | <name>]
-    Concludes the current task or the specified one. Note that there is a
+    Concludes the current task or the selected one. Note that there is a
     implicit 'halt'.
 
   status [<gid> | <gname>]
-    Prints an overview of the situation for the specified group, subgroup,
-    or task. Exports current task or subgroup unless something is specified.
+    Prints an overview of the data for the current task or subgroup, or
+    for the selected one.
 
   list
     This is a convenience alias for 'export', with "--output stdout".
 
   export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
-    Exports data to the specified format. Exports current subgroup unless
-    something is specified.
+    Prints most of the data for the current subgroup or the selected one.
     --concluded, -a
-      Include concluded tasks in the listing.
+      Include concluded tasks.
     --all, -a
-      Exports all groups and subgroups.
+      Select all groups and subgroups.
     --verbose, -v
-      More information is printed.
+      All information is exported.
     --output, -o
-      File to which to export. Defaults to "stdout".
-      Format is deduced from file extension if present.
+      File to which to write. Defaults to "stdout". Format is deduced from
+      file extension if present.
+
+  note [<name> | <id>] [-: "text"]
+    Adds a note to the current task or the specified one.
+
+  set [<name> | <id>] [-: "name" ["value"]]
+    Sets a property for the current task or the specified one. The format
+    of properties are pairs of strings (name, value).
+
+  edit [<name> | <id>]
+    Opens the specified task for manual editing. Uses current task if none is
+    specified. If $EDITOR environment variable is not set it does nothing.
+
+"-:"
+  Arguments preceeded by "-:" are necessary. If omited, then: a) if the
+  $EDITOR environment variable is set, a text file will be open for
+  editing the argument; b) otherwise, a simple prompt will be used.
 
 <name>: ["group-name"/]["subgroup-name"/]"task-name"
   "a"
@@ -76,15 +94,13 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Note that "b" and "c" can be empty strings.
 
-<id>: --id, -i ["group-id"/]["subgroup-id"/]"task-id"
+<id>: ["group-id"/]["subgroup-id"/]"task-id"
   "a"
       task "id a" in current subgroup in current group
   "b/a"
       task "id a" in subgroup "id b" in current group
   "c/b/a"
       task "id a" in subgroup "id b" in group "id c"
-
-  Note that "b" and "c" can be empty strings, which map to "id 0".
 
 <gname>: "group-name"[/"subgroup-name"][/"task-name"]
   "a"
@@ -96,13 +112,11 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Note that "a" and "b" can be empty strings, which means the same as ".".
 
-<gid>: --id, -i "group-id"[/"subgroup-id"][/"task-id"]
+<gid>: "group-id"[/"subgroup-id"][/"task-id"]
   "a"
       group "id a"
   "a/b"
       subgroup "id b" in group "id a"
   "a/b/c"
       task "id c" in subgroup "id b" in group "id a"
-
-  Note that "a" and "b" can be empty strings, which are mapped to "id 0".
 ```

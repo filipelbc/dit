@@ -321,7 +321,7 @@ $ dit -v -d ./ditdir list /t10
 Selection: t10/None/None
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 5
-Error: Invalid index: 5
+ERROR: Invalid index: 5
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list //t10

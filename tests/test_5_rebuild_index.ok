@@ -1,6 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir --rebuild-index
-Error: Missing command
+ERROR: Missing command.
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ cat ditdir/INDEX
