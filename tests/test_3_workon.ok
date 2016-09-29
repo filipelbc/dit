@@ -1,44 +1,65 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././None
+Selected: ././_
 Not working on any task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
-Selection: ././t1
+Selected: ././t1
 Already clocked out
+Task saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
-Selection: ././t10
+Selected: ././t10
+Task saved: ././t10
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././t10
+Selected: ././t10
+Task saved: ././t10
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 1
-Selection: ././t4
+Selected: ././t4
+Task saved: ././t4
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: ././t4
+Selected: ././t4
+Task saved: ././t4
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: ././None
+Selected: ././_
 
 [0/0/0] t1
   . . t1
@@ -63,13 +84,17 @@ Selection: ././None
   ~ Time spent: 20s
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
-Selection: ././t10
+Selected: ././t10
+Task saved: ././t10
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir conclude
-Selection: ././t10
+Selected: ././t10
+Task saved: ././t10
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: ././None
+Selected: ././_
 
 [0/0/0] t1
   . . t1
@@ -88,14 +113,18 @@ Selection: ././None
   * Created at: 2016-09-10 18:58:59
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
-Selection: ././t7
+Selected: ././t7
+Task saved: ././t7
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
-Selection: ././t7
+Selected: ././t7
 Already clocked in
+Task saved: ././t7
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: ././t7
+Selected: ././t7
 
 [0/0/2] t7
   . . t7
@@ -103,10 +132,12 @@ Selection: ././t7
   * Updated at: 2016-09-10 19:04:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0/0/0
-Selection: ././t1
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: ././t1
+Selected: ././t1
 
 [0/0/0] t1
   . . t1
@@ -115,19 +146,31 @@ Selection: ././t1
   ~ Time spent: 1m0s
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto g4/t5
-Selection: ././t1
-Selection: g4/./t5
+Selected: ././t1
+Task saved: ././t1
+Current task saved.
+Selected: g4/./t5
+Task saved: g4/./t5
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 4/0/0
-Selection: g4/./t5
-Selection: g5/./t6
+Selected: g4/./t5
+Task saved: g4/./t5
+Current task saved.
+Selected: g5/./t6
+Task saved: g5/./t6
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 1/0
-Selection: g5/./t6
-Selection: g5/g6/t8
+Selected: g5/./t6
+Task saved: g5/./t6
+Current task saved.
+Selected: g5/g6/t8
+Task saved: g5/g6/t8
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: g5/g6/t8
+Selected: g5/g6/t8
 
 [4] g5
 
@@ -139,10 +182,12 @@ Selection: g5/g6/t8
   * Updated at: 2016-09-10 19:06:39
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
-Selection: g5/g6/t8
+Selected: g5/g6/t8
+Task saved: g5/g6/t8
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: g5/g6/None
+Selected: g5/g6/_
 
 [4] g5
 
@@ -155,12 +200,12 @@ Selection: g5/g6/None
   ~ Time spent: 20s
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
-Selection: g5/g6/t10
+Selected: g5/g6/t10
 ERROR: No such task file: ./ditdir/g5/g6/t10
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon /t10
-Selection: g5/./t10
+Selected: g5/./t10
 ERROR: No such task file: ./ditdir/g5/t10
 Type 'dit --help' for usage details.
 ---------------------------------------------------
@@ -169,7 +214,9 @@ ERROR: Invalid index: 2
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon //t10
-Selection: ././t10
+Selected: ././t10
+Task saved: ././t10
+Current task saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
-Selection: ././t10
+Selected: ././t10

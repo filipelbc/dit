@@ -1,6 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir list
-Selection: None/None/None
+Selected: _/_/_
 
 [0/0/0] t1
   . . t1
@@ -55,7 +55,7 @@ Selection: None/None/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --all
-Selection: None/None/None
+Selected: _/_/_
 
 [0/0/0] t1
   . . t1
@@ -110,7 +110,7 @@ Selection: None/None/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 0
-Selection: ./None/None
+Selected: ./_/_
 
 [0/0/0] t1
   . . t1
@@ -129,7 +129,7 @@ Selection: ./None/None
   * Created at: 2016-09-10 18:59:29
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5
-Selection: g5/None/None
+Selected: g5/_/_
 
 [4] g5
 
@@ -148,7 +148,7 @@ Selection: g5/None/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g5
-Selection: g5/None/None
+Selected: g5/_/_
 
 [4] g5
 
@@ -167,7 +167,7 @@ Selection: g5/None/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4
-Selection: g5/None/None
+Selected: g5/_/_
 
 [4] g5
 
@@ -186,7 +186,7 @@ Selection: g5/None/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/.
-Selection: g5/./None
+Selected: g5/./_
 
 [4] g5
 
@@ -199,7 +199,7 @@ Selection: g5/./None
   * Created at: 2016-09-10 18:59:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/0
-Selection: g5/./None
+Selected: g5/./_
 
 [4] g5
 
@@ -212,7 +212,7 @@ Selection: g5/./None
   * Created at: 2016-09-10 18:59:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/g6
-Selection: g5/g6/None
+Selected: g5/g6/_
 
 [4] g5
 
@@ -223,7 +223,7 @@ Selection: g5/g6/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/1
-Selection: g5/g6/None
+Selected: g5/g6/_
 
 [4] g5
 
@@ -234,7 +234,7 @@ Selection: g5/g6/None
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/g6/t8
-Selection: g5/g6/t8
+Selected: g5/g6/t8
 
 [4] g5
 
@@ -245,7 +245,7 @@ Selection: g5/g6/t8
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/1/0
-Selection: g5/g6/t8
+Selected: g5/g6/t8
 
 [4] g5
 
@@ -256,7 +256,7 @@ Selection: g5/g6/t8
   * Created at: 2016-09-10 18:59:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/./t6
-Selection: g5/./t6
+Selected: g5/./t6
 
 [4] g5
 
@@ -265,7 +265,7 @@ Selection: g5/./t6
   * Created at: 2016-09-10 18:58:49
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g5/t6
-Selection: g5/./t6
+Selected: g5/./t6
 
 [4] g5
 
@@ -274,7 +274,7 @@ Selection: g5/./t6
   * Created at: 2016-09-10 18:58:49
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/0/0
-Selection: g5/./t6
+Selected: g5/./t6
 
 [4] g5
 
@@ -283,7 +283,7 @@ Selection: g5/./t6
   * Created at: 2016-09-10 18:58:49
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g2
-Selection: g2/None/None
+Selected: g2/_/_
 
 [2] g2
 
@@ -294,7 +294,7 @@ Selection: g2/None/None
   * Created at: 2016-09-10 18:58:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 2
-Selection: g2/None/None
+Selected: g2/_/_
 
 [2] g2
 
@@ -305,41 +305,41 @@ Selection: g2/None/None
   * Created at: 2016-09-10 18:58:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g2/
-Selection: g2/./None
+Selected: g2/./_
 
 [2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 2/0
-Selection: g2/./None
+Selected: g2/./_
 
 [2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list t10
-Selection: t10/None/None
+Selected: t10/_/_
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /t10
-Selection: t10/None/None
+Selected: t10/_/_
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 5
 ERROR: Invalid index: 5
 Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list //t10
-Selection: ././t10
+Selected: ././t10
 
 [0/0/3] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 0/0/3
-Selection: ././t10
+Selected: ././t10
 
 [0/0/3] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g1//t2
-Selection: g1/./t2
+Selected: g1/./t2
 
 [1] g1
 
@@ -348,7 +348,7 @@ Selection: g1/./t2
   * Created at: 2016-09-10 18:58:09
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 1/0/0
-Selection: g1/./t2
+Selected: g1/./t2
 
 [1] g1
 

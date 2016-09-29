@@ -1,6 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir list
-Selection: ././None
+Selected: ././_
 
 [0/0/0] t1
   . . t1
@@ -25,7 +25,7 @@ Selection: ././None
   + [2016-09-10 19:03:59]--[None]
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --concluded
-Selection: ././None
+Selected: ././_
 
 [0/0/0] t1
   . . t1
