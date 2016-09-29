@@ -81,7 +81,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     "c/b/a"
         task "a" in subgroup "b" in group "c"
 
-    Note that "b" and "c" can be empty strings.
+    A name must begin with a letter to be valid. "b" and "c" can be empty
+    or a dot, which means no subgroup and group repectively.
 
   <id>: ["group-id"/]["subgroup-id"/]"task-id"
     "a"
@@ -99,7 +100,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     "a/b/c"
         task "c" in subgroup "b" in group "a"
 
-    Note that "a" and "b" can be empty strings, which means the same as ".".
+    A name must begin with a letter to be valid. "a" and "b" can be empty
+    or a dot, which means no subgroup and group repectively.
 
   <gid>: "group-id"[/"subgroup-id"][/"task-id"]
     "a"
@@ -140,18 +142,19 @@ class NoTaskSpecifiedCondition(DitException):
 
 
 class Dit:
-    current_fn = "CURRENT"
-    index_fn = "INDEX"
-    separator = "/"
-    root_name = ""
-    root_name_cmd = "."
-    default_directory = "~/.dit"
+    CURRENT_FN = "CURRENT"
+    INDEX_FN = "INDEX"
+    SEPARATOR = "/"
+    COMMENT_CHAR = "#"
+    ROOT_NAME = ""
+    ROOT_NAME_VERB = "."
+    DEFAULT_DIR = "~/.dit"
 
     current_group = None
     current_subgroup = None
     current_task = None
 
-    index = [[root_name, [[root_name, []]]]]
+    index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
 
     base_path = None
     printer = None
@@ -162,16 +165,25 @@ class Dit:
 
     # helpers
 
-    def _printable(self, name):
-        return self.root_name_cmd if name == self.root_name else name
+    def _printable(self, name, *others):
 
-    def _trace(self, message):
+        def _(n):
+            if n is None:
+                return "_"
+            return self.ROOT_NAME_VERB if n == self.ROOT_NAME else n
+
+        ret = _(name)
+        for other in others:
+            ret += self.SEPARATOR + _(other)
+
+        return ret
+
+    def print_verb(self, message):
         if self.verbose:
             print(message)
 
-    def _trace_selection(self, group, subgroup, task):
-        self._trace("Selection: %s/%s/%s" %
-                    (self._printable(group), self._printable(subgroup), task))
+    def print_selected(self, group, subgroup, task):
+        self.print_verb("Selected: %s" % self._printable(group, subgroup, task))
 
     # ===========================================
     # Paths and files names
@@ -180,13 +192,14 @@ class Dit:
         path = os.path.expanduser(directory)
         if not os.path.exists(path):
             os.makedirs(path)
+            self.print_verb("Created path: %s" % path)
         self.base_path = path
 
     def _current_path(self):
-        return os.path.join(self.base_path, self.current_fn)
+        return os.path.join(self.base_path, self.CURRENT_FN)
 
     def _index_path(self):
-        return os.path.join(self.base_path, self.index_fn)
+        return os.path.join(self.base_path, self.INDEX_FN)
 
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
@@ -198,6 +211,7 @@ class Dit:
         path = os.path.join(self.base_path, group, subgroup)
         if not os.path.exists(path):
             os.makedirs(path)
+            self.print_verb("Created path: %s" % path)
         return os.path.join(path, task)
 
     # ===========================================
@@ -209,15 +223,15 @@ class Dit:
                 group == self.current_group)
 
     def _is_valid_group_name(self, name):
-        return ((name == self.root_name) or
+        return ((name == self.ROOT_NAME) or
                 (len(name) > 0 and
                  name[0].isalpha() and
-                 name not in [self.current_fn, self.index_fn]))
+                 name not in [self.CURRENT_FN, self.INDEX_FN]))
 
     def _is_valid_task_name(self, name):
         return (len(name) > 0 and
                 name[0].isalpha() and
-                name not in [self.current_fn, self.index_fn])
+                name not in [self.CURRENT_FN, self.INDEX_FN])
 
     # ===========================================
     # I/O
@@ -271,6 +285,7 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
         self._save_json_file(task_fp, data)
+        self.print_verb("Task saved: %s" % self._printable(group, subgroup, task))
 
     @staticmethod
     def _add_note(data, note_text):
@@ -304,6 +319,7 @@ class Dit:
             'task': self.current_task
         }
         self._save_json_file(self._current_path(), current_data)
+        self.print_verb("Current task saved.")
 
     def _load_current(self):
         current = self._load_json_file(self._current_path())
@@ -323,7 +339,7 @@ class Dit:
                 break
         if group_id == -1:
             group_id = len(self.index)
-            self.index.append([group, [[self.root_name, []]]])
+            self.index.append([group, [[self.ROOT_NAME, []]]])
 
         subgroup_id = -1
         for i in range(len(self.index[group_id][1])):
@@ -338,6 +354,7 @@ class Dit:
 
     def _save_index(self):
         self._save_json_file(self._index_path(), self.index)
+        self.print_verb("Index saved.")
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -346,21 +363,21 @@ class Dit:
             self.index = index
 
     def _rebuild_index(self):
-        self.index = [[self.root_name, [[self.root_name, []]]]]
-        c_group = self.root_name
-        c_subgroup = self.root_name
+        self.index = [[self.ROOT_NAME, [[self.ROOT_NAME, []]]]]
+        c_group = self.ROOT_NAME
+        c_subgroup = self.ROOT_NAME
         for root, dirs, files in os.walk(self.base_path):
             dirs.sort()
             for f in sorted(files):
                 if not self._is_valid_task_name(f):
                     continue
-                p = root[len(self.base_path) + 1:].split("/")
+                p = root[len(self.base_path) + 1:].split(os.sep)
 
                 p = [i for i in p if i]
                 if len(p) == 0:
-                    group, subgroup = self.root_name, self.root_name
+                    group, subgroup = self.ROOT_NAME, self.ROOT_NAME
                 elif len(p) == 1:
-                    group, subgroup = p[0], self.root_name
+                    group, subgroup = p[0], self.ROOT_NAME
                 elif len(p) == 2:
                     group, subgroup = p
                 else:
@@ -368,8 +385,8 @@ class Dit:
 
                 if group != c_group:
                     c_group = group
-                    c_subgroup = self.root_name
-                    self.index.append([group, [[self.root_name, []]]])
+                    c_subgroup = self.ROOT_NAME
+                    self.index.append([group, [[self.ROOT_NAME, []]]])
 
                 if subgroup != c_subgroup:
                     c_subgroup = subgroup
@@ -377,7 +394,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        self._save_index()
+        self.print_verb("Index rebuilt.")
 
     # ===========================================
     # Export
@@ -524,7 +541,7 @@ class Dit:
         return names
 
     def _gid_parser(self, argv):
-        idxs = argv.pop(0).split(self.separator)
+        idxs = argv.pop(0).split(self.SEPARATOR)
         if len(idxs) > 3:
             raise DitException("Invalid <gid> format.")
 
@@ -534,7 +551,7 @@ class Dit:
         return self._idxs_to_names(idxs, self.index)
 
     def _id_parser(self, argv):
-        idxs = argv.pop(0).split(self.separator)
+        idxs = argv.pop(0).split(self.SEPARATOR)
         if len(idxs) > 3:
             raise DitException("Invalid <id> format.")
 
@@ -548,10 +565,10 @@ class Dit:
         return self._idxs_to_names(idxs, self.index)
 
     def _gname_parser(self, argv):
-        names = argv.pop(0).split(self.separator)
+        names = argv.pop(0).split(self.SEPARATOR)
         if len(names) > 3:
             raise DitException("Invalid <gname> format.")
-        names = [name if name != self.root_name_cmd else self.root_name for name in names]
+        names = [name if name != self.ROOT_NAME_VERB else self.ROOT_NAME for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
@@ -561,16 +578,16 @@ class Dit:
         if task and not self._is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
 
-        if group == self.root_name and subgroup:
-            group, subgroup = subgroup, (self.root_name if task else None)
+        if group == self.ROOT_NAME and subgroup:
+            group, subgroup = subgroup, (self.ROOT_NAME if task else None)
 
         return (group, subgroup, task)
 
     def _name_parser(self, argv):
-        names = argv.pop(0).split(self.separator)
+        names = argv.pop(0).split(self.SEPARATOR)
         if len(names) > 3:
             raise DitException("Invalid <name> format.")
-        names = [name if name != self.root_name_cmd else self.root_name for name in names]
+        names = [name if name != self.ROOT_NAME_VERB else self.ROOT_NAME for name in names]
         names = [None] * (3 - len(names)) + names
 
         group, subgroup, task = names
@@ -579,13 +596,13 @@ class Dit:
             if self.current_group is not None:
                 group = self.current_group
             else:
-                group = self.root_name
+                group = self.ROOT_NAME
 
         if subgroup is None:
             if self.current_subgroup is not None:
                 subgroup = self.current_subgroup
             else:
-                subgroup = self.root_name
+                subgroup = self.ROOT_NAME
 
         for name in [group, subgroup]:
             if not self._is_valid_group_name(name):
@@ -593,7 +610,7 @@ class Dit:
         if not self._is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
 
-        if group == self.root_name and subgroup:
+        if group == self.ROOT_NAME and subgroup:
             group, subgroup = subgroup, group
 
         return (group, subgroup, task)
@@ -608,7 +625,7 @@ class Dit:
             elif not argv[0].startswith("-"):
                 (group, subgroup, task) = self._name_parser(argv)
 
-        self._trace_selection(group, subgroup, task)
+        self.print_selected(group, subgroup, task)
 
         if not task:
             raise NoTaskSpecifiedCondition("No task specified.")
@@ -629,12 +646,12 @@ class Dit:
         if editor:
             input_fp = make_tmp_fp(header, extension)
             with open(input_fp, 'w') as f:
-                f.write('# ' + header + '\n')
+                f.write(self.COMMENT_CHAR + ' ' + header + '\n')
                 if initial:
                     f.write(initial)
             subprocess.run([editor, input_fp])
             with open(input_fp, 'r') as f:
-                lines = [line for line in f.readlines() if not line.startswith('#')]
+                lines = [line for line in f.readlines() if not line.startswith(self.COMMENT_CHAR)]
             return (''.join(lines)).strip()
 
         elif not initial:
@@ -654,7 +671,7 @@ class Dit:
             raise ArgumentException("Missing argument.")
 
         (group, subgroup, task) = self._name_parser(argv)
-        self._trace_selection(group, subgroup, task)
+        self.print_selected(group, subgroup, task)
 
         description = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -694,7 +711,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedCondition as ex:
-            self._trace('Not working on any task.')
+            self.print_verb('Not working on any task.')
             return
 
         if len(argv) > 0:
@@ -762,7 +779,7 @@ class Dit:
             subgroup = self.current_subgroup
             task = self.current_task
 
-        self._trace_selection(group, subgroup, task)
+        self.print_selected(group, subgroup, task)
 
         if output in [None, "stdout"]:
             file = sys.stdout
@@ -844,28 +861,25 @@ class Dit:
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
-        header = "Editing: " + group + '/' + subgroup + '/' + task
+        header = "Editing: " + self._printable(group, subgroup, task)
+
         new_data_raw = self._prompt(header, data_pretty, "json")
 
         if new_data_raw:
-            try:
-                new_data = json.loads(new_data_raw)
-            except json.decoder.JSONDecodeError:
-                print("Invalid JSON.")
-                return
+            new_data = json.loads(new_data_raw)
             if self._is_valid_task_data(new_data):
                 self._save_task(group, subgroup, task, new_data)
             else:
-                print("Wrong data type, should be a Dictionary.")
+                print("Invalid data type, should be a dictionary.")
         else:
-            print("Cancelled.")
+            print("Operation cancelled.")
 
     # ===========================================
     # Main
 
     def configure(self, argv):
         rebuild_index = False
-        directory = self.default_directory
+        directory = self.DEFAULT_DIR
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
@@ -884,6 +898,7 @@ class Dit:
         self._setup_base_path(directory)
         if rebuild_index:
             self._rebuild_index()
+            self._save_index()
         self._load_current()
         self._load_index()
         return True
@@ -937,6 +952,8 @@ def main():
         # this was probably caused by a pop on an empty argument list
         print("ERROR: Missing argument.")
         print("Type 'dit --help' for usage details.")
+    except json.decoder.JSONDecodeError:
+        print("ERROR: Invalid JSON.")
 
 if __name__ == "__main__":
     main()
