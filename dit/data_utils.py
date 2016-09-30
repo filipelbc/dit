@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 # Auxiliary
 
-_fmt = r'%Y-%m-%d %H:%M:%S'
+DATETIME_FORMAT = r'%Y-%m-%d %H:%M:%S'
 
 
 def _timedelta_to_str(d):
@@ -24,8 +24,8 @@ def _timedelta_to_str(d):
 
 
 def _to_timedelta(log):
-    t_in = datetime.strptime(log['in'], _fmt)
-    t_out = datetime.strptime(log['out'], _fmt)
+    t_in = datetime.strptime(log['in'], DATETIME_FORMAT)
+    t_out = datetime.strptime(log['out'], DATETIME_FORMAT)
     return t_out - t_in
 
 # Main Utilities
@@ -43,17 +43,17 @@ def time_spent_on(logbook):
 # integer
 if os.path.isfile('DIT_TESTING'):
 
-    _base_now = datetime(2016, 9, 10, 18, 57, 49, 0)
+    BASE_NOW = datetime(2016, 9, 10, 18, 57, 49, 0)
 
     def now():
         with open('DIT_TESTING', 'r') as f:
-            _DIT_TESTING = int(f.read())
-        now = _base_now + timedelta(seconds=(_DIT_TESTING * 10))
+            i = int(f.read())
+        now = BASE_NOW + timedelta(seconds=(i * 10))
         with open('DIT_TESTING', 'w') as f:
-            f.write(str(_DIT_TESTING + 1))
-        return now.strftime(_fmt)
+            f.write(str(i + 1))
+        return now.strftime(DATETIME_FORMAT)
 
 else:
 
     def now():
-        return datetime.now().strftime(_fmt)
+        return datetime.now().strftime(DATETIME_FORMAT)
