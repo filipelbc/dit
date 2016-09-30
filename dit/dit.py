@@ -319,7 +319,10 @@ class Dit:
             'task': self.current_task
         }
         self._save_json_file(self._current_path(), current_data)
-        self.print_verb("Current task saved.")
+        self.print_verb("Current saved: %s" %
+                        self._printable(self.current_group,
+                                        self.current_subgroup,
+                                        self.current_task))
 
     def _load_current(self):
         current = self._load_json_file(self._current_path())
