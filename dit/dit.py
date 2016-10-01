@@ -378,7 +378,7 @@ class Dit:
 
     def _save_index(self):
         self._save_json_file(self._index_path(), self.index)
-        self.print_verb("Index saved.")
+        self.print_verb("INDEX saved.")
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -418,7 +418,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        self.print_verb("Index rebuilt.")
+        self.print_verb("INDEX rebuilt.")
 
     # ===========================================
     # Export
@@ -499,25 +499,37 @@ class Dit:
         if len(logbook) > 0:
             last = logbook[-1]
             if not last['out']:
-                print("Already clocked in")
+                print("Already clocked in.")
                 return
         data['logbook'] = logbook + [{'in': now(), 'out': None}]
 
     def _clock_out(self, data):
         logbook = data.get('logbook', [])
         if len(logbook) == 0:
-            print("Already clocked out")
+            print("Already clocked out.")
             return
         last = logbook[-1]
         if last['out']:
-            print("Already clocked out")
+            print("Already clocked out.")
             return
         last['out'] = now()
         data['logbook'] = logbook
 
+    def _clock_cancel(self, data):
+        logbook = data.get('logbook', [])
+        if len(logbook) == 0:
+            print("Was not clocked in.")
+            return
+        last = logbook[-1]
+        if last['out']:
+            print("Was not clocked in.")
+            return
+        logbook.pop(-1)
+        data['logbook'] = logbook
+
     def _conclude(self, data):
         if data.get('concluded_at', None):
-            print("Already concluded")
+            print("Already concluded.")
             return
         data['concluded_at'] = now()
 
@@ -772,7 +784,7 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    def halt(self, argv, conclude=False):
+    def halt(self, argv, conclude=False, cancel=False):
         try:
             (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedCondition as ex:
@@ -784,18 +796,25 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
 
-        self._clock_out(data)
+        if cancel:
+            self._clock_cancel(data)
+        else:
+            self._clock_out(data)
         if conclude:
             self._conclude(data)
         self._save_task(group, subgroup, task, data)
 
         if self._is_current(group, subgroup, task):
             # set previous
-            self._set_previous(group, subgroup, task)
-            self._save_previous()
+            if not cancel:
+                self._set_previous(group, subgroup, task)
+                self._save_previous()
             # clear current
             self.current_task = None
             self._save_current()
+
+    def cancel(self, argv):
+        self.halt(argv, cancel=True)
 
     def switchto(self, argv):
         self.halt([])
@@ -984,6 +1003,8 @@ class Dit:
                 self.switchto(argv)
             elif cmd in ["halt", "h"]:
                 self.halt(argv)
+            elif cmd in ["cancel", "x"]:
+                self.cancel(argv)
             elif cmd in ["conclude", "c"]:
                 self.conclude(argv)
             elif cmd in ["status", "q"]:
