@@ -2,32 +2,35 @@
 $ dit -v -d ./ditdir workon t1
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././t1
+CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././_
+PREVIOUS saved: ././t1
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././t1
+CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././_
+PREVIOUS saved: ././t1
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././t1
+CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././_
+PREVIOUS saved: ././t1
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././_
@@ -41,22 +44,24 @@ Task saved: ././t1
 $ dit -v -d ./ditdir workon t10
 Selected: ././t10
 Task saved: ././t10
-Current saved: ././t10
+CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././t10
 Task saved: ././t10
-Current saved: ././_
+PREVIOUS saved: ././t10
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 1
 Selected: ././t4
 Task saved: ././t4
-Current saved: ././t4
+CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: ././t4
 Task saved: ././t4
-Current saved: ././_
+PREVIOUS saved: ././t4
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././_
@@ -86,12 +91,13 @@ Selected: ././_
 $ dit -v -d ./ditdir workon t10
 Selected: ././t10
 Task saved: ././t10
-Current saved: ././t10
+CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir conclude
 Selected: ././t10
 Task saved: ././t10
-Current saved: ././_
+PREVIOUS saved: ././t10
+CURRENT saved: ././_
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././_
@@ -115,13 +121,13 @@ Selected: ././_
 $ dit -v -d ./ditdir workon t7
 Selected: ././t7
 Task saved: ././t7
-Current saved: ././t7
+CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
 Selected: ././t7
 Already clocked in
 Task saved: ././t7
-Current saved: ././t7
+CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././t7
@@ -134,7 +140,7 @@ Selected: ././t7
 $ dit -v -d ./ditdir workon 0/0/0
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././t1
+CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././t1
@@ -148,26 +154,29 @@ Selected: ././t1
 $ dit -v -d ./ditdir switchto g4/t5
 Selected: ././t1
 Task saved: ././t1
-Current saved: ././_
+PREVIOUS saved: ././t1
+CURRENT saved: ././_
 Selected: g4/./t5
 Task saved: g4/./t5
-Current saved: g4/./t5
+CURRENT saved: g4/./t5
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 4/0/0
 Selected: g4/./t5
 Task saved: g4/./t5
-Current saved: g4/./_
+PREVIOUS saved: g4/./t5
+CURRENT saved: g4/./_
 Selected: g5/./t6
 Task saved: g5/./t6
-Current saved: g5/./t6
+CURRENT saved: g5/./t6
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 1/0
 Selected: g5/./t6
 Task saved: g5/./t6
-Current saved: g5/./_
+PREVIOUS saved: g5/./t6
+CURRENT saved: g5/./_
 Selected: g5/g6/t8
 Task saved: g5/g6/t8
-Current saved: g5/g6/t8
+CURRENT saved: g5/g6/t8
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: g5/g6/t8
@@ -184,7 +193,8 @@ Selected: g5/g6/t8
 $ dit -v -d ./ditdir halt
 Selected: g5/g6/t8
 Task saved: g5/g6/t8
-Current saved: g5/g6/_
+PREVIOUS saved: g5/g6/t8
+CURRENT saved: g5/g6/_
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: g5/g6/_
@@ -216,7 +226,7 @@ Type 'dit --help' for usage details.
 $ dit -v -d ./ditdir workon //t10
 Selected: ././t10
 Task saved: ././t10
-Current saved: ././t10
+CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././t10
