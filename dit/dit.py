@@ -867,6 +867,9 @@ class Dit:
             subgroup = self.current_subgroup
             task = self.current_task
 
+        if statussing and task:
+            options['concluded'] = True
+
         self.print_selected(group, subgroup, task)
 
         if output in [None, "stdout"]:
