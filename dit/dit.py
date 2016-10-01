@@ -28,6 +28,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --new, -n
         Same as 'new' followed by 'workon'.
 
+    cancel [<id> | <name>]
+      Cancels the clocking of the CURRENT task or the specified one. Clears
+      CURRENT task.
+
     halt [<id> | <name>]
       Stops clocking the CURRENT task or the specified one. Sets PREVIOUS task.
       Clears CURRENT task.
