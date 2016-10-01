@@ -17,36 +17,31 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   --help, -h
     Prints this message and quits.
 
-  <command>:
+  Workflow <command>'s:
 
     new <name> [-: "description"]
-      Creates a new task. You will be prompted for the "descroption" if it is
+      Creates a new task. You will be prompted for the "description" if it is
       not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
-      Clocks in the specified task.
+      Starts clocking the specified task. Sets CURRENT task.
       --new, -n
         Same as 'new' followed by 'workon'.
 
     halt [<id> | <name>]
-      Clocks out of the current task or the specified one.
+      Stops clocking the CURRENT task or the specified one. Sets PREVIOUS task.
+      Clears CURRENT task.
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
       Same as 'halt' followed by 'workon'.
 
     conclude [<id> | <name>]
-      Concludes the current task or the selected one. Note that there is a
-      implicit 'halt'.
+      Concludes the CURRENT task or the selected one. Implies a 'halt'.
 
-    status [<gid> | <gname>]
-      Prints an overview of the data for the current task or subgroup, or
-      for the selected one.
-
-    list
-      This is a convenience alias for 'export', with "--output stdout".
+  Printing <command>'s:
 
     export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
-      Prints most of the data for the current subgroup or the selected one.
+      Prints most information of the CURRENT subgroup or the selected one.
       --concluded, -a
         Include concluded tasks.
       --all, -a
@@ -57,15 +52,23 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
         File to which to write. Defaults to "stdout". Format is deduced from
         file extension if present.
 
+    list
+      This is a convenience alias for 'export', with "--output stdout".
+
+    status [<gid> | <gname>]
+      Prints an overview of the data for the CURRENT task or subgroup, or
+      for the selected one.
+
+  Task editing <command>'s:
+
     note [<name> | <id>] [-: "text"]
-      Adds a note to the current task or the specified one.
+      Adds a note to the CURRENT task or the specified one.
 
     set [<name> | <id>] [-: "name" ["value"]]
-      Sets a property for the current task or the specified one. The format
-      of properties are pairs of strings (name, value).
+      Sets a property for the CURRENT task or the specified one.
 
     edit [<name> | <id>]
-      Opens the specified task for manual editing. Uses current task if none is
+      Opens the specified task for manual editing. Uses CURRENT task if none is
       specified. If $EDITOR environment variable is not set it does nothing.
 
   "-:"
@@ -73,43 +76,19 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     $EDITOR environment variable is set, a text file will be open for
     editing the argument; b) otherwise, a simple prompt will be used.
 
-  <name>: ["group-name"/]["subgroup-name"/]"task-name"
-    "a"
-        task "a" in current group/subgroup
-    "b/a"
-        task "a" in subgroup "b" in current group
-    "c/b/a"
-        task "a" in subgroup "b" in group "c"
+  <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
 
-    A name must begin with a letter to be valid. "b" and "c" can be empty
-    or a dot, which means no subgroup and group repectively.
+  <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
 
-  <id>: ["group-id"/]["subgroup-id"/]"task-id"
-    "a"
-        task "id a" in current subgroup in current group
-    "b/a"
-        task "id a" in subgroup "id b" in current group
-    "c/b/a"
-        task "id a" in subgroup "id b" in group "id c"
+  Note that a "-name" must begin with a letter to be valid. Group- and
+  subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
-  <gname>: "group-name"[/"subgroup-name"][/"task-name"]
-    "a"
-        group "a"
-    "a/b"
-        subgroup "b" in group "a"
-    "a/b/c"
-        task "c" in subgroup "b" in group "a"
+  Also note that CURRENT and PREVIOUS are not valid arguments for the command
+  'new'.
 
-    A name must begin with a letter to be valid. "a" and "b" can be empty
-    or a dot, which means no subgroup and group repectively.
+  <id>: [["group-id"/]"subgroup-id"/]"task-id"
 
-  <gid>: "group-id"[/"subgroup-id"][/"task-id"]
-    "a"
-        group "id a"
-    "a/b"
-        subgroup "id b" in group "id a"
-    "a/b/c"
-        task "id c" in subgroup "id b" in group "id a"
+  <gid>: "group-id"[/"subgroup-id"[/"task-id"]]
 """
 
 import sys
@@ -143,7 +122,11 @@ class NoTaskSpecifiedCondition(DitException):
 
 class Dit:
     CURRENT_FN = "CURRENT"
+    PREVIOUS_FN = "PREVIOUS"
     INDEX_FN = "INDEX"
+
+    PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN]
+
     SEPARATOR = "/"
     COMMENT_CHAR = "#"
     ROOT_NAME = ""
@@ -153,6 +136,10 @@ class Dit:
     current_group = None
     current_subgroup = None
     current_task = None
+
+    previous_group = None
+    previous_subgroup = None
+    previous_task = None
 
     index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
 
@@ -198,6 +185,9 @@ class Dit:
     def _current_path(self):
         return os.path.join(self.base_path, self.CURRENT_FN)
 
+    def _previous_path(self):
+        return os.path.join(self.base_path, self.PREVIOUS_FN)
+
     def _index_path(self):
         return os.path.join(self.base_path, self.INDEX_FN)
 
@@ -222,16 +212,21 @@ class Dit:
                 subgroup == self.current_subgroup and
                 group == self.current_group)
 
+    def _is_previous(self, group, subgroup, task):
+        return (task == self.previous_task and
+                subgroup == self.previous_subgroup and
+                group == self.previous_group)
+
     def _is_valid_group_name(self, name):
         return ((name == self.ROOT_NAME) or
                 (len(name) > 0 and
                  name[0].isalpha() and
-                 name not in [self.CURRENT_FN, self.INDEX_FN]))
+                 name not in self.PROHIBITED_FNS))
 
     def _is_valid_task_name(self, name):
         return (len(name) > 0 and
                 name[0].isalpha() and
-                name not in [self.CURRENT_FN, self.INDEX_FN])
+                name not in self.PROHIBITED_FNS)
 
     # ===========================================
     # I/O
@@ -319,7 +314,7 @@ class Dit:
             'task': self.current_task
         }
         self._save_json_file(self._current_path(), current_data)
-        self.print_verb("Current saved: %s" %
+        self.print_verb("CURRENT saved: %s" %
                         self._printable(self.current_group,
                                         self.current_subgroup,
                                         self.current_task))
@@ -330,6 +325,32 @@ class Dit:
             self._set_current(current['group'],
                               current['subgroup'],
                               current['task'])
+
+    # Previous Task
+
+    def _set_previous(self, group, subgroup, task):
+        self.previous_group = group
+        self.previous_subgroup = subgroup
+        self.previous_task = task
+
+    def _save_previous(self):
+        previous_data = {
+            'group': self.previous_group,
+            'subgroup': self.previous_subgroup,
+            'task': self.previous_task
+        }
+        self._save_json_file(self._previous_path(), previous_data)
+        self.print_verb("PREVIOUS saved: %s" %
+                        self._printable(self.previous_group,
+                                        self.previous_subgroup,
+                                        self.previous_task))
+
+    def _load_previous(self):
+        previous = self._load_json_file(self._previous_path())
+        if previous is not None:
+            self._set_previous(previous['group'],
+                               previous['subgroup'],
+                               previous['task'])
 
     # ===========================================
     # Index
@@ -518,6 +539,21 @@ class Dit:
                         break
         return group_idx, subgroup_idx
 
+    def _previous_idxs(self):
+        group_idx, subgroup_idx = None, None
+
+        if self.previous_group is not None:
+            for i, g in enumerate(self.index):
+                if g[0] == self.previous_group:
+                    group_idx = i
+                    break
+            if self.previous_subgroup is not None:
+                for j, s in enumerate(g[1]):
+                    if s[0] == self.previous_subgroup:
+                        subgroup_idx = j
+                        break
+        return group_idx, subgroup_idx
+
     @staticmethod
     def _idxs_to_names(idxs, index):
         if len(idxs) < 3:
@@ -543,8 +579,8 @@ class Dit:
 
         return names
 
-    def _gid_parser(self, argv):
-        idxs = argv.pop(0).split(self.SEPARATOR)
+    def _gid_parser(self, selection):
+        idxs = selection.split(self.SEPARATOR)
         if len(idxs) > 3:
             raise DitException("Invalid <gid> format.")
 
@@ -553,8 +589,8 @@ class Dit:
 
         return self._idxs_to_names(idxs, self.index)
 
-    def _id_parser(self, argv):
-        idxs = argv.pop(0).split(self.SEPARATOR)
+    def _id_parser(self, selection):
+        idxs = selection.split(self.SEPARATOR)
         if len(idxs) > 3:
             raise DitException("Invalid <id> format.")
 
@@ -567,8 +603,8 @@ class Dit:
 
         return self._idxs_to_names(idxs, self.index)
 
-    def _gname_parser(self, argv):
-        names = argv.pop(0).split(self.SEPARATOR)
+    def _gname_parser(self, selection):
+        names = selection.split(self.SEPARATOR)
         if len(names) > 3:
             raise DitException("Invalid <gname> format.")
         names = [name if name != self.ROOT_NAME_VERB else self.ROOT_NAME for name in names]
@@ -586,8 +622,8 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _name_parser(self, argv):
-        names = argv.pop(0).split(self.SEPARATOR)
+    def _name_parser(self, selection):
+        names = selection.split(self.SEPARATOR)
         if len(names) > 3:
             raise DitException("Invalid <name> format.")
         names = [name if name != self.ROOT_NAME_VERB else self.ROOT_NAME for name in names]
@@ -622,11 +658,23 @@ class Dit:
         group = self.current_group
         subgroup = self.current_subgroup
         task = self.current_task
-        if len(argv) > 0:
-            if argv[0][0].isdigit():
-                (group, subgroup, task) = self._id_parser(argv)
-            elif not argv[0].startswith("-"):
-                (group, subgroup, task) = self._name_parser(argv)
+
+        if len(argv) > 0 and not argv[0].startswith("-"):
+            selection = argv.pop(0)
+
+            if selection == self.CURRENT_FN:
+                pass
+
+            elif selection == self.PREVIOUS_FN:
+                group = self.previous_group
+                subgroup = self.previous_subgroup
+                task = self.previous_task
+
+            elif selection[0].isdigit():
+                (group, subgroup, task) = self._id_parser(selection)
+
+            else:
+                (group, subgroup, task) = self._name_parser(selection)
 
         self.print_selected(group, subgroup, task)
 
@@ -636,10 +684,23 @@ class Dit:
         return (group, subgroup, task)
 
     def _forward_parser(self, argv):
-        if argv[0][0].isdigit():
-            return self._gid_parser(argv)
-        elif not argv[0].startswith("-"):
-            return self._gname_parser(argv)
+        selection = argv.pop(0)
+
+        if selection == self.CURRENT_FN:
+            return (self.current_group,
+                    self.current_subgroup,
+                    self.current_task)
+
+        elif selection == self.PREVIOUS_FN:
+            return (self.previous_group,
+                    self.previous_subgroup,
+                    self.previous_task)
+
+        elif selection[0].isdigit():
+            return self._gid_parser(selection)
+
+        elif not selection.startswith("-"):
+            return self._gname_parser(selection)
 
     # ===========================================
     # Input
@@ -673,7 +734,7 @@ class Dit:
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
 
-        (group, subgroup, task) = self._name_parser(argv)
+        (group, subgroup, task) = self._name_parser(argv.pop(0))
         self.print_selected(group, subgroup, task)
 
         description = None
@@ -707,6 +768,7 @@ class Dit:
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
         self._save_task(group, subgroup, task, data)
+        # set current
         self._set_current(group, subgroup, task)
         self._save_current()
 
@@ -728,6 +790,10 @@ class Dit:
         self._save_task(group, subgroup, task, data)
 
         if self._is_current(group, subgroup, task):
+            # set previous
+            self._set_previous(group, subgroup, task)
+            self._save_previous()
+            # clear current
             self.current_task = None
             self._save_current()
 
@@ -903,6 +969,7 @@ class Dit:
             self._rebuild_index()
             self._save_index()
         self._load_current()
+        self._load_previous()
         self._load_index()
         return True
 
