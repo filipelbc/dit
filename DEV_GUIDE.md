@@ -53,7 +53,7 @@ These are the commands for tracking time and managing the flow between the vario
 
 * **Side-effect:** sets `PREVIOUS`
 
-#### **TODO** cancel
+#### **TODO** append
 
 * **Function:** cancels the previous `halt`
 
