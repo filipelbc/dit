@@ -19,3 +19,4 @@ set_env:
 
 ci: clean set_env
 	./runner.sh
+	make -C extra
