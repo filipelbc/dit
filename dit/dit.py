@@ -793,6 +793,7 @@ class Dit:
             description = self._prompt('Description')
 
         self._create_task(group, subgroup, task, description)
+        print("Created: %s" % self._printable(group, subgroup, task))
 
         return (group, subgroup, task)
 
@@ -811,6 +812,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
+        print("Working on: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set previous
@@ -828,7 +830,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedCondition as ex:
-            self.print_verb('Not working on any task.')
+            self.print_verb('Nothing to halt.')
             return
 
         if len(argv) > 0:
@@ -838,10 +840,13 @@ class Dit:
 
         if cancel:
             self._clock_cancel(data)
+            print("Canceled: %s" % self._printable(group, subgroup, task))
         else:
             self._clock_out(data)
+            print("Halted: %s" % self._printable(group, subgroup, task))
         if conclude:
             self._conclude(data)
+            print("Concluded: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current as halted
@@ -853,7 +858,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv or ['CURRENT'])
         except NoTaskSpecifiedCondition as ex:
-            self.print_verb('Not working on any task.')
+            self.print_verb('No task selected.')
             return
 
         if len(argv) > 0:
@@ -861,6 +866,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_append(data)
+        print("Continuing: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current
@@ -976,8 +982,13 @@ class Dit:
         if note_text is None:
             note_text = self._prompt("Description")
 
+        if not note_text:
+            print("Operation cancelled.")
+            return
+
         data = self._load_task_data(group, subgroup, task)
         self._add_note(data, note_text)
+        print("Noted added to: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     def set(self, argv):
@@ -1003,8 +1014,13 @@ class Dit:
             else:
                 prop_value = ''
 
+        if not prop_name:
+            print("Operation cancelled.")
+            return
+
         data = self._load_task_data(group, subgroup, task)
         self._set_property(data, prop_name, prop_value)
+        print("Set property of: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     def edit(self, argv):
@@ -1019,6 +1035,7 @@ class Dit:
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if self._is_valid_task_data(new_data):
+                print("Manually edited: %s" % self._printable(group, subgroup, task))
                 self._save_task(group, subgroup, task, new_data)
             else:
                 print("Invalid data type, should be a dictionary.")
