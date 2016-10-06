@@ -29,16 +29,26 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --new, -n
         Same as 'new' followed by 'workon'.
 
-    cancel [<id> | <name>]
-      Cancels the clocking of the CURRENT task or the specified one. Sets
-      CURRENT to halted.
-
     halt [<id> | <name>]
       Stops clocking the CURRENT task or the specified one. Sets CURRENT to
       halted.
 
+    append [<id> | <name>]
+      Undoes the previous 'halt ...'.
+
+    cancel [<id> | <name>]
+      Cancels the clocking of the CURRENT task or the selected one.
+      (The intention is to undo the previous 'workon', but not all of its
+       side-effects are undoable.)
+
+    resume
+      Same as 'workon CURRENT'.
+
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon'.
+      Same as 'halt' followed by 'workon ...'.
+
+    switchback
+      Same as 'halt' followed by 'workon PREVIOUS'.
 
     conclude [<id> | <name>]
       Concludes the CURRENT task or the selected one. Implies a 'halt'.
@@ -518,6 +528,17 @@ class Dit:
                 return
         data['logbook'] = logbook + [{'in': now(), 'out': None}]
 
+    def _clock_append(self, data):
+        logbook = data.get('logbook', [])
+        if len(logbook) == 0:
+            print("Task has no clocking.")
+            return
+        last = logbook[-1]
+        if not last['out']:
+            print("Already clocked in.")
+            return
+        last['out'] = None
+
     def _clock_out(self, data):
         logbook = data.get('logbook', [])
         if len(logbook) == 0:
@@ -688,7 +709,7 @@ class Dit:
             selection = argv.pop(0)
 
             if selection == self.CURRENT_FN:
-                pass
+                task = self.current_task
 
             elif selection == self.PREVIOUS_FN:
                 group = self.previous_group
@@ -828,12 +849,38 @@ class Dit:
             self.current_halted = True
             self._save_current()
 
+    def append(self, argv):
+        try:
+            (group, subgroup, task) = self._backward_parser(argv or ['CURRENT'])
+        except NoTaskSpecifiedCondition as ex:
+            self.print_verb('Not working on any task.')
+            return
+
+        if len(argv) > 0:
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+
+        data = self._load_task_data(group, subgroup, task)
+        self._clock_append(data)
+        self._save_task(group, subgroup, task, data)
+
+        # set current
+        if self._is_current(group, subgroup, task):
+            self._set_current(group, subgroup, task)
+            self._save_current()
+
     def cancel(self, argv):
         self.halt(argv, cancel=True)
+
+    def resume(self, argv):
+        self.workon(['CURRENT'])
 
     def switchto(self, argv):
         self.halt([])
         self.workon(argv)
+
+    def switchback(self, argv):
+        self.halt([])
+        self.workon(["PREVIOUS"])
 
     def conclude(self, argv):
         self.halt(argv, conclude=True)
@@ -1015,12 +1062,18 @@ class Dit:
                 self.new(argv)
             elif cmd in ["workon", "w"]:
                 self.workon(argv)
-            elif cmd in ["switchto", "s"]:
-                self.switchto(argv)
             elif cmd in ["halt", "h"]:
                 self.halt(argv)
+            elif cmd in ["append", "a"]:
+                self.append(argv)
             elif cmd in ["cancel", "x"]:
                 self.cancel(argv)
+            elif cmd in ["resume", "r"]:
+                self.resume(argv)
+            elif cmd in ["switchto", "s"]:
+                self.switchto(argv)
+            elif cmd in ["switchback", "b"]:
+                self.switchback(argv)
             elif cmd in ["conclude", "c"]:
                 self.conclude(argv)
             elif cmd in ["status", "q"]:
