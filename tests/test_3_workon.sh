@@ -11,6 +11,17 @@
 ./ditcmd halt
 ./ditcmd halt 't1'
 
+./ditcmd workon '0'
+./ditcmd cancel
+./ditcmd status
+
+./ditcmd workon 't1'
+./ditcmd cancel 't10'
+./ditcmd workon 't10'
+./ditcmd cancel 't1'
+./ditcmd cancel
+./ditcmd list
+
 ./ditcmd workon 't10'
 ./ditcmd halt
 ./ditcmd workon '1'

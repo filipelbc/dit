@@ -38,8 +38,87 @@ Not working on any task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
 Selected: ././t1
-Already clocked out
+Already clocked out.
 Task saved: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir workon 0
+Selected: ././t1
+Task saved: ././t1
+CURRENT saved: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir cancel
+Selected: ././t1
+Task saved: ././t1
+CURRENT saved: ././_
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Selected: ././_
+
+[0/0/0] t1
+  . . t1
+  * Created at: 2016-09-10 18:57:59
+  * Updated at: 2016-09-10 19:02:09
+  ~ Time spent: 1m0s
+
+[0/0/1] t4
+  . . t4
+  * Created at: 2016-09-10 18:58:29
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+
+[0/0/3] t10
+  . . t10
+  * Created at: 2016-09-10 18:59:29
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t1
+Selected: ././t1
+Task saved: ././t1
+CURRENT saved: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir cancel t10
+Selected: ././t10
+Was not clocked in.
+Task saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t10
+Selected: ././t10
+Task saved: ././t10
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir cancel t1
+Selected: ././t1
+Task saved: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir cancel
+Selected: ././t10
+Task saved: ././t10
+CURRENT saved: ././_
+---------------------------------------------------
+$ dit -v -d ./ditdir list
+Selected: ././_
+
+[0/0/0] t1
+  . . t1
+  * Created at: 2016-09-10 18:57:59
+  ~ Time spent: 1m0s
+  Logbook:
+  + [2016-09-10 18:59:39]--[2016-09-10 18:59:59]
+  + [2016-09-10 19:00:19]--[2016-09-10 19:00:39]
+  + [2016-09-10 19:00:59]--[2016-09-10 19:01:19]
+
+[0/0/1] t4
+  . . t4
+  * Created at: 2016-09-10 18:58:29
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+
+[0/0/3] t10
+  . . t10
+  * Created at: 2016-09-10 18:59:29
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Selected: ././t10
@@ -69,13 +148,13 @@ Selected: ././_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:01:39
+  * Updated at: 2016-09-10 19:03:09
   ~ Time spent: 1m0s
 
 [0/0/1] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
-  * Updated at: 2016-09-10 19:02:59
+  * Updated at: 2016-09-10 19:04:39
   ~ Time spent: 20s
 
 [0/0/2] t7
@@ -85,7 +164,7 @@ Selected: ././_
 [0/0/3] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
-  * Updated at: 2016-09-10 19:02:19
+  * Updated at: 2016-09-10 19:03:59
   ~ Time spent: 20s
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
@@ -105,13 +184,13 @@ Selected: ././_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:01:39
+  * Updated at: 2016-09-10 19:03:09
   ~ Time spent: 1m0s
 
 [0/0/1] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
-  * Updated at: 2016-09-10 19:02:59
+  * Updated at: 2016-09-10 19:04:39
   ~ Time spent: 20s
 
 [0/0/2] t7
@@ -125,7 +204,7 @@ CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
 Selected: ././t7
-Already clocked in
+Already clocked in.
 Task saved: ././t7
 CURRENT saved: ././t7
 ---------------------------------------------------
@@ -135,7 +214,7 @@ Selected: ././t7
 [0/0/2] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:04:19
+  * Updated at: 2016-09-10 19:05:59
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0/0/0
 Selected: ././t1
@@ -148,7 +227,7 @@ Selected: ././t1
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:04:39
+  * Updated at: 2016-09-10 19:06:19
   ~ Time spent: 1m0s
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto g4/t5
@@ -188,7 +267,7 @@ Selected: g5/g6/t8
 [4/1/0] t8
   g5 g6 t8
   * Created at: 2016-09-10 18:59:09
-  * Updated at: 2016-09-10 19:06:39
+  * Updated at: 2016-09-10 19:08:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Selected: g5/g6/t8
@@ -206,7 +285,7 @@ Selected: g5/g6/_
 [4/1/0] t8
   g5 g6 t8
   * Created at: 2016-09-10 18:59:09
-  * Updated at: 2016-09-10 19:06:59
+  * Updated at: 2016-09-10 19:08:39
   ~ Time spent: 20s
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
@@ -230,3 +309,10 @@ CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Selected: ././t10
+
+[0/0/3] t10
+  . . t10
+  * Created at: 2016-09-10 18:59:29
+  * Updated at: 2016-09-10 19:08:59
+  * Concluded at: 2016-09-10 19:05:19
+  ~ Time spent: 40s

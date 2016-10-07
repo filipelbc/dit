@@ -2,44 +2,44 @@
 $ dit -v -d ./ditdir new t1 -: '. . t1'
 Created path: ./ditdir
 Selected: ././t1
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g1/t2 -: 'g1 . t2'
 Selected: g1/./t2
 Created path: ./ditdir/g1/
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g2/g3/t3 -: 'g2 g3 t3'
 Selected: g2/g3/t3
 Created path: ./ditdir/g2/g3
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new /t4 -: '. . t4'
 Selected: ././t4
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new /g4/t5 -: 'g4 . t5'
 Selected: g4/./t5
 Created path: ./ditdir/g4/
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g5//t6 -: 'g5 . t6'
 Selected: g5/./t6
 Created path: ./ditdir/g5/
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new //t7 -: '. . t7'
 Selected: ././t7
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g5/g6/t8 -: 'g5 g6 t8'
 Selected: g5/g6/t8
 Created path: ./ditdir/g5/g6
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g5//t9 -: 'g5 . t9'
 Selected: g5/./t9
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
 Selected: ././t7
@@ -48,7 +48,7 @@ Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t10 -: '. . t10'
 Selected: ././t10
-Index saved.
+INDEX saved.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new :abu -: 'fails: invalid task name'
 ERROR: Invalid task name: :abu
