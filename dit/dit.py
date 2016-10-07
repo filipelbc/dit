@@ -337,8 +337,9 @@ class Dit:
             'halted': self.current_halted
         }
         self._save_json_file(self._current_path(), current_data)
-        self.print_verb("CURRENT saved: %s%s" %
-                        (self._printable(self.current_group,
+        self.print_verb("%s saved: %s%s" %
+                        (self.CURRENT_FN,
+                         self._printable(self.current_group,
                                          self.current_subgroup,
                                          self.current_task),
                          " (halted)" if self.current_halted else ""))
@@ -365,10 +366,11 @@ class Dit:
             'task': self.previous_task
         }
         self._save_json_file(self._previous_path(), previous_data)
-        self.print_verb("PREVIOUS saved: %s" %
-                        self._printable(self.previous_group,
-                                        self.previous_subgroup,
-                                        self.previous_task))
+        self.print_verb("%s saved: %s" %
+                        (self.PREVIOUS_FN,
+                         self._printable(self.previous_group,
+                                         self.previous_subgroup,
+                                         self.previous_task)))
 
     def _load_previous(self):
         previous = self._load_json_file(self._previous_path())
@@ -403,7 +405,7 @@ class Dit:
 
     def _save_index(self):
         self._save_json_file(self._index_path(), self.index)
-        self.print_verb("INDEX saved.")
+        self.print_verb("%s saved." % self.INDEX_FN)
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -443,7 +445,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        self.print_verb("INDEX rebuilt.")
+        self.print_verb("%s rebuilt." % self.INDEX_FN)
 
     # ===========================================
     # Export
@@ -856,7 +858,7 @@ class Dit:
 
     def append(self, argv):
         try:
-            (group, subgroup, task) = self._backward_parser(argv or ['CURRENT'])
+            (group, subgroup, task) = self._backward_parser(argv or [self.CURRENT_FN])
         except NoTaskSpecifiedCondition as ex:
             self.print_verb('No task selected.')
             return
@@ -878,7 +880,7 @@ class Dit:
         self.halt(argv, cancel=True)
 
     def resume(self, argv):
-        self.workon(['CURRENT'])
+        self.workon([self.CURRENT_FN])
 
     def switchto(self, argv):
         self.halt([])
@@ -886,7 +888,7 @@ class Dit:
 
     def switchback(self, argv):
         self.halt([])
-        self.workon(["PREVIOUS"])
+        self.workon([self.PREVIOUS_FN])
 
     def conclude(self, argv):
         self.halt(argv, conclude=True)
