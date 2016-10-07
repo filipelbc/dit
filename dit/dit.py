@@ -24,17 +24,18 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
-      Starts clocking the specified task. Sets CURRENT task.
+      Starts clocking the specified task. Sets PREVIOUS if selected task is
+      different from CURRENT one. Sets CURRENT task.
       --new, -n
         Same as 'new' followed by 'workon'.
 
     cancel [<id> | <name>]
-      Cancels the clocking of the CURRENT task or the specified one. Clears
-      CURRENT task.
+      Cancels the clocking of the CURRENT task or the specified one. Sets
+      CURRENT to halted.
 
     halt [<id> | <name>]
-      Stops clocking the CURRENT task or the specified one. Sets PREVIOUS task.
-      Clears CURRENT task.
+      Stops clocking the CURRENT task or the specified one. Sets CURRENT to
+      halted.
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
       Same as 'halt' followed by 'workon'.
@@ -140,6 +141,7 @@ class Dit:
     current_group = None
     current_subgroup = None
     current_task = None
+    current_halted = True
 
     previous_group = None
     previous_subgroup = None
@@ -306,29 +308,38 @@ class Dit:
 
     # Current Task
 
-    def _set_current(self, group, subgroup, task):
+    def _use_current(self):
+        return (self.current_group,
+                self.current_subgroup,
+                None if self.current_halted else self.current_task)
+
+    def _set_current(self, group, subgroup, task, halted=False):
         self.current_group = group
         self.current_subgroup = subgroup
         self.current_task = task
+        self.current_halted = halted
 
     def _save_current(self):
         current_data = {
             'group': self.current_group,
             'subgroup': self.current_subgroup,
-            'task': self.current_task
+            'task': self.current_task,
+            'halted': self.current_halted
         }
         self._save_json_file(self._current_path(), current_data)
-        self.print_verb("CURRENT saved: %s" %
-                        self._printable(self.current_group,
-                                        self.current_subgroup,
-                                        self.current_task))
+        self.print_verb("CURRENT saved: %s%s" %
+                        (self._printable(self.current_group,
+                                         self.current_subgroup,
+                                         self.current_task),
+                         " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
         current = self._load_json_file(self._current_path())
         if current is not None:
             self._set_current(current['group'],
                               current['subgroup'],
-                              current['task'])
+                              current['task'],
+                              current['halted'])
 
     # Previous Task
 
@@ -671,9 +682,7 @@ class Dit:
         return (group, subgroup, task)
 
     def _backward_parser(self, argv):
-        group = self.current_group
-        subgroup = self.current_subgroup
-        task = self.current_task
+        group, subgroup, task = self._use_current()
 
         if len(argv) > 0 and not argv[0].startswith("-"):
             selection = argv.pop(0)
@@ -703,9 +712,7 @@ class Dit:
         selection = argv.pop(0)
 
         if selection == self.CURRENT_FN:
-            return (self.current_group,
-                    self.current_subgroup,
-                    self.current_task)
+            return self._use_current()
 
         elif selection == self.PREVIOUS_FN:
             return (self.previous_group,
@@ -784,6 +791,14 @@ class Dit:
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
         self._save_task(group, subgroup, task, data)
+
+        # set previous
+        if not self._is_current(group, subgroup, task):
+            self._set_previous(self.current_group,
+                               self.current_subgroup,
+                               self.current_task)
+            self._save_previous()
+
         # set current
         self._set_current(group, subgroup, task)
         self._save_current()
@@ -808,13 +823,9 @@ class Dit:
             self._conclude(data)
         self._save_task(group, subgroup, task, data)
 
+        # set current as halted
         if self._is_current(group, subgroup, task):
-            # set previous
-            if not cancel:
-                self._set_previous(group, subgroup, task)
-                self._save_previous()
-            # clear current
-            self.current_task = None
+            self.current_halted = True
             self._save_current()
 
     def cancel(self, argv):
@@ -867,9 +878,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % opt)
 
         if statussing and group is None:
-            group = self.current_group
-            subgroup = self.current_subgroup
-            task = self.current_task
+            group, subgroup, task = self._use_current()
 
         if statussing and task:
             options['concluded'] = True
