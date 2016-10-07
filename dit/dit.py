@@ -29,16 +29,26 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --new, -n
         Same as 'new' followed by 'workon'.
 
-    cancel [<id> | <name>]
-      Cancels the clocking of the CURRENT task or the specified one. Sets
-      CURRENT to halted.
-
     halt [<id> | <name>]
       Stops clocking the CURRENT task or the specified one. Sets CURRENT to
       halted.
 
+    append [<id> | <name>]
+      Undoes the previous 'halt ...'.
+
+    cancel [<id> | <name>]
+      Cancels the clocking of the CURRENT task or the selected one.
+      (The intention is to undo the previous 'workon', but not all of its
+       side-effects are undoable.)
+
+    resume
+      Same as 'workon CURRENT'.
+
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon'.
+      Same as 'halt' followed by 'workon ...'.
+
+    switchback
+      Same as 'halt' followed by 'workon PREVIOUS'.
 
     conclude [<id> | <name>]
       Concludes the CURRENT task or the selected one. Implies a 'halt'.
@@ -327,8 +337,9 @@ class Dit:
             'halted': self.current_halted
         }
         self._save_json_file(self._current_path(), current_data)
-        self.print_verb("CURRENT saved: %s%s" %
-                        (self._printable(self.current_group,
+        self.print_verb("%s saved: %s%s" %
+                        (self.CURRENT_FN,
+                         self._printable(self.current_group,
                                          self.current_subgroup,
                                          self.current_task),
                          " (halted)" if self.current_halted else ""))
@@ -355,10 +366,11 @@ class Dit:
             'task': self.previous_task
         }
         self._save_json_file(self._previous_path(), previous_data)
-        self.print_verb("PREVIOUS saved: %s" %
-                        self._printable(self.previous_group,
-                                        self.previous_subgroup,
-                                        self.previous_task))
+        self.print_verb("%s saved: %s" %
+                        (self.PREVIOUS_FN,
+                         self._printable(self.previous_group,
+                                         self.previous_subgroup,
+                                         self.previous_task)))
 
     def _load_previous(self):
         previous = self._load_json_file(self._previous_path())
@@ -393,7 +405,7 @@ class Dit:
 
     def _save_index(self):
         self._save_json_file(self._index_path(), self.index)
-        self.print_verb("INDEX saved.")
+        self.print_verb("%s saved." % self.INDEX_FN)
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -433,7 +445,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        self.print_verb("INDEX rebuilt.")
+        self.print_verb("%s rebuilt." % self.INDEX_FN)
 
     # ===========================================
     # Export
@@ -517,6 +529,17 @@ class Dit:
                 print("Already clocked in.")
                 return
         data['logbook'] = logbook + [{'in': now(), 'out': None}]
+
+    def _clock_append(self, data):
+        logbook = data.get('logbook', [])
+        if len(logbook) == 0:
+            print("Task has no clocking.")
+            return
+        last = logbook[-1]
+        if not last['out']:
+            print("Already clocked in.")
+            return
+        last['out'] = None
 
     def _clock_out(self, data):
         logbook = data.get('logbook', [])
@@ -688,7 +711,7 @@ class Dit:
             selection = argv.pop(0)
 
             if selection == self.CURRENT_FN:
-                pass
+                task = self.current_task
 
             elif selection == self.PREVIOUS_FN:
                 group = self.previous_group
@@ -772,6 +795,7 @@ class Dit:
             description = self._prompt('Description')
 
         self._create_task(group, subgroup, task, description)
+        print("Created: %s" % self._printable(group, subgroup, task))
 
         return (group, subgroup, task)
 
@@ -790,6 +814,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
+        print("Working on: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set previous
@@ -807,7 +832,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedCondition as ex:
-            self.print_verb('Not working on any task.')
+            self.print_verb('Nothing to halt.')
             return
 
         if len(argv) > 0:
@@ -817,10 +842,13 @@ class Dit:
 
         if cancel:
             self._clock_cancel(data)
+            print("Canceled: %s" % self._printable(group, subgroup, task))
         else:
             self._clock_out(data)
+            print("Halted: %s" % self._printable(group, subgroup, task))
         if conclude:
             self._conclude(data)
+            print("Concluded: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current as halted
@@ -828,12 +856,39 @@ class Dit:
             self.current_halted = True
             self._save_current()
 
+    def append(self, argv):
+        try:
+            (group, subgroup, task) = self._backward_parser(argv or [self.CURRENT_FN])
+        except NoTaskSpecifiedCondition as ex:
+            self.print_verb('No task selected.')
+            return
+
+        if len(argv) > 0:
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+
+        data = self._load_task_data(group, subgroup, task)
+        self._clock_append(data)
+        print("Continuing: %s" % self._printable(group, subgroup, task))
+        self._save_task(group, subgroup, task, data)
+
+        # set current
+        if self._is_current(group, subgroup, task):
+            self._set_current(group, subgroup, task)
+            self._save_current()
+
     def cancel(self, argv):
         self.halt(argv, cancel=True)
+
+    def resume(self, argv):
+        self.workon([self.CURRENT_FN])
 
     def switchto(self, argv):
         self.halt([])
         self.workon(argv)
+
+    def switchback(self, argv):
+        self.halt([])
+        self.workon([self.PREVIOUS_FN])
 
     def conclude(self, argv):
         self.halt(argv, conclude=True)
@@ -929,8 +984,13 @@ class Dit:
         if note_text is None:
             note_text = self._prompt("Description")
 
+        if not note_text:
+            print("Operation cancelled.")
+            return
+
         data = self._load_task_data(group, subgroup, task)
         self._add_note(data, note_text)
+        print("Noted added to: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     def set(self, argv):
@@ -956,8 +1016,13 @@ class Dit:
             else:
                 prop_value = ''
 
+        if not prop_name:
+            print("Operation cancelled.")
+            return
+
         data = self._load_task_data(group, subgroup, task)
         self._set_property(data, prop_name, prop_value)
+        print("Set property of: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     def edit(self, argv):
@@ -972,6 +1037,7 @@ class Dit:
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if self._is_valid_task_data(new_data):
+                print("Manually edited: %s" % self._printable(group, subgroup, task))
                 self._save_task(group, subgroup, task, new_data)
             else:
                 print("Invalid data type, should be a dictionary.")
@@ -1015,12 +1081,18 @@ class Dit:
                 self.new(argv)
             elif cmd in ["workon", "w"]:
                 self.workon(argv)
-            elif cmd in ["switchto", "s"]:
-                self.switchto(argv)
             elif cmd in ["halt", "h"]:
                 self.halt(argv)
+            elif cmd in ["append", "a"]:
+                self.append(argv)
             elif cmd in ["cancel", "x"]:
                 self.cancel(argv)
+            elif cmd in ["resume", "r"]:
+                self.resume(argv)
+            elif cmd in ["switchto", "s"]:
+                self.switchto(argv)
+            elif cmd in ["switchback", "b"]:
+                self.switchback(argv)
             elif cmd in ["conclude", "c"]:
                 self.conclude(argv)
             elif cmd in ["status", "q"]:
