@@ -16,7 +16,9 @@ make install
 dit [--verbose, -v] [--directory, -d "path"] <command>
 
 --directory, -d
-  Specifies the directory where the tasks are stored. Defaults to '~/.dit'.
+  Specifies the directory where the tasks are stored. If not specified, the
+  closest ".dit" directory in the tree is used. If not found, '~/.dit' is
+  used.
 
 --verbose, -v
   Prints detailed information of what is being done.
@@ -28,36 +30,46 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
 --help, -h
   Prints this message and quits.
 
-<command>:
+Workflow <command>'s:
 
   new <name> [-: "description"]
-    Creates a new task. You will be prompted for the "descroption" if it is
+    Creates a new task. You will be prompted for the "description" if it is
     not provided.
 
   workon <id> | <name> | --new, -n <name> [-: "description"]
-    Clocks in the specified task.
+    Starts clocking the specified task. Sets PREVIOUS if selected task is
+    different from CURRENT one. Sets CURRENT task.
     --new, -n
       Same as 'new' followed by 'workon'.
 
   halt [<id> | <name>]
-    Clocks out of the current task or the specified one.
+    Stops clocking the CURRENT task or the specified one. Sets CURRENT to
+    halted.
+
+  append [<id> | <name>]
+    Undoes the previous 'halt ...'.
+
+  cancel [<id> | <name>]
+    Cancels the clocking of the CURRENT task or the selected one.
+    (The intention is to undo the previous 'workon', but not all of its
+     side-effects are undoable.)
+
+  resume
+    Same as 'workon CURRENT'.
 
   switchto <id> | <name> | --new, -n <name> [-: "description"]
-    Same as 'halt' followed by 'workon'.
+    Same as 'halt' followed by 'workon ...'.
+
+  switchback
+    Same as 'halt' followed by 'workon PREVIOUS'.
 
   conclude [<id> | <name>]
-    Concludes the current task or the selected one. Note that there is a
-    implicit 'halt'.
+    Concludes the CURRENT task or the selected one. Implies a 'halt'.
 
-  status [<gid> | <gname>]
-    Prints an overview of the data for the current task or subgroup, or
-    for the selected one.
-
-  list
-    This is a convenience alias for 'export', with "--output stdout".
+Printing <command>'s:
 
   export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
-    Prints most of the data for the current subgroup or the selected one.
+    Prints most information of the CURRENT subgroup or the selected one.
     --concluded, -a
       Include concluded tasks.
     --all, -a
@@ -68,15 +80,23 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
       File to which to write. Defaults to "stdout". Format is deduced from
       file extension if present.
 
+  list
+    This is a convenience alias for 'export', with "--output stdout".
+
+  status [<gid> | <gname>]
+    Prints an overview of the data for the CURRENT task or subgroup, or
+    for the selected one.
+
+Task editing <command>'s:
+
   note [<name> | <id>] [-: "text"]
-    Adds a note to the current task or the specified one.
+    Adds a note to the CURRENT task or the specified one.
 
   set [<name> | <id>] [-: "name" ["value"]]
-    Sets a property for the current task or the specified one. The format
-    of properties are pairs of strings (name, value).
+    Sets a property for the CURRENT task or the specified one.
 
   edit [<name> | <id>]
-    Opens the specified task for manual editing. Uses current task if none is
+    Opens the specified task for manual editing. Uses CURRENT task if none is
     specified. If $EDITOR environment variable is not set it does nothing.
 
 "-:"
@@ -84,39 +104,17 @@ dit [--verbose, -v] [--directory, -d "path"] <command>
   $EDITOR environment variable is set, a text file will be open for
   editing the argument; b) otherwise, a simple prompt will be used.
 
-<name>: ["group-name"/]["subgroup-name"/]"task-name"
-  "a"
-      task "a" in current group/subgroup
-  "b/a"
-      task "a" in subgroup "b" in current group
-  "c/b/a"
-      task "a" in subgroup "b" in group "c"
+<name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
 
-  Note that "b" and "c" can be empty strings.
+<gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
 
-<id>: ["group-id"/]["subgroup-id"/]"task-id"
-  "a"
-      task "id a" in current subgroup in current group
-  "b/a"
-      task "id a" in subgroup "id b" in current group
-  "c/b/a"
-      task "id a" in subgroup "id b" in group "id c"
+Note that a "-name" must begin with a letter to be valid. Group- and
+subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
-<gname>: "group-name"[/"subgroup-name"][/"task-name"]
-  "a"
-      group "a"
-  "a/b"
-      subgroup "b" in group "a"
-  "a/b/c"
-      task "c" in subgroup "b" in group "a"
+Also note that CURRENT and PREVIOUS are not valid arguments for the command
+'new'.
 
-  Note that "a" and "b" can be empty strings, which means the same as ".".
+<id>: [["group-id"/]"subgroup-id"/]"task-id"
 
-<gid>: "group-id"[/"subgroup-id"][/"task-id"]
-  "a"
-      group "id a"
-  "a/b"
-      subgroup "id b" in group "id a"
-  "a/b/c"
-      task "id c" in subgroup "id b" in group "id a"
+<gid>: "group-id"[/"subgroup-id"[/"task-id"]]
 ```
