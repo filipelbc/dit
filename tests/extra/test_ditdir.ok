@@ -1,10 +1,12 @@
 ---------------------------------------------------
 $ dit -v list --all
-Created path: ~/.dit
+Created directory: ~/.dit
+Using directory: ~/.dit
 Selected: _/_/_
 ---------------------------------------------------
 $ dit -v -d ditdir list --all
-Created path: ditdir
+Created directory: ditdir
+Using directory: ditdir
 Selected: _/_/_
 ---------------------------------------------------
 $ tar -xf test_ditdir.tgz
@@ -12,6 +14,7 @@ $ tar -xf test_ditdir.tgz
 $ mv .dit ../
 ---------------------------------------------------
 $ dit -v list --all
+Using directory: ../.dit
 Selected: _/_/_
 
 [0/0/0] Task 1
@@ -19,6 +22,7 @@ Selected: _/_/_
   * Created at: 2016-01-01 00:00:00
 ---------------------------------------------------
 $ dit -v -d ditdir list --all
+Using directory: ditdir
 Selected: _/_/_
 
 [0/0/0] Task 2
