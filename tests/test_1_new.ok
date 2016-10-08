@@ -1,6 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t1 -: '. . t1'
-Created directory: ditdir
+Created: ditdir
 Using directory: ditdir
 Selected: ././t1
 INDEX saved.
@@ -9,14 +9,14 @@ Created: ././t1
 $ dit -v -d ./ditdir new g1/t2 -: 'g1 . t2'
 Using directory: ditdir
 Selected: g1/./t2
-Created path: ./ditdir/g1/
+Created: ditdir/g1
 INDEX saved.
 Created: g1/./t2
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g2/g3/t3 -: 'g2 g3 t3'
 Using directory: ditdir
 Selected: g2/g3/t3
-Created path: ./ditdir/g2/g3
+Created: ditdir/g2/g3
 INDEX saved.
 Created: g2/g3/t3
 ---------------------------------------------------
@@ -29,14 +29,14 @@ Created: ././t4
 $ dit -v -d ./ditdir new /g4/t5 -: 'g4 . t5'
 Using directory: ditdir
 Selected: g4/./t5
-Created path: ./ditdir/g4/
+Created: ditdir/g4
 INDEX saved.
 Created: g4/./t5
 ---------------------------------------------------
 $ dit -v -d ./ditdir new g5//t6 -: 'g5 . t6'
 Using directory: ditdir
 Selected: g5/./t6
-Created path: ./ditdir/g5/
+Created: ditdir/g5
 INDEX saved.
 Created: g5/./t6
 ---------------------------------------------------
@@ -49,7 +49,7 @@ Created: ././t7
 $ dit -v -d ./ditdir new g5/g6/t8 -: 'g5 g6 t8'
 Using directory: ditdir
 Selected: g5/g6/t8
-Created path: ./ditdir/g5/g6
+Created: ditdir/g5/g6
 INDEX saved.
 Created: g5/g6/t8
 ---------------------------------------------------
