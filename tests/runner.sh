@@ -7,9 +7,10 @@ do
     ok=${i%.*}.ok
     diff=${i%.*}.diff
     ./$i > $out 2>&1
-    diff $out $ok > $diff
+    diff -u $ok $out > $diff
     if [ -s $diff ]; then
         echo "fail"
+        cat $diff
         exit 1
     else
         echo "pass"
