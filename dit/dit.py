@@ -191,6 +191,11 @@ class Dit:
     def print_selected(self, group, subgroup, task):
         self.print_verb("Selected: %s" % self._printable(group, subgroup, task))
 
+    def path_to_string(self, path):
+        if path == os.path.expanduser(self.DEFAULT_DIR):
+            return self.DEFAULT_DIR
+        return os.path.relpath(path)
+
     # ===========================================
     # Paths and files names
 
@@ -209,8 +214,8 @@ class Dit:
         path = os.path.expanduser(dir)
         if not os.path.exists(path):
             os.makedirs(path)
-            self.print_verb("Created path: %s" %
-                            re.sub("^" + os.path.expanduser("~"), "~", path))
+            self.print_verb("Created directory: %s" % self.path_to_string(path))
+        self.print_verb("Using directory: %s" % self.path_to_string(path))
         self.base_path = path
 
     def _current_path(self):
