@@ -2,6 +2,9 @@
 install:
 	python3 setup.py install
 
+install-completion:
+	install bash-completion/dit /usr/share/bash-completion/completions/
+
 venv:
 	python3 -m virtualenv -p python3 venv
 	venv/bin/pip3 install -r requirements.txt
