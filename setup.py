@@ -40,6 +40,7 @@ setup(
     },
 
     entry_points={
-        'console_scripts': ['dit=dit.dit:main'],
+        'console_scripts': ['dit=dit.dit:main',
+                            'dit-completion=dit.dit:completion'],
     },
 )
