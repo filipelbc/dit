@@ -1,5 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir --rebuild-index
+Using directory: ditdir
 INDEX rebuilt.
 INDEX saved.
 ERROR: Missing command.

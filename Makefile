@@ -8,4 +8,5 @@ venv:
 
 clean:
 	make -C tests clean
+	make -C tests/extra clean
 	rm -rf __pycache__/ venv/ dist/ dit.egg-info/ build/

@@ -1,5 +1,6 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir list -c -v .
+Using directory: ditdir
 Selected: ./_/_
 
 [0/0/0] t1
@@ -48,6 +49,7 @@ Selected: ./_/_
   + [2016-09-10 19:05:39]--[None]
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto t4
+Using directory: ditdir
 Selected: ././t10
 Halted: ././t10
 Task saved: ././t10
@@ -59,6 +61,7 @@ PREVIOUS saved: ././t10
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
+Using directory: ditdir
 Selected: ././t4
 Halted: ././t4
 Task saved: ././t4
@@ -70,6 +73,7 @@ PREVIOUS saved: ././t4
 CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
+Using directory: ditdir
 Selected: ././t10
 Halted: ././t10
 Task saved: ././t10
@@ -81,30 +85,35 @@ PREVIOUS saved: ././t10
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Using directory: ditdir
 Selected: ././t4
 Halted: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir resume
+Using directory: ditdir
 Selected: ././t4
 Working on: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
+Using directory: ditdir
 Selected: ././t4
 Halted: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir append
+Using directory: ditdir
 Selected: ././t4
 Continuing: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto t1
+Using directory: ditdir
 Selected: ././t4
 Halted: ././t4
 Task saved: ././t4
@@ -116,6 +125,7 @@ PREVIOUS saved: ././t4
 CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
+Using directory: ditdir
 Selected: ././t1
 Halted: ././t1
 Task saved: ././t1
@@ -127,6 +137,7 @@ PREVIOUS saved: ././t1
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir resume
+Using directory: ditdir
 Selected: ././t4
 Already clocked in.
 Working on: ././t4
@@ -134,6 +145,7 @@ Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir append
+Using directory: ditdir
 Selected: ././t4
 Already clocked in.
 Continuing: ././t4
@@ -141,12 +153,14 @@ Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel
+Using directory: ditdir
 Selected: ././t4
 Canceled: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
+Using directory: ditdir
 Selected: ././_
 Nothing to halt.
 Selected: ././t1
@@ -156,6 +170,7 @@ PREVIOUS saved: ././t4
 CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir list -c -v .
+Using directory: ditdir
 Selected: ./_/_
 
 [0/0/0] t1

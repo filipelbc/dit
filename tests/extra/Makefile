@@ -1,6 +1,6 @@
 
 all: is_venv clean set_env
-	make -C .. install
+	make -C ../.. install
 	make run
 
 is_venv:
@@ -13,7 +13,7 @@ set_env:
 	@echo "1" > DIT_TESTING
 
 ok: clean is_venv set_env
-	make -C .. install
+	make -C ../.. install
 	rm -f *.ok
 	./oker.sh test_*.sh
 

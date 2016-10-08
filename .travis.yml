@@ -9,3 +9,4 @@ install:
 
 script:
   - make -C tests ci
+  - make -C tests/extra ci

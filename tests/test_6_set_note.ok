@@ -1,43 +1,52 @@
 ---------------------------------------------------
 $ dit -v -d ./ditdir note -: 'this is a note'
+Using directory: ditdir
 Selected: ././t10
 Noted added to: ././t10
 Task saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir note t1 -: 'this is another note'
+Using directory: ditdir
 Selected: ././t1
 Noted added to: ././t1
 Task saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir note t1 -: ''
+Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
 $ dit -v -d ./ditdir note g5/t6 -: 'note note note'
+Using directory: ditdir
 Selected: g5/./t6
 Noted added to: g5/./t6
 Task saved: g5/./t6
 ---------------------------------------------------
 $ dit -v -d ./ditdir set -: foo bar
+Using directory: ditdir
 Selected: ././t10
 Set property of: ././t10
 Task saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir set t1 -: abu din
+Using directory: ditdir
 Selected: ././t1
 Set property of: ././t1
 Task saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir set t1 -: '' ''
+Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
 $ dit -v -d ./ditdir set g5/t6 -: jas min
+Using directory: ditdir
 Selected: g5/./t6
 Set property of: g5/./t6
 Task saved: g5/./t6
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --concluded .
+Using directory: ditdir
 Selected: ./_/_
 
 [0/0/0] t1
@@ -81,6 +90,7 @@ Selected: ./_/_
   + [2016-09-10 19:05:39]--[None]
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5//t6
+Using directory: ditdir
 Selected: g5/./t6
 
 [4] g5

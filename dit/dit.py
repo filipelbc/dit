@@ -5,7 +5,9 @@
 Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   --directory, -d
-    Specifies the directory where the tasks are stored. Defaults to '~/.dit'.
+    Specifies the directory where the tasks are stored. If not specified, the
+    closest ".dit" directory in the tree is used. If not found, '~/.dit' is
+    used.
 
   --verbose, -v
     Prints detailed information of what is being done.
@@ -109,6 +111,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 import sys
 import json
 import os
+import re
 import subprocess
 
 from importlib import import_module
@@ -188,14 +191,31 @@ class Dit:
     def print_selected(self, group, subgroup, task):
         self.print_verb("Selected: %s" % self._printable(group, subgroup, task))
 
+    def path_to_string(self, path):
+        if path == os.path.expanduser(self.DEFAULT_DIR):
+            return self.DEFAULT_DIR
+        return os.path.relpath(path)
+
     # ===========================================
     # Paths and files names
 
-    def _setup_base_path(self, directory):
-        path = os.path.expanduser(directory)
+    def _setup_base_path(self, dir):
+        def _bottomup_search(cur_level, basename):
+            path = os.path.join(cur_level, basename)
+            while not os.path.isdir(path):
+                parent_level = os.path.dirname(cur_level)
+                if parent_level == cur_level:
+                    return None
+                cur_level = parent_level
+                path = os.path.join(cur_level, basename)
+            return path
+
+        dir = dir or _bottomup_search(os.getcwd(), ".dit") or self.DEFAULT_DIR
+        path = os.path.expanduser(dir)
         if not os.path.exists(path):
             os.makedirs(path)
-            self.print_verb("Created path: %s" % path)
+            self.print_verb("Created directory: %s" % self.path_to_string(path))
+        self.print_verb("Using directory: %s" % self.path_to_string(path))
         self.base_path = path
 
     def _current_path(self):
@@ -1049,7 +1069,7 @@ class Dit:
 
     def configure(self, argv):
         rebuild_index = False
-        directory = self.DEFAULT_DIR
+        directory = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
