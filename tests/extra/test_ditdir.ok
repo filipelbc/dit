@@ -1,11 +1,11 @@
 ---------------------------------------------------
 $ dit -v list --all
-Created directory: ~/.dit
+Created: ~/.dit
 Using directory: ~/.dit
 Selected: _/_/_
 ---------------------------------------------------
 $ dit -v -d ditdir list --all
-Created directory: ditdir
+Created: ditdir
 Using directory: ditdir
 Selected: _/_/_
 ---------------------------------------------------
