@@ -1,0 +1,15 @@
+_dit()
+{
+    local curr opts
+    curr="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ "$prev" == "--directory" ] || [ "$prev" == "-d" ]
+    then
+        COMPREPLY=( $(compgen -d -- "$curr") )
+    else
+        opts=$(dit-completion "$COMP_CWORD" ${COMP_WORDS[*]})
+        COMPREPLY=( $(compgen -W "$opts" -- "$curr") )
+    fi
+}
+complete -F _dit dit

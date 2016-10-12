@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dit',
-    version='0.3',
+    version='0.4dev0',
 
     description='A command line work time tracker and task list management system.',
 
@@ -40,6 +40,7 @@ setup(
     },
 
     entry_points={
-        'console_scripts': ['dit=dit.dit:main'],
+        'console_scripts': ['dit=dit.dit:main',
+                            'dit-completion=dit.dit:completion'],
     },
 )

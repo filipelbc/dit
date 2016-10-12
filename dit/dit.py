@@ -111,7 +111,6 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 import sys
 import json
 import os
-import re
 import subprocess
 
 from importlib import import_module
@@ -133,6 +132,27 @@ class ArgumentException(DitException):
 
 class NoTaskSpecifiedCondition(DitException):
     pass
+
+# ===========================================
+# Command decorator
+
+COMMAND_INFO = {}
+
+SELECT_BY_NAME = "N"
+SELECT_BY_GNAME = "G"
+
+
+def command(letter, options, usage, select):
+    def wrapper(cmd):
+        global COMMAND_INFO
+        COMMAND_INFO[cmd.__name__] = {'letter': letter,
+                                      'options': options,
+                                      'usage': usage,
+                                      'select': select,
+                                      'doc': cmd.__doc__}
+        COMMAND_INFO[letter] = COMMAND_INFO[cmd.__name__]
+        return cmd
+    return wrapper
 
 # ===========================================
 # Dit Class
@@ -199,7 +219,13 @@ class Dit:
     # ===========================================
     # Paths and files names
 
-    def _setup_base_path(self, dir):
+    def _make_path(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+            self.print_verb("Created: %s" % self.path_to_string(path))
+
+    def _discover_base_path(self, directory):
+
         def _bottomup_search(cur_level, basename):
             path = os.path.join(cur_level, basename)
             while not os.path.isdir(path):
@@ -210,11 +236,12 @@ class Dit:
                 path = os.path.join(cur_level, basename)
             return path
 
-        dir = dir or _bottomup_search(os.getcwd(), ".dit") or self.DEFAULT_DIR
-        path = os.path.expanduser(dir)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self.print_verb("Created directory: %s" % self.path_to_string(path))
+        dir = directory or _bottomup_search(os.getcwd(), ".dit") or self.DEFAULT_DIR
+        return os.path.expanduser(dir)
+
+    def _setup_base_path(self, directory):
+        path = self._discover_base_path(directory)
+        self._make_path(path)
         self.print_verb("Using directory: %s" % self.path_to_string(path))
         self.base_path = path
 
@@ -235,9 +262,7 @@ class Dit:
 
     def _make_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup)
-        if not os.path.exists(path):
-            os.makedirs(path)
-            self.print_verb("Created path: %s" % path)
+        self._make_path(path)
         return os.path.join(path, task)
 
     # ===========================================
@@ -796,6 +821,7 @@ class Dit:
     def usage(self):
         print(__doc__)
 
+    @command("n", "-: --:", "", SELECT_BY_NAME)
     def new(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -819,6 +845,7 @@ class Dit:
 
         return (group, subgroup, task)
 
+    @command("w", "--new", "", SELECT_BY_NAME)
     def workon(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -848,6 +875,7 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
+    @command("h", "", "", SELECT_BY_NAME)
     def halt(self, argv, conclude=False, cancel=False):
         try:
             (group, subgroup, task) = self._backward_parser(argv)
@@ -876,6 +904,7 @@ class Dit:
             self.current_halted = True
             self._save_current()
 
+    @command("a", "", "", SELECT_BY_NAME)
     def append(self, argv):
         try:
             (group, subgroup, task) = self._backward_parser(argv or [self.CURRENT_FN])
@@ -896,29 +925,37 @@ class Dit:
             self._set_current(group, subgroup, task)
             self._save_current()
 
+    @command("x", "", "", SELECT_BY_NAME)
     def cancel(self, argv):
         self.halt(argv, cancel=True)
 
+    @command("r", "", "", None)
     def resume(self, argv):
         self.workon([self.CURRENT_FN])
 
+    @command("s", "--new", "", SELECT_BY_NAME)
     def switchto(self, argv):
         self.halt([])
         self.workon(argv)
 
+    @command("b", "", "", None)
     def switchback(self, argv):
         self.halt([])
         self.workon([self.PREVIOUS_FN])
 
+    @command("c", "", "", SELECT_BY_NAME)
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
+    @command("q", "--concluded --verbose --all", "", SELECT_BY_GNAME)
     def status(self, argv):
         self.export(argv, statussing=True)
 
+    @command("l", "--concluded --verbose --all", "", SELECT_BY_GNAME)
     def list(self, argv):
         self.export(argv, listing=True)
 
+    @command("e", "--concluded --verbose --all --output", "", SELECT_BY_GNAME)
     def export(self, argv, listing=False, statussing=False):
         all = False
         output = None
@@ -990,6 +1027,7 @@ class Dit:
 
         file.close()
 
+    @command("t", "-: --:", "", SELECT_BY_NAME)
     def note(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1013,6 +1051,7 @@ class Dit:
         print("Noted added to: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
+    @command("p", "-: --:", "", SELECT_BY_NAME)
     def set(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1045,6 +1084,7 @@ class Dit:
         print("Set property of: %s" % self._printable(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
+    @command("m", "", "", SELECT_BY_NAME)
     def edit(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1133,6 +1173,114 @@ class Dit:
             raise ArgumentException("Missing command.")
 
 # ===========================================
+# Completion
+
+
+def complete_gname(dit, names):
+
+    names[-1] = None
+    names = names + [None] * (3 - len(names))
+    group, subgroup, task = names
+
+    comp_options = []
+    for i, g in enumerate(dit.index):
+        if group is None:
+            comp_options.append(dit._printable(g[0]) + dit.SEPARATOR)
+        elif g[0] == group:
+            for j, s in enumerate(g[1]):
+                if subgroup is None:
+                    comp_options.append(dit._printable(g[0], s[0]) + dit.SEPARATOR)
+                elif s[0] == subgroup:
+                    for k, t in enumerate(s[1]):
+                        comp_options.append(dit._printable(g[0], s[0], t))
+                    break
+            break
+
+    return '\n'.join(comp_options)
+
+
+def complete_selection(cmd, directory, selection):
+
+    names = selection.split(Dit.SEPARATOR)
+    names = [name if name != Dit.ROOT_NAME_VERB else Dit.ROOT_NAME for name in names]
+    if len(names) > 3:
+        return ""
+
+    dit = Dit()
+    path = dit._discover_base_path(directory)
+    if not os.path.exists(path):
+        return ""
+
+    dit.base_path = path
+    dit._load_index()
+    if not dit.index:
+        return ""
+
+    select = COMMAND_INFO[cmd]['select']
+
+    if select in [SELECT_BY_GNAME, SELECT_BY_NAME]:
+        return complete_gname(dit, names)
+    else:
+        return ""
+
+
+def complete_cmd_name():
+    return '\n'.join([cmd for cmd in COMMAND_INFO])
+
+
+def complete_cmd_option(cmd):
+    return COMMAND_INFO[cmd]['options']
+
+
+def complete_option():
+    return "--verbose\n--directory\n--rebuild-index\n--help"
+
+
+def completion():
+    argv = sys.argv
+    argv.pop(0)
+
+    idx = int(argv.pop(0)) - 1
+    line = argv[1:]
+    cmd = None
+    directory = None
+
+    i = 0
+    while i != idx and i < len(line):
+        if line[i] in ["--directory", "-d"]:
+            i += 1
+            directory = line[i]
+        elif line[i].isalpha():
+            cmd = line[i]
+            break
+        i += 1
+
+    if cmd and cmd not in COMMAND_INFO:
+        return ""
+
+    word = line[idx] if len(line) > idx else ""
+
+    if word == "" or word[0].isalpha():
+        if cmd:
+            comp_options = complete_selection(cmd, directory, word)
+        else:
+            comp_options = complete_cmd_name()
+    elif word.startswith(".") or word.startswith("/"):
+        if cmd:
+            comp_options = complete_selection(cmd, directory, word)
+        else:
+            comp_options = ""
+    elif word.startswith('-'):
+        if cmd:
+            comp_options = complete_cmd_option(cmd)
+        else:
+            comp_options = complete_option()
+    else:
+        comp_options = ""
+
+    print(comp_options)
+
+# ===========================================
 # Main
 
 
@@ -1153,6 +1301,3 @@ def main():
         print("Type 'dit --help' for usage details.")
     except json.decoder.JSONDecodeError:
         print("ERROR: Invalid JSON.")
-
-if __name__ == "__main__":
-    main()

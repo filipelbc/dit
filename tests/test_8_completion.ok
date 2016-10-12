@@ -1,0 +1,36 @@
+---------------------------------------------------
+$ dit <TAB><TAB>
+a append b c cancel conclude e edit export h halt l list m n new note p q r resume s set status switchback switchto t w workon x 
+---------------------------------------------------
+$ dit -<TAB><TAB>
+--directory --help --rebuild-index --verbose 
+---------------------------------------------------
+$ dit -d <TAB><TAB>
+ditdir extra 
+---------------------------------------------------
+$ dit -d ditdir <TAB><TAB>
+a append b c cancel conclude e edit export h halt l list m n new note p q r resume s set status switchback switchto t w workon x 
+---------------------------------------------------
+$ dit -d ditdir e<TAB><TAB>
+e edit export 
+---------------------------------------------------
+$ dit -d ditdir e -<TAB><TAB>
+--all --concluded --output --verbose 
+---------------------------------------------------
+$ dit -d ditdir w <TAB><TAB>
+./ g1/ g2/ g4/ g5/ 
+---------------------------------------------------
+$ dit -d ditdir w g<TAB><TAB>
+g1/ g2/ g4/ g5/ 
+---------------------------------------------------
+$ dit -d ditdir w .<TAB><TAB>
+./ 
+---------------------------------------------------
+$ dit -d ditdir w ./<TAB><TAB>
+././ 
+---------------------------------------------------
+$ dit -d ditdir w ././<TAB><TAB>
+././t1 ././t10 ././t4 ././t7 
+---------------------------------------------------
+$ dit -d ditdir w ././t<TAB><TAB>
+././t1 ././t10 ././t4 ././t7 
