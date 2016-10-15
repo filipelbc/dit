@@ -255,6 +255,12 @@ def path_to_string(path):
 # I/O
 
 
+def make_dirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        msg_verbose("Created: %s" % path_to_string(path))
+
+
 def load_json_file(fp):
     if os.path.isfile(fp):
         with open(fp, 'r') as f:
@@ -382,14 +388,9 @@ class Dit:
     # ===========================================
     # Paths and files names
 
-    def _make_path(self, path):
-        if not os.path.exists(path):
-            os.makedirs(path)
-            msg_verbose("Created: %s" % path_to_string(path))
-
     def _setup_base_path(self, directory):
         path = discover_base_path(directory)
-        self._make_path(path)
+        make_dirs(path)
         msg_verbose("Using directory: %s" % path_to_string(path))
         self.base_path = path
 
@@ -410,7 +411,7 @@ class Dit:
 
     def _make_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup)
-        self._make_path(path)
+        make_dirs(path)
         return os.path.join(path, task)
 
     # ===========================================
