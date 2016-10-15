@@ -172,7 +172,7 @@ def command(letter, options, usage, select):
     return wrapper
 
 # ===========================================
-# Task Name To Nice String
+# To Nice String
 
 
 def _(name, *more_names):
@@ -189,6 +189,85 @@ def _(name, *more_names):
         s += SEPARATOR_CHAR + nice(name)
 
     return s
+
+
+def path_to_string(path):
+    if path == os.path.expanduser(DEFAULT_DIR):
+        return DEFAULT_DIR
+    return os.path.relpath(path)
+
+# ===========================================
+# I/O
+
+
+def load_json_file(fp):
+    if os.path.isfile(fp):
+        with open(fp, 'r') as f:
+            return json.load(f)
+    return None
+
+
+def save_json_file(fp, data):
+    with open(fp, 'w') as f:
+        f.write(json.dumps(data))
+
+# ===========================================
+# Task Data Manipulation
+
+
+def data_clock_in(data):
+    logbook = data.get('logbook', [])
+    if len(logbook) > 0:
+        last = logbook[-1]
+        if not last['out']:
+            print("Already clocked in.")
+            return
+    data['logbook'] = logbook + [{'in': now(), 'out': None}]
+
+
+def data_clock_append(data):
+    logbook = data.get('logbook', [])
+    if len(logbook) == 0:
+        print("Task has no clocking.")
+        return
+    last = logbook[-1]
+    if not last['out']:
+        print("Already clocked in.")
+        return
+    last['out'] = None
+
+
+def data_clock_out(data):
+    logbook = data.get('logbook', [])
+    if len(logbook) == 0:
+        print("Already clocked out.")
+        return
+    last = logbook[-1]
+    if last['out']:
+        print("Already clocked out.")
+        return
+    last['out'] = now()
+    data['logbook'] = logbook
+
+
+def data_clock_cancel(data):
+    logbook = data.get('logbook', [])
+    if len(logbook) == 0:
+        print("Was not clocked in.")
+        return
+    last = logbook[-1]
+    if last['out']:
+        print("Was not clocked in.")
+        return
+    logbook.pop(-1)
+    data['logbook'] = logbook
+
+
+def data_conclude(data):
+    if data.get('concluded_at', None):
+        print("Already concluded.")
+        return
+    data['concluded_at'] = now()
 
 # ===========================================
 # Dit Class
@@ -223,18 +302,13 @@ class Dit:
     def print_selected(self, group, subgroup, task):
         self.print_verb("Selected: %s" % _(group, subgroup, task))
 
-    def path_to_string(self, path):
-        if path == os.path.expanduser(DEFAULT_DIR):
-            return DEFAULT_DIR
-        return os.path.relpath(path)
-
     # ===========================================
     # Paths and files names
 
     def _make_path(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
-            self.print_verb("Created: %s" % self.path_to_string(path))
+            self.print_verb("Created: %s" % path_to_string(path))
 
     def _discover_base_path(self, directory):
 
@@ -254,7 +328,7 @@ class Dit:
     def _setup_base_path(self, directory):
         path = self._discover_base_path(directory)
         self._make_path(path)
-        self.print_verb("Using directory: %s" % self.path_to_string(path))
+        self.print_verb("Using directory: %s" % path_to_string(path))
         self.base_path = path
 
     def _current_path(self):
@@ -302,21 +376,6 @@ class Dit:
                 name not in PROHIBITED_FNS)
 
     # ===========================================
-    # I/O
-
-    @staticmethod
-    def _load_json_file(fp):
-        if os.path.isfile(fp):
-            with open(fp, 'r') as f:
-                return json.load(f)
-        return None
-
-    @staticmethod
-    def _save_json_file(fp, data):
-        with open(fp, 'w') as f:
-            f.write(json.dumps(data))
-
-    # ===========================================
     # Task management
 
     @staticmethod
@@ -338,13 +397,13 @@ class Dit:
         if os.path.isfile(task_fp):
             raise DitException("Task file already exists: %s" % task_fp)
         data = self._new_task_data(description)
-        self._save_json_file(task_fp, data)
+        save_json_file(task_fp, data)
         self._add_to_index(group, subgroup, task)
         self._save_index()
 
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._get_task_path(group, subgroup, task)
-        task = self._load_json_file(task_fp)
+        task = load_json_file(task_fp)
         if not self._is_valid_task_data(task):
             raise DitException("Task file contains invalid data: %s" % task_fp)
         return task
@@ -352,7 +411,7 @@ class Dit:
     def _save_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
-        self._save_json_file(task_fp, data)
+        save_json_file(task_fp, data)
         self.print_verb("Task saved: %s" % _(group, subgroup, task))
 
     @staticmethod
@@ -393,7 +452,7 @@ class Dit:
             'task': self.current_task,
             'halted': self.current_halted
         }
-        self._save_json_file(self._current_path(), current_data)
+        save_json_file(self._current_path(), current_data)
         self.print_verb("%s saved: %s%s" %
                         (CURRENT_FN, _(self.current_group,
                                        self.current_subgroup,
@@ -401,7 +460,7 @@ class Dit:
                          " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
-        current = self._load_json_file(self._current_path())
+        current = load_json_file(self._current_path())
         if current is not None:
             self._set_current(current['group'],
                               current['subgroup'],
@@ -421,14 +480,14 @@ class Dit:
             'subgroup': self.previous_subgroup,
             'task': self.previous_task
         }
-        self._save_json_file(self._previous_path(), previous_data)
+        save_json_file(self._previous_path(), previous_data)
         self.print_verb("%s saved: %s" %
                         (PREVIOUS_FN, _(self.previous_group,
                                         self.previous_subgroup,
                                         self.previous_task)))
 
     def _load_previous(self):
-        previous = self._load_json_file(self._previous_path())
+        previous = load_json_file(self._previous_path())
         if previous is not None:
             self._set_previous(previous['group'],
                                previous['subgroup'],
@@ -459,12 +518,12 @@ class Dit:
         self.index[group_id][1][subgroup_id][1].append(task)
 
     def _save_index(self):
-        self._save_json_file(self._index_path(), self.index)
+        save_json_file(self._index_path(), self.index)
         self.print_verb("%s saved." % INDEX_FN)
 
     def _load_index(self):
         index_fp = self._index_path()
-        index = self._load_json_file(index_fp)
+        index = load_json_file(index_fp)
         if index is not None:
             self.index = index
 
@@ -572,59 +631,6 @@ class Dit:
                                 break
                         break
                 break
-
-    # ===========================================
-    # Clock
-
-    def _clock_in(self, data):
-        logbook = data.get('logbook', [])
-        if len(logbook) > 0:
-            last = logbook[-1]
-            if not last['out']:
-                print("Already clocked in.")
-                return
-        data['logbook'] = logbook + [{'in': now(), 'out': None}]
-
-    def _clock_append(self, data):
-        logbook = data.get('logbook', [])
-        if len(logbook) == 0:
-            print("Task has no clocking.")
-            return
-        last = logbook[-1]
-        if not last['out']:
-            print("Already clocked in.")
-            return
-        last['out'] = None
-
-    def _clock_out(self, data):
-        logbook = data.get('logbook', [])
-        if len(logbook) == 0:
-            print("Already clocked out.")
-            return
-        last = logbook[-1]
-        if last['out']:
-            print("Already clocked out.")
-            return
-        last['out'] = now()
-        data['logbook'] = logbook
-
-    def _clock_cancel(self, data):
-        logbook = data.get('logbook', [])
-        if len(logbook) == 0:
-            print("Was not clocked in.")
-            return
-        last = logbook[-1]
-        if last['out']:
-            print("Was not clocked in.")
-            return
-        logbook.pop(-1)
-        data['logbook'] = logbook
-
-    def _conclude(self, data):
-        if data.get('concluded_at', None):
-            print("Already concluded.")
-            return
-        data['concluded_at'] = now()
 
     # ===========================================
     # Parsers
@@ -870,7 +876,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
-        self._clock_in(data)
+        data_clock_in(data)
         print("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
@@ -899,13 +905,13 @@ class Dit:
         data = self._load_task_data(group, subgroup, task)
 
         if cancel:
-            self._clock_cancel(data)
+            data_clock_cancel(data)
             print("Canceled: %s" % _(group, subgroup, task))
         else:
-            self._clock_out(data)
+            data_clock_out(data)
             print("Halted: %s" % _(group, subgroup, task))
         if conclude:
-            self._conclude(data)
+            data_conclude(data)
             print("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
@@ -926,7 +932,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
-        self._clock_append(data)
+        data_clock_append(data)
         print("Continuing: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
