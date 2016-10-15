@@ -182,6 +182,10 @@ def msg_error(message):
 def msg_selected(group, subgroup, task):
     msg_verbose("Selected: %s" % _(group, subgroup, task))
 
+
+def msg_usage(self):
+    msg_normal(__doc__)
+
 # ===========================================
 # Command decorator
 
@@ -855,9 +859,6 @@ class Dit:
     # ===========================================
     # Commands
 
-    def usage(self):
-        msg_normal(__doc__)
-
     @command("n", "-: --:", "", SELECT_BY_NAME)
     def new(self, argv):
         if len(argv) < 1:
@@ -1158,7 +1159,7 @@ class Dit:
             elif opt in ["--rebuild-index", '-r']:
                 rebuild_index = True
             elif opt in ["--help", "-h"]:
-                self.usage()
+                msg_usage()
                 return False
             else:
                 raise ArgumentException("No such option: %s" % opt)
@@ -1214,7 +1215,7 @@ class Dit:
 # Completion
 
 
-def complete_gname(dit, names):
+def completion_gname(dit, names):
 
     names[-1] = None
     names = names + [None] * (3 - len(names))
@@ -1237,7 +1238,7 @@ def complete_gname(dit, names):
     return '\n'.join(comp_options)
 
 
-def complete_selection(cmd, directory, selection):
+def completion_selection(cmd, directory, selection):
 
     names = selection.split(SEPARATOR_CHAR)
     names = [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
@@ -1257,20 +1258,20 @@ def complete_selection(cmd, directory, selection):
     select = COMMAND_INFO[cmd]['select']
 
     if select in [SELECT_BY_GNAME, SELECT_BY_NAME]:
-        return complete_gname(dit, names)
+        return completion_gname(dit, names)
     else:
         return ""
 
 
-def complete_cmd_name():
+def completion_cmd_name():
     return '\n'.join([cmd for cmd in COMMAND_INFO])
 
 
-def complete_cmd_option(cmd):
+def completion_cmd_option(cmd):
     return COMMAND_INFO[cmd]['options']
 
 
-def complete_option():
+def completion_option():
     return "--verbose\n--directory\n--rebuild-index\n--help"
 
 
@@ -1300,19 +1301,19 @@ def completion():
 
     if word == "" or word[0].isalpha():
         if cmd:
-            comp_options = complete_selection(cmd, directory, word)
+            comp_options = completion_selection(cmd, directory, word)
         else:
-            comp_options = complete_cmd_name()
+            comp_options = completion_cmd_name()
     elif word.startswith((ROOT_NAME_CHAR, SEPARATOR_CHAR)):
         if cmd:
-            comp_options = complete_selection(cmd, directory, word)
+            comp_options = completion_selection(cmd, directory, word)
         else:
             comp_options = ""
     elif word.startswith('-'):
         if cmd:
-            comp_options = complete_cmd_option(cmd)
+            comp_options = completion_cmd_option(cmd)
         else:
-            comp_options = complete_option()
+            comp_options = completion_option()
     else:
         comp_options = ""
 
