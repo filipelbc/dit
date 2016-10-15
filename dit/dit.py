@@ -12,10 +12,6 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   --verbose, -v
     Prints detailed information of what is being done.
 
-  --rebuild-index
-    Rebuild the INDEX file. For use in case of manual modification of the
-    contents of "--directory".
-
   --help, -h
     Prints this message and quits.
 
@@ -87,6 +83,12 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     edit [<name> | <id>]
       Opens the specified task for manual editing. Uses CURRENT task if none is
       specified. If $EDITOR environment variable is not set it does nothing.
+
+  Other <command>'s:
+
+    rebuild-index
+      Rebuild the INDEX file. For use in case of manual modification of the
+      contents of "--directory".
 
   "-:"
     Arguments preceeded by "-:" are necessary. If omited, then: a) if the
