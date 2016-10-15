@@ -144,6 +144,7 @@ PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN]
 
 SEPARATOR_CHAR = "/"
 COMMENT_CHAR = "#"
+NONE_CHAR = "_"
 ROOT_NAME_CHAR = "."
 ROOT_NAME = ""
 
@@ -171,6 +172,25 @@ def command(letter, options, usage, select):
     return wrapper
 
 # ===========================================
+# Task Name To Nice String
+
+
+def _(name, *more_names):
+
+    def nice(name):
+        if name is None:
+            return NONE_CHAR
+        elif name == ROOT_NAME:
+            return ROOT_NAME_CHAR
+        return name
+
+    s = nice(name)
+    for name in more_names:
+        s += SEPARATOR_CHAR + nice(name)
+
+    return s
+
+# ===========================================
 # Dit Class
 
 
@@ -196,25 +216,12 @@ class Dit:
 
     # helpers
 
-    def _printable(self, name, *others):
-
-        def _(n):
-            if n is None:
-                return "_"
-            return ROOT_NAME_CHAR if n == ROOT_NAME else n
-
-        ret = _(name)
-        for other in others:
-            ret += SEPARATOR_CHAR + _(other)
-
-        return ret
-
     def print_verb(self, message):
         if self.verbose:
             print(message)
 
     def print_selected(self, group, subgroup, task):
-        self.print_verb("Selected: %s" % self._printable(group, subgroup, task))
+        self.print_verb("Selected: %s" % _(group, subgroup, task))
 
     def path_to_string(self, path):
         if path == os.path.expanduser(DEFAULT_DIR):
@@ -346,7 +353,7 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
         self._save_json_file(task_fp, data)
-        self.print_verb("Task saved: %s" % self._printable(group, subgroup, task))
+        self.print_verb("Task saved: %s" % _(group, subgroup, task))
 
     @staticmethod
     def _add_note(data, note_text):
@@ -388,10 +395,9 @@ class Dit:
         }
         self._save_json_file(self._current_path(), current_data)
         self.print_verb("%s saved: %s%s" %
-                        (CURRENT_FN,
-                         self._printable(self.current_group,
-                                         self.current_subgroup,
-                                         self.current_task),
+                        (CURRENT_FN, _(self.current_group,
+                                       self.current_subgroup,
+                                       self.current_task),
                          " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
@@ -417,10 +423,9 @@ class Dit:
         }
         self._save_json_file(self._previous_path(), previous_data)
         self.print_verb("%s saved: %s" %
-                        (PREVIOUS_FN,
-                         self._printable(self.previous_group,
-                                         self.previous_subgroup,
-                                         self.previous_task)))
+                        (PREVIOUS_FN, _(self.previous_group,
+                                        self.previous_subgroup,
+                                        self.previous_task)))
 
     def _load_previous(self):
         previous = self._load_json_file(self._previous_path())
@@ -846,7 +851,7 @@ class Dit:
             description = self._prompt('Description')
 
         self._create_task(group, subgroup, task, description)
-        print("Created: %s" % self._printable(group, subgroup, task))
+        print("Created: %s" % _(group, subgroup, task))
 
         return (group, subgroup, task)
 
@@ -866,7 +871,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_in(data)
-        print("Working on: %s" % self._printable(group, subgroup, task))
+        print("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set previous
@@ -895,13 +900,13 @@ class Dit:
 
         if cancel:
             self._clock_cancel(data)
-            print("Canceled: %s" % self._printable(group, subgroup, task))
+            print("Canceled: %s" % _(group, subgroup, task))
         else:
             self._clock_out(data)
-            print("Halted: %s" % self._printable(group, subgroup, task))
+            print("Halted: %s" % _(group, subgroup, task))
         if conclude:
             self._conclude(data)
-            print("Concluded: %s" % self._printable(group, subgroup, task))
+            print("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current as halted
@@ -922,7 +927,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._clock_append(data)
-        print("Continuing: %s" % self._printable(group, subgroup, task))
+        print("Continuing: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current
@@ -1053,7 +1058,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._add_note(data, note_text)
-        print("Noted added to: %s" % self._printable(group, subgroup, task))
+        print("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     @command("p", "-: --:", "", SELECT_BY_NAME)
@@ -1086,7 +1091,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         self._set_property(data, prop_name, prop_value)
-        print("Set property of: %s" % self._printable(group, subgroup, task))
+        print("Set property of: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     @command("m", "", "", SELECT_BY_NAME)
@@ -1095,14 +1100,14 @@ class Dit:
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
-        header = "Editing: " + self._printable(group, subgroup, task)
+        header = "Editing: " + _(group, subgroup, task)
 
         new_data_raw = self._prompt(header, data_pretty, "json")
 
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if self._is_valid_task_data(new_data):
-                print("Manually edited: %s" % self._printable(group, subgroup, task))
+                print("Manually edited: %s" % _(group, subgroup, task))
                 self._save_task(group, subgroup, task, new_data)
             else:
                 print("Invalid data type, should be a dictionary.")
@@ -1190,14 +1195,14 @@ def complete_gname(dit, names):
     comp_options = []
     for i, g in enumerate(dit.index):
         if group is None:
-            comp_options.append(dit._printable(g[0]) + SEPARATOR_CHAR)
+            comp_options.append(_(g[0]) + SEPARATOR_CHAR)
         elif g[0] == group:
             for j, s in enumerate(g[1]):
                 if subgroup is None:
-                    comp_options.append(dit._printable(g[0], s[0]) + SEPARATOR_CHAR)
+                    comp_options.append(_(g[0], s[0]) + SEPARATOR_CHAR)
                 elif s[0] == subgroup:
                     for k, t in enumerate(s[1]):
-                        comp_options.append(dit._printable(g[0], s[0], t))
+                        comp_options.append(_(g[0], s[0], t))
                     break
             break
 
