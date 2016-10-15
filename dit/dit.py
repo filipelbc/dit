@@ -185,7 +185,7 @@ def msg_selected(group, subgroup, task):
     msg_verbose("Selected: %s" % _(group, subgroup, task))
 
 
-def msg_usage(self):
+def msg_usage():
     msg_normal(__doc__)
 
 # ===========================================
@@ -197,16 +197,20 @@ SELECT_BY_NAME = "N"
 SELECT_BY_GNAME = "G"
 
 
-def command(letter, options, usage, select):
+def command(letter, options, select):
     def wrapper(cmd):
         global COMMAND_INFO
-        COMMAND_INFO[cmd.__name__] = {'name': cmd.__name__,
-                                      'letter': letter,
-                                      'options': options,
-                                      'usage': usage,
-                                      'select': select,
-                                      'doc': cmd.__doc__}
-        COMMAND_INFO[letter] = COMMAND_INFO[cmd.__name__]
+        name = cmd.__name__.replace("_", "-")
+        if name in COMMAND_INFO:
+            raise Exception("Method '%s' is already registered as command.")
+        COMMAND_INFO[name] = {'name': cmd.__name__,
+                              'letter': letter,
+                              'options': options,
+                              'select': select}
+        if letter and letter in COMMAND_INFO:
+            raise Exception("Letter '%s' is already registered as command.")
+        if letter:
+            COMMAND_INFO[letter] = COMMAND_INFO[cmd.__name__]
         return cmd
     return wrapper
 
@@ -872,7 +876,7 @@ class Dit:
     # ===========================================
     # Commands
 
-    @command("n", "-: --:", "", SELECT_BY_NAME)
+    @command("n", "-: --:", SELECT_BY_NAME)
     def new(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -896,7 +900,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    @command("w", "--new", "", SELECT_BY_NAME)
+    @command("w", "--new", SELECT_BY_NAME)
     def workon(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -926,7 +930,7 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    @command("h", "", "", SELECT_BY_NAME)
+    @command("h", "", SELECT_BY_NAME)
     def halt(self, argv, conclude=False, cancel=False):
         try:
             (group, subgroup, task) = self._backward_parser(argv)
@@ -955,7 +959,7 @@ class Dit:
             self.current_halted = True
             self._save_current()
 
-    @command("a", "", "", SELECT_BY_NAME)
+    @command("a", "", SELECT_BY_NAME)
     def append(self, argv):
         try:
             (group, subgroup, task) = self._backward_parser(argv or [CURRENT_FN])
@@ -976,37 +980,37 @@ class Dit:
             self._set_current(group, subgroup, task)
             self._save_current()
 
-    @command("x", "", "", SELECT_BY_NAME)
+    @command("x", "", SELECT_BY_NAME)
     def cancel(self, argv):
         self.halt(argv, cancel=True)
 
-    @command("r", "", "", None)
+    @command("r", "", None)
     def resume(self, argv):
         self.workon([CURRENT_FN])
 
-    @command("s", "--new", "", SELECT_BY_NAME)
+    @command("s", "--new", SELECT_BY_NAME)
     def switchto(self, argv):
         self.halt([])
         self.workon(argv)
 
-    @command("b", "", "", None)
+    @command("b", "", None)
     def switchback(self, argv):
         self.halt([])
         self.workon([PREVIOUS_FN])
 
-    @command("c", "", "", SELECT_BY_NAME)
+    @command("c", "", SELECT_BY_NAME)
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", "--concluded --verbose --all", "", SELECT_BY_GNAME)
+    @command("q", "--concluded --verbose --all", SELECT_BY_GNAME)
     def status(self, argv):
         self.export(argv, statussing=True)
 
-    @command("l", "--concluded --verbose --all", "", SELECT_BY_GNAME)
+    @command("l", "--concluded --verbose --all", SELECT_BY_GNAME)
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("e", "--concluded --verbose --all --output", "", SELECT_BY_GNAME)
+    @command("e", "--concluded --verbose --all --output", SELECT_BY_GNAME)
     def export(self, argv, listing=False, statussing=False):
         all = False
         output = None
@@ -1078,7 +1082,7 @@ class Dit:
 
         file.close()
 
-    @command("t", "-: --:", "", SELECT_BY_NAME)
+    @command("t", "-: --:", SELECT_BY_NAME)
     def note(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1102,7 +1106,7 @@ class Dit:
         msg_normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-    @command("p", "-: --:", "", SELECT_BY_NAME)
+    @command("p", "-: --:", SELECT_BY_NAME)
     def set(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1135,7 +1139,7 @@ class Dit:
         msg_normal("Set property of: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-    @command("m", "", "", SELECT_BY_NAME)
+    @command("m", "", SELECT_BY_NAME)
     def edit(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1155,12 +1159,16 @@ class Dit:
         else:
             msg_normal("Operation cancelled.")
 
+    @command("", "", None)
+    def rebuild_index(self, argv):
+        self._rebuild_index()
+        self._save_index()
+
     # ===========================================
     # Main
 
     def configure(self, argv):
         global VERBOSE
-        rebuild_index = False
         directory = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
@@ -1169,8 +1177,6 @@ class Dit:
                 VERBOSE = True
             elif opt in ["--directory", "-d"]:
                 directory = argv.pop(0)
-            elif opt in ["--rebuild-index", '-r']:
-                rebuild_index = True
             elif opt in ["--help", "-h"]:
                 msg_usage()
                 return False
@@ -1178,9 +1184,6 @@ class Dit:
                 raise ArgumentException("No such option: %s" % opt)
 
         self._setup_base_path(directory)
-        if rebuild_index:
-            self._rebuild_index()
-            self._save_index()
         self._load_current()
         self._load_previous()
         self._load_index()
@@ -1257,7 +1260,7 @@ def completion_cmd_option(cmd):
 
 
 def completion_option():
-    return "--verbose\n--directory\n--rebuild-index\n--help"
+    return "--verbose\n--directory\n--help"
 
 
 def completion():

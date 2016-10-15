@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./ditcmd --rebuild-index
+./ditcmd rebuild-index
 
 ./step cat ditdir/INDEX
 echo ''
