@@ -200,7 +200,8 @@ SELECT_BY_GNAME = "G"
 def command(letter, options, usage, select):
     def wrapper(cmd):
         global COMMAND_INFO
-        COMMAND_INFO[cmd.__name__] = {'letter': letter,
+        COMMAND_INFO[cmd.__name__] = {'name': cmd.__name__,
+                                      'letter': letter,
                                       'options': options,
                                       'usage': usage,
                                       'select': select,
@@ -1188,36 +1189,8 @@ class Dit:
     def interpret(self, argv):
         if len(argv) > 0:
             cmd = argv.pop(0)
-            if cmd in ["new", "n"]:
-                self.new(argv)
-            elif cmd in ["workon", "w"]:
-                self.workon(argv)
-            elif cmd in ["halt", "h"]:
-                self.halt(argv)
-            elif cmd in ["append", "a"]:
-                self.append(argv)
-            elif cmd in ["cancel", "x"]:
-                self.cancel(argv)
-            elif cmd in ["resume", "r"]:
-                self.resume(argv)
-            elif cmd in ["switchto", "s"]:
-                self.switchto(argv)
-            elif cmd in ["switchback", "b"]:
-                self.switchback(argv)
-            elif cmd in ["conclude", "c"]:
-                self.conclude(argv)
-            elif cmd in ["status", "q"]:
-                self.status(argv)
-            elif cmd in ["list", "l"]:
-                self.list(argv)
-            elif cmd in ["export", "e"]:
-                self.export(argv)
-            elif cmd in ["note", "t"]:
-                self.note(argv)
-            elif cmd in ["set", "p"]:
-                self.set(argv)
-            elif cmd in ["edit", "m"]:
-                self.edit(argv)
+            if cmd in COMMAND_INFO:
+                getattr(self, COMMAND_INFO[cmd]['name'])(argv)
             else:
                 raise ArgumentException("No such command: %s" % cmd)
         else:
