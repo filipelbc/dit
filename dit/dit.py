@@ -108,14 +108,16 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   <gid>: "group-id"[/"subgroup-id"[/"task-id"]]
 """
 
-import sys
 import json
 import os
+import re
 import subprocess
+import sys
 
+from getpass import getuser
 from importlib import import_module
+from tempfile import gettempdir
 
-from .utils import make_tmp_fp
 from .data_utils import now
 
 # ===========================================
@@ -230,26 +232,25 @@ def discover_base_path(directory):
 # To Nice String
 
 
-def _(name, *more_names):
-
-    def nice(name):
-        if name is None:
-            return NONE_CHAR
-        elif name == ROOT_NAME:
-            return ROOT_NAME_CHAR
-        return name
-
-    s = nice(name)
-    for name in more_names:
-        s += SEPARATOR_CHAR + nice(name)
-
-    return s
-
-
 def path_to_string(path):
     if path == os.path.expanduser(DEFAULT_BASE_PATH):
         return DEFAULT_BASE_PATH
     return os.path.relpath(path)
+
+
+def task_name_to_string(name):
+    if name is None:
+        return NONE_CHAR
+    elif name == ROOT_NAME:
+        return ROOT_NAME_CHAR
+    return name
+
+
+def _(name, *more_names):
+    s = task_name_to_string(name)
+    for name in more_names:
+        s += SEPARATOR_CHAR + task_name_to_string(name)
+    return s
 
 # ===========================================
 # I/O
@@ -271,6 +272,16 @@ def load_json_file(fp):
 def save_json_file(fp, data):
     with open(fp, 'w') as f:
         f.write(json.dumps(data))
+
+
+def make_tmp_fp(name, extension):
+    name = re.sub(r'[^_A-Za-z0-9]', '_', name).strip('_') + '.' + extension
+
+    path = os.path.join(gettempdir(), getuser(), "dit")
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    return os.path.join(path, name)
 
 
 def prompt(header, initial=None, extension='txt'):
