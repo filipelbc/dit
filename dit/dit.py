@@ -148,7 +148,8 @@ NONE_CHAR = "_"
 ROOT_NAME_CHAR = "."
 ROOT_NAME = ""
 
-DEFAULT_DIR = "~/.dit"
+DEFAULT_BASE_DIR = ".dit"
+DEFAULT_BASE_PATH = "~/" + DEFAULT_BASE_DIR
 
 # ===========================================
 # Command decorator
@@ -172,6 +173,25 @@ def command(letter, options, usage, select):
     return wrapper
 
 # ===========================================
+# Path Discovery
+
+
+def discover_base_path(directory):
+
+    def bottomup_search(current_level, basename):
+        path = os.path.join(current_level, basename)
+        while not os.path.isdir(path):
+            parent_level = os.path.dirname(current_level)
+            if parent_level == current_level:
+                return None
+            current_level = parent_level
+            path = os.path.join(current_level, basename)
+        return path
+
+    dir = directory or bottomup_search(os.getcwd(), DEFAULT_BASE_DIR) or DEFAULT_BASE_PATH
+    return os.path.expanduser(dir)
+
+# ===========================================
 # To Nice String
 
 
@@ -192,8 +212,8 @@ def _(name, *more_names):
 
 
 def path_to_string(path):
-    if path == os.path.expanduser(DEFAULT_DIR):
-        return DEFAULT_DIR
+    if path == os.path.expanduser(DEFAULT_BASE_PATH):
+        return DEFAULT_BASE_PATH
     return os.path.relpath(path)
 
 # ===========================================
@@ -325,23 +345,8 @@ class Dit:
             os.makedirs(path)
             self.print_verb("Created: %s" % path_to_string(path))
 
-    def _discover_base_path(self, directory):
-
-        def _bottomup_search(cur_level, basename):
-            path = os.path.join(cur_level, basename)
-            while not os.path.isdir(path):
-                parent_level = os.path.dirname(cur_level)
-                if parent_level == cur_level:
-                    return None
-                cur_level = parent_level
-                path = os.path.join(cur_level, basename)
-            return path
-
-        dir = directory or _bottomup_search(os.getcwd(), ".dit") or DEFAULT_DIR
-        return os.path.expanduser(dir)
-
     def _setup_base_path(self, directory):
-        path = self._discover_base_path(directory)
+        path = discover_base_path(directory)
         self._make_path(path)
         self.print_verb("Using directory: %s" % path_to_string(path))
         self.base_path = path
@@ -1223,7 +1228,7 @@ def complete_selection(cmd, directory, selection):
         return ""
 
     dit = Dit()
-    path = dit._discover_base_path(directory)
+    path = discover_base_path(directory)
     if not os.path.exists(path):
         return ""
 
