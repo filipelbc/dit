@@ -262,6 +262,26 @@ def save_json_file(fp, data):
     with open(fp, 'w') as f:
         f.write(json.dumps(data))
 
+
+def prompt(header, initial=None, extension='txt'):
+    editor = os.environ.get('EDITOR', None)
+    if editor:
+        input_fp = make_tmp_fp(header, extension)
+        with open(input_fp, 'w') as f:
+            f.write(COMMENT_CHAR + ' ' + header + '\n')
+            if initial:
+                f.write(initial)
+        subprocess.run([editor, input_fp])
+        with open(input_fp, 'r') as f:
+            lines = [line for line in f.readlines() if not line.startswith(COMMENT_CHAR)]
+        return (''.join(lines)).strip()
+
+    elif not initial:
+        return input(header + ': ').strip()
+
+    else:
+        raise DitException("$EDITOR environment variable is not set.")
+
 # ===========================================
 # Task Verification
 
@@ -833,28 +853,6 @@ class Dit:
             return self._gname_parser(selection)
 
     # ===========================================
-    # Input
-
-    def _prompt(self, header, initial=None, extension='txt'):
-        editor = os.environ.get('EDITOR', None)
-        if editor:
-            input_fp = make_tmp_fp(header, extension)
-            with open(input_fp, 'w') as f:
-                f.write(COMMENT_CHAR + ' ' + header + '\n')
-                if initial:
-                    f.write(initial)
-            subprocess.run([editor, input_fp])
-            with open(input_fp, 'r') as f:
-                lines = [line for line in f.readlines() if not line.startswith(COMMENT_CHAR)]
-            return (''.join(lines)).strip()
-
-        elif not initial:
-            return input(header + ': ').strip()
-
-        else:
-            raise DitException("$EDITOR environment variable is not set.")
-
-    # ===========================================
     # Commands
 
     def usage(self):
@@ -877,7 +875,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if description is None:
-            description = self._prompt('Description')
+            description = prompt('Description')
 
         self._create_task(group, subgroup, task, description)
         msg_normal("Created: %s" % _(group, subgroup, task))
@@ -1079,7 +1077,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if note_text is None:
-            note_text = self._prompt("Description")
+            note_text = prompt("Description")
 
         if not note_text:
             msg_normal("Operation cancelled.")
@@ -1101,13 +1099,13 @@ class Dit:
             if len(argv) > 0:
                 prop_value = argv.pop(0)
             else:
-                prop_value = self._prompt("Value for '%s'" % prop_name)
+                prop_value = prompt("Value for '%s'" % prop_name)
 
         if len(argv) > 0:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if prop_name is None:
-            prop = self._prompt("Name and Value for property").split('\n', 1)
+            prop = prompt("Name and Value for property").split('\n', 1)
             prop_name = prop[0].strip()
             if len(prop) == 2:
                 prop_value = prop[1].strip()
@@ -1131,7 +1129,7 @@ class Dit:
                                  indent=4)
         header = "Editing: " + _(group, subgroup, task)
 
-        new_data_raw = self._prompt(header, data_pretty, "json")
+        new_data_raw = prompt(header, data_pretty, "json")
 
         if new_data_raw:
             new_data = json.loads(new_data_raw)
