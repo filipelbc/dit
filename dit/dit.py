@@ -376,6 +376,34 @@ def data_conclude(data):
         return
     data['concluded_at'] = now()
 
+
+def data_new(description=None):
+    return {
+        "description": description,
+        "logbook": [],
+        "properties": [],
+        "notes": [],
+        "created_at": now()
+    }
+
+
+def data_add_note(data, note_text):
+    if 'notes' not in data:
+        data['notes'] = []
+    data['notes'].append(note_text)
+
+
+def data_set_property(data, prop_name, prop_value):
+    if 'properties' not in data:
+        data['properties'] = []
+
+    properties = data['properties']
+    for prop in properties:
+        if prop_name == prop['name']:
+            prop['value'] = prop_value
+            return
+    properties.append({'name': prop_name, 'value': prop_value})
+
 # ===========================================
 # Dit Class
 
@@ -441,21 +469,11 @@ class Dit:
     # ===========================================
     # Task management
 
-    @staticmethod
-    def _new_task_data(description=None):
-        return {
-            "description": description,
-            "logbook": [],
-            "properties": [],
-            "notes": [],
-            "created_at": now()
-        }
-
     def _create_task(self, group, subgroup, task, description):
         task_fp = self._make_task_path(group, subgroup, task)
         if os.path.isfile(task_fp):
             raise DitException("Task file already exists: %s" % task_fp)
-        data = self._new_task_data(description)
+        data = data_new(description)
         save_json_file(task_fp, data)
         self._add_to_index(group, subgroup, task)
         self._save_index()
@@ -472,24 +490,6 @@ class Dit:
         data['updated_at'] = now()
         save_json_file(task_fp, data)
         msg_verbose("Task saved: %s" % _(group, subgroup, task))
-
-    @staticmethod
-    def _add_note(data, note_text):
-        if 'notes' not in data:
-            data['notes'] = []
-        data['notes'].append(note_text)
-
-    @staticmethod
-    def _set_property(data, prop_name, prop_value):
-        if 'properties' not in data:
-            data['properties'] = []
-
-        properties = data['properties']
-        for prop in properties:
-            if prop_name == prop['name']:
-                prop['value'] = prop_value
-                return
-        properties.append({'name': prop_name, 'value': prop_value})
 
     # Current Task
 
@@ -1097,7 +1097,7 @@ class Dit:
             return
 
         data = self._load_task_data(group, subgroup, task)
-        self._add_note(data, note_text)
+        data_add_note(data, note_text)
         msg_normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
@@ -1130,7 +1130,7 @@ class Dit:
             return
 
         data = self._load_task_data(group, subgroup, task)
-        self._set_property(data, prop_name, prop_value)
+        data_set_property(data, prop_name, prop_value)
         msg_normal("Set property of: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
