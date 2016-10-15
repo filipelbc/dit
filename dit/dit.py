@@ -212,6 +212,21 @@ def save_json_file(fp, data):
         f.write(json.dumps(data))
 
 # ===========================================
+# Task Verification
+
+
+def is_valid_task_name(name):
+    return len(name) > 0 and name[0].isalpha() and name not in PROHIBITED_FNS
+
+
+def is_valid_group_name(name):
+    return name == ROOT_NAME or is_valid_task_name(name)
+
+
+def is_valid_task_data(data):
+    return isinstance(data, dict)
+
+# ===========================================
 # Task Data Manipulation
 
 
@@ -364,17 +379,6 @@ class Dit:
                 subgroup == self.previous_subgroup and
                 group == self.previous_group)
 
-    def _is_valid_group_name(self, name):
-        return ((name == ROOT_NAME) or
-                (len(name) > 0 and
-                 name[0].isalpha() and
-                 name not in PROHIBITED_FNS))
-
-    def _is_valid_task_name(self, name):
-        return (len(name) > 0 and
-                name[0].isalpha() and
-                name not in PROHIBITED_FNS)
-
     # ===========================================
     # Task management
 
@@ -388,10 +392,6 @@ class Dit:
             "created_at": now()
         }
 
-    @staticmethod
-    def _is_valid_task_data(data):
-        return isinstance(data, dict)
-
     def _create_task(self, group, subgroup, task, description):
         task_fp = self._make_task_path(group, subgroup, task)
         if os.path.isfile(task_fp):
@@ -403,10 +403,10 @@ class Dit:
 
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._get_task_path(group, subgroup, task)
-        task = load_json_file(task_fp)
-        if not self._is_valid_task_data(task):
+        data = load_json_file(task_fp)
+        if not is_valid_task_data(data):
             raise DitException("Task file contains invalid data: %s" % task_fp)
-        return task
+        return data
 
     def _save_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
@@ -534,7 +534,7 @@ class Dit:
         for root, dirs, files in os.walk(self.base_path):
             dirs.sort()
             for f in sorted(files):
-                if not self._is_valid_task_name(f):
+                if not is_valid_task_name(f):
                     continue
                 p = root[len(self.base_path) + 1:].split(os.sep)
 
@@ -723,9 +723,9 @@ class Dit:
         group, subgroup, task = names
 
         for name in [group, subgroup]:
-            if name and not self._is_valid_group_name(name):
+            if name and not is_valid_group_name(name):
                 raise DitException("Invalid group name: %s" % name)
-        if task and not self._is_valid_task_name(task):
+        if task and not is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
 
         if group == ROOT_NAME and subgroup:
@@ -755,9 +755,9 @@ class Dit:
                 subgroup = ROOT_NAME
 
         for name in [group, subgroup]:
-            if not self._is_valid_group_name(name):
+            if not is_valid_group_name(name):
                 raise DitException("Invalid group name: %s" % name)
-        if not self._is_valid_task_name(task):
+        if not is_valid_task_name(task):
             raise DitException("Invalid task name: %s" % task)
 
         if group == ROOT_NAME and subgroup:
@@ -1112,7 +1112,7 @@ class Dit:
 
         if new_data_raw:
             new_data = json.loads(new_data_raw)
-            if self._is_valid_task_data(new_data):
+            if is_valid_task_data(new_data):
                 print("Manually edited: %s" % _(group, subgroup, task))
                 self._save_task(group, subgroup, task, new_data)
             else:
