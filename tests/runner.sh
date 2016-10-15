@@ -6,7 +6,7 @@ do
     out=${i%.*}.out
     ok=${i%.*}.ok
     diff=${i%.*}.diff
-    ./$i > $out 2>&1
+    ./$i &> $out
     diff -u $ok $out > $diff
     if [ -s $diff ]; then
         echo "fail"

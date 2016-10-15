@@ -152,6 +152,37 @@ DEFAULT_BASE_DIR = ".dit"
 DEFAULT_BASE_PATH = "~/" + DEFAULT_BASE_DIR
 
 # ===========================================
+# General Options
+
+VERBOSE = False
+
+# ===========================================
+# Message output
+
+
+def msg_normal(message):
+    sys.stdout.write("%s\n" % message)
+
+
+def msg_verbose(message):
+    if VERBOSE:
+        msg_normal(message)
+
+
+def msg_warning(message):
+    if VERBOSE:
+        msg_normal(message)
+
+
+def msg_error(message):
+    sys.stdout.flush()
+    sys.stderr.write("ERROR: %s\n" % message)
+
+
+def msg_selected(group, subgroup, task):
+    msg_verbose("Selected: %s" % _(group, subgroup, task))
+
+# ===========================================
 # Command decorator
 
 COMMAND_INFO = {}
@@ -255,7 +286,7 @@ def data_clock_in(data):
     if len(logbook) > 0:
         last = logbook[-1]
         if not last['out']:
-            print("Already clocked in.")
+            msg_normal("Already clocked in.")
             return
     data['logbook'] = logbook + [{'in': now(), 'out': None}]
 
@@ -263,11 +294,11 @@ def data_clock_in(data):
 def data_clock_append(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        print("Task has no clocking.")
+        msg_normal("Task has no clocking.")
         return
     last = logbook[-1]
     if not last['out']:
-        print("Already clocked in.")
+        msg_normal("Already clocked in.")
         return
     last['out'] = None
 
@@ -275,11 +306,11 @@ def data_clock_append(data):
 def data_clock_out(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        print("Already clocked out.")
+        msg_normal("Already clocked out.")
         return
     last = logbook[-1]
     if last['out']:
-        print("Already clocked out.")
+        msg_normal("Already clocked out.")
         return
     last['out'] = now()
     data['logbook'] = logbook
@@ -288,11 +319,11 @@ def data_clock_out(data):
 def data_clock_cancel(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        print("Was not clocked in.")
+        msg_normal("Was not clocked in.")
         return
     last = logbook[-1]
     if last['out']:
-        print("Was not clocked in.")
+        msg_normal("Was not clocked in.")
         return
     logbook.pop(-1)
     data['logbook'] = logbook
@@ -300,7 +331,7 @@ def data_clock_cancel(data):
 
 def data_conclude(data):
     if data.get('concluded_at', None):
-        print("Already concluded.")
+        msg_normal("Already concluded.")
         return
     data['concluded_at'] = now()
 
@@ -323,19 +354,6 @@ class Dit:
 
     base_path = None
     printer = None
-    verbose = False
-
-    # ===========================================
-    # Trace and Verbosity
-
-    # helpers
-
-    def print_verb(self, message):
-        if self.verbose:
-            print(message)
-
-    def print_selected(self, group, subgroup, task):
-        self.print_verb("Selected: %s" % _(group, subgroup, task))
 
     # ===========================================
     # Paths and files names
@@ -343,12 +361,12 @@ class Dit:
     def _make_path(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
-            self.print_verb("Created: %s" % path_to_string(path))
+            msg_verbose("Created: %s" % path_to_string(path))
 
     def _setup_base_path(self, directory):
         path = discover_base_path(directory)
         self._make_path(path)
-        self.print_verb("Using directory: %s" % path_to_string(path))
+        msg_verbose("Using directory: %s" % path_to_string(path))
         self.base_path = path
 
     def _current_path(self):
@@ -417,7 +435,7 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now()
         save_json_file(task_fp, data)
-        self.print_verb("Task saved: %s" % _(group, subgroup, task))
+        msg_verbose("Task saved: %s" % _(group, subgroup, task))
 
     @staticmethod
     def _add_note(data, note_text):
@@ -458,11 +476,11 @@ class Dit:
             'halted': self.current_halted
         }
         save_json_file(self._current_path(), current_data)
-        self.print_verb("%s saved: %s%s" %
-                        (CURRENT_FN, _(self.current_group,
-                                       self.current_subgroup,
-                                       self.current_task),
-                         " (halted)" if self.current_halted else ""))
+        msg_verbose("%s saved: %s%s" %
+                    (CURRENT_FN, _(self.current_group,
+                                   self.current_subgroup,
+                                   self.current_task),
+                     " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
         current = load_json_file(self._current_path())
@@ -486,10 +504,10 @@ class Dit:
             'task': self.previous_task
         }
         save_json_file(self._previous_path(), previous_data)
-        self.print_verb("%s saved: %s" %
-                        (PREVIOUS_FN, _(self.previous_group,
-                                        self.previous_subgroup,
-                                        self.previous_task)))
+        msg_verbose("%s saved: %s" %
+                    (PREVIOUS_FN, _(self.previous_group,
+                                    self.previous_subgroup,
+                                    self.previous_task)))
 
     def _load_previous(self):
         previous = load_json_file(self._previous_path())
@@ -524,7 +542,7 @@ class Dit:
 
     def _save_index(self):
         save_json_file(self._index_path(), self.index)
-        self.print_verb("%s saved." % INDEX_FN)
+        msg_verbose("%s saved." % INDEX_FN)
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -564,7 +582,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        self.print_verb("%s rebuilt." % INDEX_FN)
+        msg_verbose("%s rebuilt." % INDEX_FN)
 
     # ===========================================
     # Export
@@ -790,7 +808,7 @@ class Dit:
             else:
                 (group, subgroup, task) = self._name_parser(selection)
 
-        self.print_selected(group, subgroup, task)
+        msg_selected(group, subgroup, task)
 
         if not task:
             raise NoTaskSpecifiedCondition("No task specified.")
@@ -840,7 +858,7 @@ class Dit:
     # Commands
 
     def usage(self):
-        print(__doc__)
+        msg_normal(__doc__)
 
     @command("n", "-: --:", "", SELECT_BY_NAME)
     def new(self, argv):
@@ -848,7 +866,7 @@ class Dit:
             raise ArgumentException("Missing argument.")
 
         (group, subgroup, task) = self._name_parser(argv.pop(0))
-        self.print_selected(group, subgroup, task)
+        msg_selected(group, subgroup, task)
 
         description = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -862,7 +880,7 @@ class Dit:
             description = self._prompt('Description')
 
         self._create_task(group, subgroup, task, description)
-        print("Created: %s" % _(group, subgroup, task))
+        msg_normal("Created: %s" % _(group, subgroup, task))
 
         return (group, subgroup, task)
 
@@ -882,7 +900,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         data_clock_in(data)
-        print("Working on: %s" % _(group, subgroup, task))
+        msg_normal("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set previous
@@ -901,7 +919,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv)
         except NoTaskSpecifiedCondition as ex:
-            self.print_verb('Nothing to halt.')
+            msg_verbose('Nothing to halt.')
             return
 
         if len(argv) > 0:
@@ -911,13 +929,13 @@ class Dit:
 
         if cancel:
             data_clock_cancel(data)
-            print("Canceled: %s" % _(group, subgroup, task))
+            msg_normal("Canceled: %s" % _(group, subgroup, task))
         else:
             data_clock_out(data)
-            print("Halted: %s" % _(group, subgroup, task))
+            msg_normal("Halted: %s" % _(group, subgroup, task))
         if conclude:
             data_conclude(data)
-            print("Concluded: %s" % _(group, subgroup, task))
+            msg_normal("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current as halted
@@ -930,7 +948,7 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser(argv or [CURRENT_FN])
         except NoTaskSpecifiedCondition as ex:
-            self.print_verb('No task selected.')
+            msg_verbose('No task selected.')
             return
 
         if len(argv) > 0:
@@ -938,7 +956,7 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         data_clock_append(data)
-        print("Continuing: %s" % _(group, subgroup, task))
+        msg_normal("Continuing: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         # set current
@@ -1016,7 +1034,7 @@ class Dit:
         if statussing and task:
             options['concluded'] = True
 
-        self.print_selected(group, subgroup, task)
+        msg_selected(group, subgroup, task)
 
         if output in [None, "stdout"]:
             file = sys.stdout
@@ -1064,12 +1082,12 @@ class Dit:
             note_text = self._prompt("Description")
 
         if not note_text:
-            print("Operation cancelled.")
+            msg_normal("Operation cancelled.")
             return
 
         data = self._load_task_data(group, subgroup, task)
         self._add_note(data, note_text)
-        print("Noted added to: %s" % _(group, subgroup, task))
+        msg_normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     @command("p", "-: --:", "", SELECT_BY_NAME)
@@ -1097,12 +1115,12 @@ class Dit:
                 prop_value = ''
 
         if not prop_name:
-            print("Operation cancelled.")
+            msg_normal("Operation cancelled.")
             return
 
         data = self._load_task_data(group, subgroup, task)
         self._set_property(data, prop_name, prop_value)
-        print("Set property of: %s" % _(group, subgroup, task))
+        msg_normal("Set property of: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     @command("m", "", "", SELECT_BY_NAME)
@@ -1118,24 +1136,25 @@ class Dit:
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if is_valid_task_data(new_data):
-                print("Manually edited: %s" % _(group, subgroup, task))
+                msg_normal("Manually edited: %s" % _(group, subgroup, task))
                 self._save_task(group, subgroup, task, new_data)
             else:
-                print("Invalid data type, should be a dictionary.")
+                msg_normal("Invalid data type, should be a dictionary.")
         else:
-            print("Operation cancelled.")
+            msg_normal("Operation cancelled.")
 
     # ===========================================
     # Main
 
     def configure(self, argv):
+        global VERBOSE
         rebuild_index = False
         directory = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
-                self.verbose = True
+                VERBOSE = True
             elif opt in ["--directory", "-d"]:
                 directory = argv.pop(0)
             elif opt in ["--rebuild-index", '-r']:
@@ -1286,7 +1305,7 @@ def completion():
             comp_options = complete_selection(cmd, directory, word)
         else:
             comp_options = complete_cmd_name()
-    elif word.startswith(".") or word.startswith("/"):
+    elif word.startswith((ROOT_NAME_CHAR, SEPARATOR_CHAR)):
         if cmd:
             comp_options = complete_selection(cmd, directory, word)
         else:
@@ -1299,7 +1318,7 @@ def completion():
     else:
         comp_options = ""
 
-    print(comp_options)
+    sys.stdout.write(comp_options)
 
 # ===========================================
 # Main
@@ -1314,11 +1333,9 @@ def main():
         if dit.configure(argv):
             dit.interpret(argv)
     except DitException as err:
-        print("ERROR: %s" % err)
-        print("Type 'dit --help' for usage details.")
+        msg_error(err)
     except IndexError as err:
         # this was probably caused by a pop on an empty argument list
-        print("ERROR: Missing argument.")
-        print("Type 'dit --help' for usage details.")
+        msg_error("Missing argument.")
     except json.decoder.JSONDecodeError:
-        print("ERROR: Invalid JSON.")
+        msg_error("Invalid JSON.")
