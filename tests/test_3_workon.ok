@@ -359,18 +359,15 @@ $ dit -v -d ./ditdir workon t10
 Using directory: ditdir
 Selected: g5/g6/t10
 ERROR: No such task file: ./ditdir/g5/g6/t10
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon /t10
 Using directory: ditdir
 Selected: g5/./t10
 ERROR: No such task file: ./ditdir/g5/t10
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 2
 Using directory: ditdir
 ERROR: Invalid index: 2
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon //t10
 Using directory: ditdir

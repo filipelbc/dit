@@ -344,7 +344,6 @@ Selected: t10/_/_
 $ dit -v -d ./ditdir list 5
 Using directory: ditdir
 ERROR: Invalid index: 5
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list //t10
 Using directory: ditdir

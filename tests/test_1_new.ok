@@ -63,7 +63,6 @@ $ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
 Using directory: ditdir
 Selected: ././t7
 ERROR: Task file already exists: ./ditdir/t7
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new t10 -: '. . t10'
 Using directory: ditdir
@@ -74,12 +73,10 @@ Created: ././t10
 $ dit -v -d ./ditdir new :abu -: 'fails: invalid task name'
 Using directory: ditdir
 ERROR: Invalid task name: :abu
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ dit -v -d ./ditdir new .bo/bar -: 'fails: invalid group name'
 Using directory: ditdir
 ERROR: Invalid group name: .bo
-Type 'dit --help' for usage details.
 ---------------------------------------------------
 $ find './ditdir' -type f | sort
 ./ditdir/g1/t2
