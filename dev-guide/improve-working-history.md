@@ -143,11 +143,13 @@ stack-controlled workflow.
 The `dit` commands should work as follows:
 
 1. **workon T**: starts clocking task T and sets CURRENT to T.
-    * If there was a CURRENT task, it is moved to the top of the PREVIOUS stack.
+    * If there was a CURRENT task in HALTED state, it is moved to the top of the
+      PREVIOUS stack.
+    * If there was a CURRENT task in DOING state, nothing is done.
 
 2. **halt**: stops clocking CURRENT.
 
-3. **append**: undoes the previous `halt`.
+3. **append**: if the CURRENT task is halted, this command undoes the `halt`.
 
 4. **conclude [T]**: removes the task T or CURRENT from the PREVIOUS stack (not
    necessarily from the top) or from CURRENT, `halt`ing it first.
