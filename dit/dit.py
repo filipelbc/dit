@@ -22,8 +22,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
-      Starts clocking the specified task. Sets PREVIOUS if selected task is
-      different from CURRENT one. Sets CURRENT task.
+      Starts clocking the specified task. If CURRENT is not halted, nothing is
+      done. Sets CURRENT task.
       --new, -n
         Same as 'new' followed by 'workon'.
 
@@ -32,21 +32,20 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       halted.
 
     append [<id> | <name>]
-      Undoes the previous 'halt ...'.
+      If CURRENT is halted, undoes the 'halt'.
 
     cancel [<id> | <name>]
-      Cancels the clocking of the CURRENT task or the selected one.
-      (The intention is to undo the previous 'workon', but not all of its
-       side-effects are undoable.)
+      Undoes the previous 'workon'.
 
     resume
       Same as 'workon CURRENT'.
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon ...'.
+      Same as 'halt' followed by 'workon T'.
 
     switchback
-      Same as 'halt' followed by 'workon PREVIOUS'.
+      Same as 'switchto T', where T is the last halted task that is not
+      CURRENT.
 
     conclude [<id> | <name>]
       Concludes the CURRENT task or the selected one. Implies a 'halt'.
@@ -96,15 +95,14 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     $EDITOR environment variable is set, a text file will be open for
     editing the argument; b) otherwise, a simple prompt will be used.
 
-  <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
+  <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT
 
-  <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
+  <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT
 
   Note that a "-name" must begin with a letter to be valid. Group- and
   subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
-  Also note that CURRENT and PREVIOUS are not valid arguments for the command
-  'new'.
+  Also note that CURRENT is not a valid argument for the command 'new'.
 
   <id>: [["group-id"/]"subgroup-id"/]"task-id"
 
