@@ -6,8 +6,8 @@ Selected: ./_/_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:09:49
-  ~ Time spent: 1m20s
+  * Updated at: 2016-09-10 19:08:29
+  ~ Time spent: 1m0s
   Notes:
   * this is another note
   Properties:
@@ -16,37 +16,36 @@ Selected: ./_/_
   + [2016-09-10 18:59:39]--[2016-09-10 18:59:59]
   + [2016-09-10 19:00:19]--[2016-09-10 19:00:39]
   + [2016-09-10 19:00:59]--[2016-09-10 19:01:19]
-  + [2016-09-10 19:06:09]--[2016-09-10 19:06:29]
 
 [0/0/1] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
-  * Updated at: 2016-09-10 19:09:39
-  * Concluded at: 2016-09-10 19:05:19
+  * Updated at: 2016-09-10 19:08:19
   ~ Time spent: 40s
   Notes:
   * this is a note
   Properties:
   * foo: bar
   Logbook:
-  + [2016-09-10 19:03:29]--[2016-09-10 19:03:49]
-  + [2016-09-10 19:04:49]--[2016-09-10 19:05:09]
-  + [2016-09-10 19:08:49]--[None]
+  + [2016-09-10 19:02:39]--[2016-09-10 19:02:59]
+  + [2016-09-10 19:03:59]--[2016-09-10 19:04:19]
+  + [2016-09-10 19:07:29]--[None]
 
 [0/0/2] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
-  * Updated at: 2016-09-10 19:04:39
+  * Updated at: 2016-09-10 19:03:49
   ~ Time spent: 20s
   Logbook:
-  + [2016-09-10 19:04:09]--[2016-09-10 19:04:29]
+  + [2016-09-10 19:03:19]--[2016-09-10 19:03:39]
 
 [0/0/3] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:05:59
+  * Updated at: 2016-09-10 19:05:19
+  ~ Time spent: 20s
   Logbook:
-  + [2016-09-10 19:05:39]--[None]
+  + [2016-09-10 19:04:49]--[2016-09-10 19:05:09]
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto t4
 Using directory: ditdir
@@ -57,7 +56,7 @@ CURRENT saved: ././t10 (halted)
 Selected: ././t4
 Working on: ././t4
 Task saved: ././t4
-PREVIOUS saved: ././t10
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
@@ -69,7 +68,7 @@ CURRENT saved: ././t4 (halted)
 Selected: ././t10
 Working on: ././t10
 Task saved: ././t10
-PREVIOUS saved: ././t4
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
@@ -81,7 +80,7 @@ CURRENT saved: ././t10 (halted)
 Selected: ././t4
 Working on: ././t4
 Task saved: ././t4
-PREVIOUS saved: ././t10
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
@@ -121,7 +120,7 @@ CURRENT saved: ././t4 (halted)
 Selected: ././t1
 Working on: ././t1
 Task saved: ././t1
-PREVIOUS saved: ././t4
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
@@ -133,24 +132,18 @@ CURRENT saved: ././t1 (halted)
 Selected: ././t4
 Working on: ././t4
 Task saved: ././t4
-PREVIOUS saved: ././t1
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir resume
 Using directory: ditdir
 Selected: ././t4
-Already clocked in.
-Working on: ././t4
-Task saved: ././t4
-CURRENT saved: ././t4
+Already working in a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir append
 Using directory: ditdir
 Selected: ././t4
-Already clocked in.
-Continuing: ././t4
-Task saved: ././t4
-CURRENT saved: ././t4
+Task is in DOING state.
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel
 Using directory: ditdir
@@ -166,8 +159,108 @@ Nothing to halt.
 Selected: ././t1
 Working on: ././t1
 Task saved: ././t1
-PREVIOUS saved: ././t4
+PREVIOUS saved with 6 tasks.
 CURRENT saved: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t1
+Halted: ././t1
+Concluded: ././t1
+Task saved: ././t1
+PREVIOUS saved with 5 tasks.
+CURRENT saved: ././t4 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: ././t4
+Working on: ././t4
+Task saved: ././t4
+CURRENT saved: ././t4
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t4
+Halted: ././t4
+Concluded: ././t4
+Task saved: ././t4
+PREVIOUS saved with 4 tasks.
+CURRENT saved: ././t10 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: ././t10
+Working on: ././t10
+Task saved: ././t10
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t10
+Halted: ././t10
+Concluded: ././t10
+Task saved: ././t10
+PREVIOUS saved with 3 tasks.
+CURRENT saved: g5/g6/t8 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: g5/g6/t8
+Working on: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/t8
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g5/g6/t8
+Halted: g5/g6/t8
+Concluded: g5/g6/t8
+Task saved: g5/g6/t8
+PREVIOUS saved with 2 tasks.
+CURRENT saved: g5/./t6 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: g5/./t6
+Working on: g5/./t6
+Task saved: g5/./t6
+CURRENT saved: g5/./t6
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g5/./t6
+Halted: g5/./t6
+Concluded: g5/./t6
+Task saved: g5/./t6
+PREVIOUS saved with 1 tasks.
+CURRENT saved: g4/./t5 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: g4/./t5
+Working on: g4/./t5
+Task saved: g4/./t5
+CURRENT saved: g4/./t5
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g4/./t5
+Halted: g4/./t5
+Concluded: g4/./t5
+Task saved: g4/./t5
+PREVIOUS saved with 0 tasks.
+CURRENT saved: ././t7 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: ././t7
+Working on: ././t7
+Task saved: ././t7
+CURRENT saved: ././t7
+---------------------------------------------------
+$ dit -v -d ./ditdir switchback
+Using directory: ditdir
+No halted tasks to switchback
 ---------------------------------------------------
 $ dit -v -d ./ditdir list -c -v .
 Using directory: ditdir
@@ -176,7 +269,8 @@ Selected: ./_/_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:15:19
+  * Updated at: 2016-09-10 19:14:09
+  * Concluded at: 2016-09-10 19:13:59
   ~ Time spent: 1m40s
   Notes:
   * this is another note
@@ -186,40 +280,44 @@ Selected: ./_/_
   + [2016-09-10 18:59:39]--[2016-09-10 18:59:59]
   + [2016-09-10 19:00:19]--[2016-09-10 19:00:39]
   + [2016-09-10 19:00:59]--[2016-09-10 19:01:19]
-  + [2016-09-10 19:06:09]--[2016-09-10 19:06:29]
-  + [2016-09-10 19:13:39]--[2016-09-10 19:13:59]
-  + [2016-09-10 19:15:09]--[None]
+  + [2016-09-10 19:12:19]--[2016-09-10 19:12:39]
+  + [2016-09-10 19:13:29]--[2016-09-10 19:13:49]
 
 [0/0/1] t10
   . . t10
   * Created at: 2016-09-10 18:59:29
-  * Updated at: 2016-09-10 19:11:39
-  * Concluded at: 2016-09-10 19:05:19
-  ~ Time spent: 2m20s
+  * Updated at: 2016-09-10 19:15:49
+  * Concluded at: 2016-09-10 19:15:39
+  ~ Time spent: 2m40s
   Notes:
   * this is a note
   Properties:
   * foo: bar
   Logbook:
-  + [2016-09-10 19:03:29]--[2016-09-10 19:03:49]
-  + [2016-09-10 19:04:49]--[2016-09-10 19:05:09]
-  + [2016-09-10 19:08:49]--[2016-09-10 19:10:09]
-  + [2016-09-10 19:11:09]--[2016-09-10 19:11:29]
+  + [2016-09-10 19:02:39]--[2016-09-10 19:02:59]
+  + [2016-09-10 19:03:59]--[2016-09-10 19:04:19]
+  + [2016-09-10 19:07:29]--[2016-09-10 19:08:49]
+  + [2016-09-10 19:09:49]--[2016-09-10 19:10:09]
+  + [2016-09-10 19:15:09]--[2016-09-10 19:15:29]
 
 [0/0/2] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
   * Updated at: 2016-09-10 19:14:59
-  ~ Time spent: 1m50s
+  * Concluded at: 2016-09-10 19:14:49
+  ~ Time spent: 2m10s
   Logbook:
-  + [2016-09-10 19:04:09]--[2016-09-10 19:04:29]
+  + [2016-09-10 19:03:19]--[2016-09-10 19:03:39]
+  + [2016-09-10 19:09:09]--[2016-09-10 19:09:29]
   + [2016-09-10 19:10:29]--[2016-09-10 19:10:49]
-  + [2016-09-10 19:11:49]--[2016-09-10 19:12:09]
-  + [2016-09-10 19:12:29]--[2016-09-10 19:13:19]
+  + [2016-09-10 19:11:09]--[2016-09-10 19:11:59]
+  + [2016-09-10 19:14:19]--[2016-09-10 19:14:39]
 
 [0/0/3] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:05:59
+  * Updated at: 2016-09-10 19:18:39
+  ~ Time spent: 20s
   Logbook:
-  + [2016-09-10 19:05:39]--[None]
+  + [2016-09-10 19:04:49]--[2016-09-10 19:05:09]
+  + [2016-09-10 19:18:29]--[None]

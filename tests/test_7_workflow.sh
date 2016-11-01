@@ -28,4 +28,30 @@
 
 ./ditcmd switchback
 
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd conclude
+
+./ditcmd resume
+
+./ditcmd switchback
+
 ./ditcmd list -c -v .
