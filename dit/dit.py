@@ -142,14 +142,19 @@ class ArgumentException(DitException):
 class NoTaskSpecifiedCondition(DitException):
     pass
 
+
+class HookException(Exception):
+    pass
+
 # ===========================================
 # Constants
 
 CURRENT_FN = "CURRENT"
 PREVIOUS_FN = "PREVIOUS"
 INDEX_FN = "INDEX"
+HOOKS_DIR = "HOOKS"
 
-PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN]
+PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN, HOOKS_DIR]
 
 SEPARATOR_CHAR = "/"
 COMMENT_CHAR = "#"
@@ -174,6 +179,8 @@ class State(Enum):
 # General Options
 
 VERBOSE = False
+HOOKS_ENABLED = True
+CHECK_HOOKS = False
 
 # ===========================================
 # Message output
@@ -214,7 +221,7 @@ SELECT_BY_NAME = "N"
 SELECT_BY_GNAME = "G"
 
 
-def command(letter, options, select):
+def command(letter, options, select, readonly=False):
     def wrapper(cmd):
         global COMMAND_INFO
         name = cmd.__name__.replace("_", "-")
@@ -223,7 +230,8 @@ def command(letter, options, select):
         COMMAND_INFO[name] = {'name': cmd.__name__,
                               'letter': letter,
                               'options': options,
-                              'select': select}
+                              'select': select,
+                              'readonly': readonly}
         if letter and letter in COMMAND_INFO:
             raise Exception("Letter '%s' is already registered as command.")
         if letter:
@@ -441,6 +449,7 @@ def data_set_property(data, prop_name, prop_value):
     properties = data['properties']
     for prop in properties:
         if prop_name == prop['name']:
+            msg_warning('Property overwritten, previous value was: %s' % prop['value'])
             prop['value'] = prop_value
             return
     properties.append({'name': prop_name, 'value': prop_value})
@@ -461,7 +470,7 @@ class Dit:
     index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
 
     base_path = None
-    printer = None
+    exporter = None
 
     # ===========================================
     # Paths and files names
@@ -480,6 +489,9 @@ class Dit:
 
     def _index_path(self):
         return os.path.join(self.base_path, INDEX_FN)
+
+    def _hook_path(self, hook):
+        return os.path.join(self.base_path, HOOKS_DIR, hook)
 
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
@@ -674,19 +686,19 @@ class Dit:
     def _export_t_k(self, g, i, s, j, t, k, force_header=False):
         if force_header:
             if i > 0:
-                self.printer.group(g[0], i)
+                self.exporter.group(g[0], i)
             if j > 0:
-                self.printer.subgroup(g[0], i, s[0], j)
+                self.exporter.subgroup(g[0], i, s[0], j)
 
         data = self._load_task_data(g[0], s[0], t)
-        self.printer.task(g[0], i, s[0], j, t, k, data)
+        self.exporter.task(g[0], i, s[0], j, t, k, data)
 
     def _export_s_j(self, g, i, s, j, force_header=False):
         if force_header and i > 0:
-            self.printer.group(g[0], i)
+            self.exporter.group(g[0], i)
 
         if j > 0:
-            self.printer.subgroup(g[0], i, s[0], j)
+            self.exporter.subgroup(g[0], i, s[0], j)
         for k, t in enumerate(s[1]):
             self._export_t_k(g, i,
                              s, j,
@@ -694,7 +706,7 @@ class Dit:
 
     def _export_g_i(self, g, i):
         if i > 0:
-            self.printer.group(g[0], i)
+            self.exporter.group(g[0], i)
         for j, s in enumerate(g[1]):
             self._export_s_j(g, i,
                              s, j)
@@ -904,6 +916,19 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
     # ===========================================
+    # Hooks
+
+    def _call_hook(self, hook):
+        if HOOKS_ENABLED:
+            hook_fn = self._hook_path(hook)
+            if os.path.isfile(hook_fn):
+                msg_normal("Executing hook: %s" % hook)
+                try:
+                    subprocess.run([hook_fn, self.base_path], check=CHECK_HOOKS)
+                except subprocess.CalledProcessError:
+                    raise HookException(hook)
+
+    # ===========================================
     # Commands
 
     @command("n", "-: --:", SELECT_BY_NAME)
@@ -1070,15 +1095,15 @@ class Dit:
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", "--concluded --verbose --all", SELECT_BY_GNAME)
+    @command("q", "--concluded --verbose --all", SELECT_BY_GNAME, True)
     def status(self, argv):
         self.export(argv, statussing=True)
 
-    @command("l", "--concluded --verbose --all", SELECT_BY_GNAME)
+    @command("l", "--concluded --verbose --all", SELECT_BY_GNAME, True)
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("e", "--concluded --verbose --all --output", SELECT_BY_GNAME)
+    @command("e", "--concluded --verbose --all --output", SELECT_BY_GNAME, True)
     def export(self, argv, listing=False, statussing=False):
         all = False
         output = None
@@ -1130,10 +1155,10 @@ class Dit:
         if fmt not in ['dit', 'org']:
             raise DitException("Unrecognized format: %s", fmt)
 
-        self.printer = import_module('dit.' + fmt + 'printer')
-        self.printer.setup(file, options, statussing, listing)
+        self.exporter = import_module('dit.' + fmt + 'exporter')
+        self.exporter.setup(file, options, statussing, listing)
 
-        self.printer.begin()
+        self.exporter.begin()
 
         if all:
             self._export_all()
@@ -1146,7 +1171,7 @@ class Dit:
         else:
             self._export_all()
 
-        self.printer.end()
+        self.exporter.end()
 
         file.close()
 
@@ -1235,37 +1260,56 @@ class Dit:
     # ===========================================
     # Main
 
-    def configure(self, argv):
+    def interpret(self, argv):
         global VERBOSE
+        global HOOKS_ENABLED
+        global CHECK_HOOKS
         directory = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 VERBOSE = True
+            elif opt in ["--no-hooks"]:
+                HOOKS_ENABLED = False
+            elif opt in ["--check-hooks"]:
+                CHECK_HOOKS = False
             elif opt in ["--directory", "-d"]:
                 directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
                 msg_usage()
-                return False
+                return
             else:
                 raise ArgumentException("No such option: %s" % opt)
 
         self._setup_base_path(directory)
+
+        if len(argv) == 0:
+            raise ArgumentException("Missing command.")
+
+        cmd = argv.pop(0)
+        if cmd not in COMMAND_INFO:
+            raise ArgumentException("No such command: %s" % cmd)
+        readonly_cmd = COMMAND_INFO[cmd]["readonly"]
+
+        self._call_hook("before")
+
+        if readonly_cmd:
+            self._call_hook("before_read")
+        else:
+            self._call_hook("before_write")
+
         self._load_current()
         self._load_previous()
         self._load_index()
-        return True
+        getattr(self, COMMAND_INFO[cmd]['name'])(argv)
 
-    def interpret(self, argv):
-        if len(argv) > 0:
-            cmd = argv.pop(0)
-            if cmd in COMMAND_INFO:
-                getattr(self, COMMAND_INFO[cmd]['name'])(argv)
-            else:
-                raise ArgumentException("No such command: %s" % cmd)
+        if readonly_cmd:
+            self._call_hook("after_read")
         else:
-            raise ArgumentException("Missing command.")
+            self._call_hook("after_write")
+
+        self._call_hook("after")
 
 # ===========================================
 # Completion
@@ -1328,7 +1372,7 @@ def completion_cmd_option(cmd):
 
 
 def completion_option():
-    return "--verbose\n--directory\n--help"
+    return "--verbose\n--directory\n--help\n--no-hooks\n--check-hooks"
 
 
 def completion():
@@ -1383,10 +1427,8 @@ def main():
     argv = sys.argv
     argv.pop(0)
 
-    dit = Dit()
     try:
-        if dit.configure(argv):
-            dit.interpret(argv)
+        Dit().interpret(argv)
     except DitException as err:
         msg_error(err)
     except IndexError as err:
@@ -1394,3 +1436,5 @@ def main():
         msg_error("Missing argument.")
     except json.decoder.JSONDecodeError:
         msg_error("Invalid JSON.")
+    except HookException as err:
+        msg_error("Hook %s returned with non-zero code, aborting." % err)
