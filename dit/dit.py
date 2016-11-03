@@ -22,33 +22,33 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
-      Starts clocking the specified task. If CURRENT is not halted, nothing is
-      done. Sets CURRENT task.
+      Starts clocking the specified task. If already working on a task, nothing
+      is done. Sets the CURRENT and PREVIOUS tasks.
       --new, -n
         Same as 'new' followed by 'workon'.
 
-    halt [<id> | <name>]
-      Stops clocking the CURRENT task or the specified one. Sets CURRENT to
-      halted.
+    halt
+      Stops clocking the CURRENT task.
 
-    append [<id> | <name>]
-      If CURRENT is halted, undoes the 'halt'.
+    append
+      Undoes the previous 'halt'.
 
-    cancel [<id> | <name>]
-      Undoes the previous 'workon'.
+    cancel
+      Undoes the previous 'workon' (but the CURRENT task is not changed back).
 
     resume
       Same as 'workon CURRENT'.
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon T'.
+      Same as 'halt' followed by 'workon'.
 
     switchback
-      Same as 'switchto T', where T is the last halted task that is not
-      CURRENT.
+      Same as 'halt' followed by 'workon PREVIOUS'. If there is no PREVIOUS
+      task, nothing is done.
 
     conclude [<id> | <name>]
-      Concludes the CURRENT task or the selected one. Implies a 'halt'.
+      Concludes the CURRENT task or the selected one. Implies a 'halt'. It may
+      set the CURRENT and/or PREVIOUS tasks.
 
   Printing <command>'s:
 
@@ -95,14 +95,19 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     $EDITOR environment variable is set, a text file will be open for
     editing the argument; b) otherwise, a simple prompt will be used.
 
-  <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT
+  <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
 
-  <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT
+  <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
 
-  Note that a "-name" must begin with a letter to be valid. Group- and
+  CURRENT is a reference to the most recent task that received a 'workon'
+  and has not been 'concluded'. PREVIOUS is a reference to the second most
+  recent.
+
+  Note that a "*-name" must begin with a letter to be valid. Group- and
   subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
-  Also note that CURRENT is not a valid argument for the command 'new'.
+  Also note that CURRENT and PREVIOUS are not valid arguments for the command
+  'new'.
 
   <id>: [["group-id"/]"subgroup-id"/]"task-id"
 
@@ -140,7 +145,6 @@ class NoTaskSpecifiedCondition(DitException):
 # ===========================================
 # Constants
 
-
 CURRENT_FN = "CURRENT"
 PREVIOUS_FN = "PREVIOUS"
 INDEX_FN = "INDEX"
@@ -168,7 +172,6 @@ class State(Enum):
 
 # ===========================================
 # General Options
-
 
 VERBOSE = False
 
@@ -204,7 +207,6 @@ def msg_usage():
 
 # ===========================================
 # Command decorator
-
 
 COMMAND_INFO = {}
 
@@ -349,7 +351,7 @@ def is_valid_task_data(data):
 def state(task_data):
     if task_data.get('concluded_at', None):
         return State.CONCLUDED
-    logbook = task_data.get('logbook', None)
+    logbook = task_data.get('logbook', [])
     if len(logbook) > 0:
         last = logbook[-1]
         if last['out']:
@@ -514,8 +516,8 @@ class Dit:
         task_fp = self._get_task_path(group, subgroup, task)
         data = load_json_file(task_fp)
         if not is_valid_task_data(data):
-            raise DitException(
-                "Task file contains invalid data: %s" % task_fp)
+            raise DitException("Task file contains invalid data: %s"
+                               % task_fp)
         return data
 
     def _save_task(self, group, subgroup, task, data):
@@ -548,11 +550,12 @@ class Dit:
             'halted': self.current_halted
         }
         save_json_file(self._current_path(), current_data)
-        msg_verbose("%s saved: %s%s" %
-                    (CURRENT_FN, _(self.current_group,
-                                   self.current_subgroup,
-                                   self.current_task),
-                     " (halted)" if self.current_halted else ""))
+        msg_verbose("%s saved: %s%s"
+                    % (CURRENT_FN,
+                       _(self.current_group,
+                         self.current_subgroup,
+                         self.current_task),
+                       " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
         current = load_json_file(self._current_path())
@@ -565,24 +568,26 @@ class Dit:
     # Previous Task
 
     def _previous_add(self, group, subgroup, task):
-        s = "%s/%s/%s" % (group, subgroup, task,)
+        s = _(group, subgroup, task)
         self.previous_stack.append(s)
 
     def _previous_remove(self, group, subgroup, task):
-        s = "%s/%s/%s" % (group, subgroup, task,)
+        s = _(group, subgroup, task)
         self.previous_stack = [i for i in self.previous_stack if i != s]
 
     def _previous_pop(self):
         e = self.previous_stack.pop()
-        return e.split("/")
+        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                for name in e.split(SEPARATOR_CHAR)]
 
     def _previous_empty(self):
         return len(self.previous_stack) == 0
 
     def _save_previous(self):
         save_json_file(self._previous_path(), self.previous_stack)
-        msg_verbose("%s saved with %d tasks." % (
-            PREVIOUS_FN, len(self.previous_stack),))
+        l = len(self.previous_stack)
+        msg_verbose("%s saved. It has %d task%s now."
+                    % (PREVIOUS_FN, l, "s" if l != 1 else ""))
 
     def _load_previous(self):
         previous = load_json_file(self._previous_path())
@@ -765,8 +770,8 @@ class Dit:
                     names[i] = index[idx]
 
         except ValueError:
-            raise DitException(
-                "Invalid index format, must be an integer: %s" % idx)
+            raise DitException("Invalid index format, must be an integer: %s"
+                               % idx)
         except IndexError:
             raise DitException("Invalid index: %d" % idx)
 
@@ -858,6 +863,9 @@ class Dit:
             if selection == CURRENT_FN:
                 task = self.current_task
 
+            elif selection == PREVIOUS_FN:
+                (group, subgroup, task) = self._previous_pop()
+
             elif selection[0].isdigit():
                 (group, subgroup, task) = self._id_parser(selection)
 
@@ -877,11 +885,19 @@ class Dit:
         if selection == CURRENT_FN:
             return self._get_current()
 
+        elif selection == PREVIOUS_FN:
+            return self._previous_pop()
+
         elif selection[0].isdigit():
             return self._gid_parser(selection)
 
         elif not selection.startswith("-"):
             return self._gname_parser(selection)
+
+    @staticmethod
+    def raise_unrecognized_argument(argv):
+        if len(argv) > 0:
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
     # ===========================================
     # Commands
@@ -899,8 +915,7 @@ class Dit:
             argv.pop(0)
             description = argv.pop(0)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self.raise_unrecognized_argument(argv)
 
         if description is None:
             description = prompt('Description')
@@ -921,11 +936,10 @@ class Dit:
         else:
             (group, subgroup, task) = self._backward_parser(argv)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self.raise_unrecognized_argument(argv)
 
         if not self.current_halted:
-            msg_verbose("Already working in a task.")
+            msg_verbose("Already working on a task.")
             return
 
         data = self._load_task_data(group, subgroup, task)
@@ -951,24 +965,24 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    @command("h", "", SELECT_BY_NAME)
+    @command("h", "", None)
     def halt(self, argv, conclude=False, cancel=False):
         try:
-            (group, subgroup, task) = self._backward_parser(argv)
+            if conclude:
+                (group, subgroup, task) = self._backward_parser(argv)
+            self.raise_unrecognized_argument(argv)
+            if not conclude:
+                (group, subgroup, task) = self._backward_parser([CURRENT_FN])
         except NoTaskSpecifiedCondition:
-            msg_verbose('Nothing to halt.')
+            msg_verbose('Nothing to %s.' % "conclude" if conclude else "halt")
             return
-
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         data = self._load_task_data(group, subgroup, task)
 
         task_state = state(data)
         if task_state != State.DOING:
             if not conclude:
-                msg_verbose('Not working in task (in %s state).' %
-                            task_state.name)
+                msg_verbose('Not working on the task.')
                 return
             elif task_state == State.CONCLUDED:
                 msg_verbose('Task has already been concluded.')
@@ -1000,40 +1014,38 @@ class Dit:
             self._previous_remove(group, subgroup, task)
             self._save_previous()
 
-    @command("a", "", SELECT_BY_NAME)
+    @command("a", "", None)
     def append(self, argv):
-        try:
-            (group, subgroup, task) = self._backward_parser(argv or
-                                                            [CURRENT_FN])
-        except NoTaskSpecifiedCondition:
-            msg_verbose('No task selected.')
-            return
+        self.raise_unrecognized_argument(argv)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        try:
+            (group, subgroup, task) = self._backward_parser([CURRENT_FN])
+        except NoTaskSpecifiedCondition:
+            msg_verbose('No current task to append to.')
+            return
 
         data = self._load_task_data(group, subgroup, task)
         task_state = state(data)
 
         if task_state != State.HALTED:
-            msg_verbose("Task is in %s state." % task_state.name)
+            msg_verbose("Can only append if task is halted, but task is %s."
+                        % task_state.name)
             return
 
-        if self._is_current(group, subgroup, task):
-            data_clock_append(data)
-            msg_normal("Continuing: %s" % _(group, subgroup, task))
-            self._save_task(group, subgroup, task, data)
-            self.current_halted = False
-            self._save_current()
-        else:
-            msg_verbose("Task is not current.")
+        data_clock_append(data)
+        msg_normal("Continuing work on: %s" % _(group, subgroup, task))
+        self._save_task(group, subgroup, task, data)
+        self.current_halted = False
+        self._save_current()
 
-    @command("x", "", SELECT_BY_NAME)
+    @command("x", "", None)
     def cancel(self, argv):
-        self.halt(argv, cancel=True)
+        self.raise_unrecognized_argument(argv)
+        self.halt([], cancel=True)
 
     @command("r", "", None)
     def resume(self, argv):
+        self.raise_unrecognized_argument(argv)
         self.workon([CURRENT_FN])
 
     @command("s", "--new", SELECT_BY_NAME)
@@ -1043,12 +1055,12 @@ class Dit:
 
     @command("b", "", None)
     def switchback(self, argv):
+        self.raise_unrecognized_argument(argv)
         if self._previous_empty():
-            msg_verbose("No halted tasks to switchback")
+            msg_verbose("No previous task to switch back to.")
         else:
             self.halt([])
-            group, subgroup, task = self._previous_pop()
-            self.workon(["%s/%s/%s" % (group, subgroup, task,)])
+            self.workon([PREVIOUS_FN])
 
     @command("c", "", SELECT_BY_NAME)
     def conclude(self, argv):

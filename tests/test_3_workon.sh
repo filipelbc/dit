@@ -26,6 +26,10 @@
 ./ditcmd halt
 ./ditcmd workon '1'
 ./ditcmd halt
+./ditcmd workon 'CURRENT'
+./ditcmd halt
+./ditcmd workon 'PREVIOUS'
+./ditcmd halt
 ./ditcmd status
 
 ./ditcmd workon 't10'
