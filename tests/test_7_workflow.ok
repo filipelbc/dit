@@ -264,6 +264,59 @@ $ dit -v -d ./ditdir switchback
 Using directory: ditdir
 No previous task to switch back to.
 ---------------------------------------------------
+$ dit -v -d ./ditdir workon PREVIOUS
+Using directory: ditdir
+Selected: _/_/_
+ERROR: No task specified.
+---------------------------------------------------
+$ dit -v -d ./ditdir list PREVIOUS
+Using directory: ditdir
+Selected: _/_/_
+
+[0/0/3] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+  ~ Time spent: 20s
+  Logbook:
+  + [2016-09-10 19:06:09]--[2016-09-10 19:06:29]
+  + [2016-09-10 19:19:49]--[None]
+
+[1] g1
+
+[1/0/0] t2
+  g1 . t2
+  * Created at: 2016-09-10 18:58:09
+
+[2] g2
+
+[2/1] g3
+
+[2/1/0] t3
+  g2 g3 t3
+  * Created at: 2016-09-10 18:58:19
+
+[3] g4
+
+[4] g5
+
+[4/0/1] t9
+  g5 . t9
+  * Created at: 2016-09-10 18:59:19
+
+[4/1] g6
+---------------------------------------------------
+$ dit -v -d ./ditdir list CURRENT
+Using directory: ditdir
+Selected: ././t7
+
+[0/0/3] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+  ~ Time spent: 20s
+  Logbook:
+  + [2016-09-10 19:06:09]--[2016-09-10 19:06:29]
+  + [2016-09-10 19:19:49]--[None]
+---------------------------------------------------
 $ dit -v -d ./ditdir list -c -v .
 Using directory: ditdir
 Selected: ./_/_

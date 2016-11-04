@@ -54,4 +54,10 @@
 
 ./ditcmd switchback
 
+./ditcmd workon PREVIOUS
+
+./ditcmd list PREVIOUS
+
+./ditcmd list CURRENT
+
 ./ditcmd list -c -v .

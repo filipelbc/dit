@@ -566,6 +566,8 @@ class Dit:
                               current['halted'])
 
     # Previous Task
+    def _previous_empty(self):
+        return len(self.previous_stack) == 0
 
     def _previous_add(self, group, subgroup, task):
         s = _(group, subgroup, task)
@@ -576,12 +578,14 @@ class Dit:
         self.previous_stack = [i for i in self.previous_stack if i != s]
 
     def _previous_pop(self):
-        e = self.previous_stack.pop()
         return [name if name != ROOT_NAME_CHAR else ROOT_NAME
-                for name in e.split(SEPARATOR_CHAR)]
+                for name in self.previous_stack.pop().split(SEPARATOR_CHAR)]
 
-    def _previous_empty(self):
-        return len(self.previous_stack) == 0
+    def _previous_peak(self):
+        if self._previous_empty():
+            return (None, None, None)
+        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                for name in self.previous_stack[-1].split(SEPARATOR_CHAR)]
 
     def _save_previous(self):
         save_json_file(self._previous_path(), self.previous_stack)
@@ -864,7 +868,7 @@ class Dit:
                 task = self.current_task
 
             elif selection == PREVIOUS_FN:
-                (group, subgroup, task) = self._previous_pop()
+                (group, subgroup, task) = self._previous_peak()
 
             elif selection[0].isdigit():
                 (group, subgroup, task) = self._id_parser(selection)
@@ -886,7 +890,7 @@ class Dit:
             return self._get_current()
 
         elif selection == PREVIOUS_FN:
-            return self._previous_pop()
+            return self._previous_peak()
 
         elif selection[0].isdigit():
             return self._gid_parser(selection)
