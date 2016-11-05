@@ -593,7 +593,7 @@ class Dit:
         return [name if name != ROOT_NAME_CHAR else ROOT_NAME
                 for name in self.previous_stack.pop().split(SEPARATOR_CHAR)]
 
-    def _previous_peak(self):
+    def _previous_peek(self):
         if self._previous_empty():
             return (None, None, None)
         return [name if name != ROOT_NAME_CHAR else ROOT_NAME
@@ -880,7 +880,7 @@ class Dit:
                 task = self.current_task
 
             elif selection == PREVIOUS_FN:
-                (group, subgroup, task) = self._previous_peak()
+                (group, subgroup, task) = self._previous_peek()
 
             elif selection[0].isdigit():
                 (group, subgroup, task) = self._id_parser(selection)
@@ -902,7 +902,7 @@ class Dit:
             return self._get_current()
 
         elif selection == PREVIOUS_FN:
-            return self._previous_peak()
+            return self._previous_peek()
 
         elif selection[0].isdigit():
             return self._gid_parser(selection)
@@ -1173,7 +1173,8 @@ class Dit:
 
         self.exporter.end()
 
-        file.close()
+        if output not in [None, "stdout"]:
+            file.close()
 
     @command("t", "-: --:", SELECT_BY_NAME)
     def note(self, argv):
