@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from tzlocal import get_localzone
 
 # Auxiliary
 
-DATETIME_FORMAT = r'%Y-%m-%d %H:%M:%S'
+DATETIME_FORMAT = r'%Y-%m-%d %H:%M:%S %z'
 
 
 def _timedelta_to_str(d):
@@ -43,7 +44,8 @@ def time_spent_on(logbook):
 # integer
 if os.path.isfile('DIT_TESTING'):
 
-    BASE_NOW = datetime(2016, 9, 10, 18, 57, 49, 0)
+    BASE_NOW = datetime(2016, 9, 10, 18, 57, 49, 0,
+                        timezone(timedelta(-1, 79200), 'BRST'))
 
     def now():
         with open('DIT_TESTING', 'r') as f:
@@ -55,5 +57,7 @@ if os.path.isfile('DIT_TESTING'):
 
 else:
 
+    LOCALZONE = get_localzone()
+
     def now():
-        return datetime.now().strftime(DATETIME_FORMAT)
+        return datetime.now(LOCALZONE).strftime(DATETIME_FORMAT)
