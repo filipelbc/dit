@@ -188,6 +188,7 @@ CHECK_HOOKS = False
 
 def msg_normal(message):
     sys.stdout.write("%s\n" % message)
+    sys.stdout.flush()
 
 
 def msg_verbose(message):
@@ -201,8 +202,8 @@ def msg_warning(message):
 
 
 def msg_error(message):
-    sys.stdout.flush()
     sys.stderr.write("ERROR: %s\n" % message)
+    sys.stdout.flush()
 
 
 def msg_selected(group, subgroup, task):
@@ -918,13 +919,14 @@ class Dit:
     # ===========================================
     # Hooks
 
-    def _call_hook(self, hook):
+    def _call_hook(self, hook, cmd_name):
         if HOOKS_ENABLED:
             hook_fn = self._hook_path(hook)
             if os.path.isfile(hook_fn):
                 msg_normal("Executing hook: %s" % hook)
                 try:
-                    subprocess.run([hook_fn, self.base_path], check=CHECK_HOOKS)
+                    subprocess.run([hook_fn, self.base_path, cmd_name],
+                                   check=CHECK_HOOKS)
                 except subprocess.CalledProcessError:
                     raise HookException(hook)
 
@@ -1274,7 +1276,7 @@ class Dit:
             elif opt in ["--no-hooks"]:
                 HOOKS_ENABLED = False
             elif opt in ["--check-hooks"]:
-                CHECK_HOOKS = False
+                CHECK_HOOKS = True
             elif opt in ["--directory", "-d"]:
                 directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
@@ -1291,26 +1293,28 @@ class Dit:
         cmd = argv.pop(0)
         if cmd not in COMMAND_INFO:
             raise ArgumentException("No such command: %s" % cmd)
-        readonly_cmd = COMMAND_INFO[cmd]["readonly"]
 
-        self._call_hook("before")
+        readonly_cmd = COMMAND_INFO[cmd]["readonly"]
+        cmd_name = COMMAND_INFO[cmd]['name']
+
+        self._call_hook("before", cmd_name)
 
         if readonly_cmd:
-            self._call_hook("before_read")
+            self._call_hook("before_read", cmd_name)
         else:
-            self._call_hook("before_write")
+            self._call_hook("before_write", cmd_name)
 
         self._load_current()
         self._load_previous()
         self._load_index()
-        getattr(self, COMMAND_INFO[cmd]['name'])(argv)
+        getattr(self, cmd_name)(argv)
 
         if readonly_cmd:
-            self._call_hook("after_read")
+            self._call_hook("after_read", cmd_name)
         else:
-            self._call_hook("after_write")
+            self._call_hook("after_write", cmd_name)
 
-        self._call_hook("after")
+        self._call_hook("after", cmd_name)
 
 # ===========================================
 # Completion
@@ -1438,4 +1442,4 @@ def main():
     except json.decoder.JSONDecodeError:
         msg_error("Invalid JSON.")
     except HookException as err:
-        msg_error("Hook %s returned with non-zero code, aborting." % err)
+        msg_error("Hook '%s' returned with non-zero code." % err)
