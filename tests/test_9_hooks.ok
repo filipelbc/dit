@@ -1,0 +1,27 @@
+---------------------------------------------------
+$ setup_hooks
+---------------------------------------------------
+$ dit -v -d ./ditdir workon ././t1
+before: ./ditdir
+before_write: ./ditdir
+after_write: ./ditdir
+after: ./ditdir
+Using directory: ditdir
+Executing hook: before
+Executing hook: before_write
+Selected: ././t1
+Already working on a task.
+Executing hook: after_write
+Executing hook: after
+---------------------------------------------------
+$ dit -v -d ./ditdir list ././t1
+before: ./ditdir
+before_read: ./ditdir
+after_read: ./ditdir
+after: ./ditdir
+Using directory: ditdir
+Executing hook: before
+Executing hook: before_read
+Selected: ././t1
+Executing hook: after_read
+Executing hook: after
