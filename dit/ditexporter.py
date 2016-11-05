@@ -2,18 +2,23 @@
 
 from .data_utils import time_spent_on
 
-file = None
-statussing = False
-listing = False
-options = {}
+_file = None
+_options = {
+    'verbose': False,
+    'concluded': False,
+    'statussing': False,
+}
 
 
-def setup(_file, _options, _statussing, _listing):
-    global file, options, statussing, listing
-    file = _file
-    options = _options
-    listing = _listing
-    statussing = _statussing
+def write(string=''):
+    _file.write('\n%s' % string)
+
+
+def setup(file, options):
+    global _file
+    global _options
+    _file = file
+    _options.update(options)
 
 
 def begin():
@@ -25,19 +30,20 @@ def end():
 
 
 def group(group, group_id):
-    file.write("\n[%s] %s\n" % (group_id, group))
+    write('[%s] %s\n' % (group_id, group))
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    file.write("\n[%s/%s] %s\n" % (group_id, subgroup_id, subgroup))
+    write('[%s/%s] %s\n' % (group_id, subgroup_id, subgroup))
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
-    # get options
-    verbose = options.get('verbose', False)
-    concluded = options.get('concluded', False)
+    # options
+    verbose = _options.get('verbose')
+    concluded = _options.get('concluded')
+    statussing = _options.get('statussing')
 
-    # get data
+    # data
     concluded_at = data.get('concluded_at', None)
 
     if concluded_at and not concluded:
@@ -56,42 +62,46 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         time_spent = None
 
     # write
-    file.write("\n[%s/%s/%s] %s" % (group_id, subgroup_id, task_id, task))
+    write('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task))
 
     if description:
-        file.write("\n  %s" % description)
+        write('  %s' % description)
 
-    if created_at:
-        file.write('\n  * Created at: %s' % created_at)
+    if created_at and not statussing:
+        write('  * Created at: %s' % created_at)
 
     if verbose or statussing:
         if updated_at:
-            file.write('\n  * Updated at: %s' % updated_at)
+            write('  * Updated at: %s' % updated_at)
 
     if concluded:
         if concluded_at:
-            file.write('\n  * Concluded at: %s' % concluded_at)
+            write('  * Concluded at: %s' % concluded_at)
 
     if time_spent:
-        file.write('\n  ~ Time spent: %s' % time_spent)
+        write('  ~ Time spent: %s' % time_spent)
 
     if not statussing or (verbose and statussing):
         if notes:
-            file.write("\n  Notes:")
+            write('  Notes:')
         for note in notes:
-            file.write("\n  * %s" % note)
+            write('  * %s' % note)
 
         if props:
-            file.write("\n  Properties:")
+            write('  Properties:')
         for prop in props:
-            file.write("\n  * %s: %s" % (prop['name'], prop['value']))
+            write('  * %s: %s' % (prop['name'], prop['value']))
 
     if not statussing:
         if logbook:
-            file.write("\n  Logbook:")
+            write('  Logbook:')
 
         i = 0 if verbose else -3
         for log in logbook[i:]:
-            file.write("\n  + [%s]--[%s]" % (log['in'], log['out']))
+            write('  + [%s]--[%s]' % (log['in'], log['out']))
+    else:
+        if logbook:
+            log = logbook[-1]
+            write('  [%s]--[%s]' % (log['in'], log['out']))
 
-    file.write("\n")
+    write()
