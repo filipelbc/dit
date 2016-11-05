@@ -3,3 +3,7 @@
 ./ditcmd list
 
 ./ditcmd list --concluded
+
+./ditcmd list PREVIOUS
+
+./ditcmd list CURRENT

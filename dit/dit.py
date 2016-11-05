@@ -22,38 +22,38 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       not provided.
 
     workon <id> | <name> | --new, -n <name> [-: "description"]
-      Starts clocking the specified task. Sets PREVIOUS if selected task is
-      different from CURRENT one. Sets CURRENT task.
+      Starts clocking the specified task. If already working on a task, nothing
+      is done. Sets the CURRENT and PREVIOUS tasks.
       --new, -n
         Same as 'new' followed by 'workon'.
 
-    halt [<id> | <name>]
-      Stops clocking the CURRENT task or the specified one. Sets CURRENT to
-      halted.
+    halt
+      Stops clocking the CURRENT task.
 
-    append [<id> | <name>]
-      Undoes the previous 'halt ...'.
+    append
+      Undoes the previous 'halt'.
 
-    cancel [<id> | <name>]
-      Cancels the clocking of the CURRENT task or the selected one.
-      (The intention is to undo the previous 'workon', but not all of its
-       side-effects are undoable.)
+    cancel
+      Undoes the previous 'workon' (but the CURRENT task is not changed back).
 
     resume
       Same as 'workon CURRENT'.
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon ...'.
+      Same as 'halt' followed by 'workon'.
 
     switchback
-      Same as 'halt' followed by 'workon PREVIOUS'.
+      Same as 'halt' followed by 'workon PREVIOUS'. If there is no PREVIOUS
+      task, nothing is done.
 
     conclude [<id> | <name>]
-      Concludes the CURRENT task or the selected one. Implies a 'halt'.
+      Concludes the CURRENT task or the selected one. Implies a 'halt'. It may
+      set the CURRENT and/or PREVIOUS tasks.
 
   Printing <command>'s:
 
-    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"] [<gid> | <gname>]
+    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
+           [<gid> | <gname>]
       Prints most information of the CURRENT subgroup or the selected one.
       --concluded, -a
         Include concluded tasks.
@@ -99,7 +99,11 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
 
-  Note that a "-name" must begin with a letter to be valid. Group- and
+  CURRENT is a reference to the most recent task that received a 'workon'
+  and has not been 'concluded'. PREVIOUS is a reference to the second most
+  recent.
+
+  Note that a "*-name" must begin with a letter to be valid. Group- and
   subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
   Also note that CURRENT and PREVIOUS are not valid arguments for the command
@@ -116,6 +120,7 @@ import re
 import subprocess
 import sys
 
+from enum import Enum
 from getpass import getuser
 from importlib import import_module
 from tempfile import gettempdir
@@ -154,6 +159,16 @@ ROOT_NAME = ""
 
 DEFAULT_BASE_DIR = ".dit"
 DEFAULT_BASE_PATH = "~/" + DEFAULT_BASE_DIR
+
+# ===========================================
+# Enumerators
+
+
+class State(Enum):
+    TODO = 1
+    DOING = 2
+    HALTED = 3
+    CONCLUDED = 4
 
 # ===========================================
 # General Options
@@ -232,8 +247,11 @@ def discover_base_path(directory):
             path = os.path.join(current_level, basename)
         return path
 
-    dir = directory or bottomup_search(os.getcwd(), DEFAULT_BASE_DIR) or DEFAULT_BASE_PATH
-    return os.path.expanduser(dir)
+    directory = directory\
+        or bottomup_search(os.getcwd(), DEFAULT_BASE_DIR)\
+        or DEFAULT_BASE_PATH
+
+    return os.path.expanduser(directory)
 
 # ===========================================
 # To Nice String
@@ -301,7 +319,8 @@ def prompt(header, initial=None, extension='txt'):
                 f.write(initial)
         subprocess.run([editor, input_fp])
         with open(input_fp, 'r') as f:
-            lines = [line for line in f.readlines() if not line.startswith(COMMENT_CHAR)]
+            lines = [line for line in f.readlines()
+                     if not line.startswith(COMMENT_CHAR)]
         return (''.join(lines)).strip()
 
     elif not initial:
@@ -329,6 +348,20 @@ def is_valid_task_data(data):
 # Task Data Manipulation
 
 
+def state(task_data):
+    if task_data.get('concluded_at', None):
+        return State.CONCLUDED
+    logbook = task_data.get('logbook', [])
+    if len(logbook) > 0:
+        last = logbook[-1]
+        if last['out']:
+            return State.HALTED
+        else:
+            return State.DOING
+    else:
+        return State.TODO
+
+
 def data_clock_in(data):
     logbook = data.get('logbook', [])
     if len(logbook) > 0:
@@ -336,6 +369,7 @@ def data_clock_in(data):
         if not last['out']:
             msg_normal("Already clocked in.")
             return
+    data.pop('concluded_at', None)
     data['logbook'] = logbook + [{'in': now(), 'out': None}]
 
 
@@ -422,9 +456,7 @@ class Dit:
     current_task = None
     current_halted = True
 
-    previous_group = None
-    previous_subgroup = None
-    previous_task = None
+    previous_stack = []
 
     index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
 
@@ -468,11 +500,6 @@ class Dit:
                 subgroup == self.current_subgroup and
                 group == self.current_group)
 
-    def _is_previous(self, group, subgroup, task):
-        return (task == self.previous_task and
-                subgroup == self.previous_subgroup and
-                group == self.previous_group)
-
     # ===========================================
     # Task management
 
@@ -489,7 +516,8 @@ class Dit:
         task_fp = self._get_task_path(group, subgroup, task)
         data = load_json_file(task_fp)
         if not is_valid_task_data(data):
-            raise DitException("Task file contains invalid data: %s" % task_fp)
+            raise DitException("Task file contains invalid data: %s"
+                               % task_fp)
         return data
 
     def _save_task(self, group, subgroup, task, data):
@@ -500,10 +528,13 @@ class Dit:
 
     # Current Task
 
-    def _use_current(self):
+    def _get_current(self):
         return (self.current_group,
                 self.current_subgroup,
                 None if self.current_halted else self.current_task)
+
+    def _clear_current(self):
+        self._set_current(None, None, None)
 
     def _set_current(self, group, subgroup, task, halted=False):
         self.current_group = group
@@ -519,11 +550,12 @@ class Dit:
             'halted': self.current_halted
         }
         save_json_file(self._current_path(), current_data)
-        msg_verbose("%s saved: %s%s" %
-                    (CURRENT_FN, _(self.current_group,
-                                   self.current_subgroup,
-                                   self.current_task),
-                     " (halted)" if self.current_halted else ""))
+        msg_verbose("%s saved: %s%s"
+                    % (CURRENT_FN,
+                       _(self.current_group,
+                         self.current_subgroup,
+                         self.current_task),
+                       " (halted)" if self.current_halted else ""))
 
     def _load_current(self):
         current = load_json_file(self._current_path())
@@ -534,30 +566,37 @@ class Dit:
                               current['halted'])
 
     # Previous Task
+    def _previous_empty(self):
+        return len(self.previous_stack) == 0
 
-    def _set_previous(self, group, subgroup, task):
-        self.previous_group = group
-        self.previous_subgroup = subgroup
-        self.previous_task = task
+    def _previous_add(self, group, subgroup, task):
+        s = _(group, subgroup, task)
+        self.previous_stack.append(s)
+
+    def _previous_remove(self, group, subgroup, task):
+        s = _(group, subgroup, task)
+        self.previous_stack = [i for i in self.previous_stack if i != s]
+
+    def _previous_pop(self):
+        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                for name in self.previous_stack.pop().split(SEPARATOR_CHAR)]
+
+    def _previous_peak(self):
+        if self._previous_empty():
+            return (None, None, None)
+        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                for name in self.previous_stack[-1].split(SEPARATOR_CHAR)]
 
     def _save_previous(self):
-        previous_data = {
-            'group': self.previous_group,
-            'subgroup': self.previous_subgroup,
-            'task': self.previous_task
-        }
-        save_json_file(self._previous_path(), previous_data)
-        msg_verbose("%s saved: %s" %
-                    (PREVIOUS_FN, _(self.previous_group,
-                                    self.previous_subgroup,
-                                    self.previous_task)))
+        save_json_file(self._previous_path(), self.previous_stack)
+        l = len(self.previous_stack)
+        msg_verbose("%s saved. It has %d task%s now."
+                    % (PREVIOUS_FN, l, "s" if l != 1 else ""))
 
     def _load_previous(self):
         previous = load_json_file(self._previous_path())
         if previous is not None:
-            self._set_previous(previous['group'],
-                               previous['subgroup'],
-                               previous['task'])
+            self.previous_stack = previous
 
     # ===========================================
     # Index
@@ -716,21 +755,6 @@ class Dit:
                         break
         return group_idx, subgroup_idx
 
-    def _previous_idxs(self):
-        group_idx, subgroup_idx = None, None
-
-        if self.previous_group is not None:
-            for i, g in enumerate(self.index):
-                if g[0] == self.previous_group:
-                    group_idx = i
-                    break
-            if self.previous_subgroup is not None:
-                for j, s in enumerate(g[1]):
-                    if s[0] == self.previous_subgroup:
-                        subgroup_idx = j
-                        break
-        return group_idx, subgroup_idx
-
     @staticmethod
     def _idxs_to_names(idxs, index):
         if len(idxs) < 3:
@@ -750,7 +774,8 @@ class Dit:
                     names[i] = index[idx]
 
         except ValueError:
-            raise DitException("Invalid index format, must be an integer: %s" % idx)
+            raise DitException("Invalid index format, must be an integer: %s"
+                               % idx)
         except IndexError:
             raise DitException("Invalid index: %d" % idx)
 
@@ -784,7 +809,8 @@ class Dit:
         names = selection.split(SEPARATOR_CHAR)
         if len(names) > 3:
             raise DitException("Invalid <gname> format.")
-        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
+        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                 for name in names]
         names = names + [None] * (3 - len(names))
         group, subgroup, task = names
 
@@ -803,7 +829,8 @@ class Dit:
         names = selection.split(SEPARATOR_CHAR)
         if len(names) > 3:
             raise DitException("Invalid <name> format.")
-        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
+        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME
+                 for name in names]
         names = [None] * (3 - len(names)) + names
 
         group, subgroup, task = names
@@ -832,7 +859,7 @@ class Dit:
         return (group, subgroup, task)
 
     def _backward_parser(self, argv):
-        group, subgroup, task = self._use_current()
+        group, subgroup, task = self._get_current()
 
         if len(argv) > 0 and not argv[0].startswith("-"):
             selection = argv.pop(0)
@@ -841,9 +868,7 @@ class Dit:
                 task = self.current_task
 
             elif selection == PREVIOUS_FN:
-                group = self.previous_group
-                subgroup = self.previous_subgroup
-                task = self.previous_task
+                (group, subgroup, task) = self._previous_peak()
 
             elif selection[0].isdigit():
                 (group, subgroup, task) = self._id_parser(selection)
@@ -862,18 +887,21 @@ class Dit:
         selection = argv.pop(0)
 
         if selection == CURRENT_FN:
-            return self._use_current()
+            return self._get_current()
 
         elif selection == PREVIOUS_FN:
-            return (self.previous_group,
-                    self.previous_subgroup,
-                    self.previous_task)
+            return self._previous_peak()
 
         elif selection[0].isdigit():
             return self._gid_parser(selection)
 
         elif not selection.startswith("-"):
             return self._gname_parser(selection)
+
+    @staticmethod
+    def raise_unrecognized_argument(argv):
+        if len(argv) > 0:
+            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
     # ===========================================
     # Commands
@@ -891,8 +919,7 @@ class Dit:
             argv.pop(0)
             description = argv.pop(0)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self.raise_unrecognized_argument(argv)
 
         if description is None:
             description = prompt('Description')
@@ -913,37 +940,57 @@ class Dit:
         else:
             (group, subgroup, task) = self._backward_parser(argv)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self.raise_unrecognized_argument(argv)
+
+        if not self.current_halted:
+            msg_verbose("Already working on a task.")
+            return
 
         data = self._load_task_data(group, subgroup, task)
+
+        previous_updated = False
+        if not self._is_current(group, subgroup, task):
+            if self.current_task is not None:
+                self._previous_add(self.current_group,
+                                   self.current_subgroup,
+                                   self.current_task)
+                previous_updated = True
+            if state(data) == State.HALTED:
+                self._previous_remove(group, subgroup, task)
+                previous_updated = True
+
         data_clock_in(data)
         msg_normal("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-        # set previous
-        if not self._is_current(group, subgroup, task):
-            self._set_previous(self.current_group,
-                               self.current_subgroup,
-                               self.current_task)
+        if previous_updated:
             self._save_previous()
 
-        # set current
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    @command("h", "", SELECT_BY_NAME)
+    @command("h", "", None)
     def halt(self, argv, conclude=False, cancel=False):
         try:
-            (group, subgroup, task) = self._backward_parser(argv)
-        except NoTaskSpecifiedCondition as ex:
-            msg_verbose('Nothing to halt.')
+            if conclude:
+                (group, subgroup, task) = self._backward_parser(argv)
+            self.raise_unrecognized_argument(argv)
+            if not conclude:
+                (group, subgroup, task) = self._backward_parser([CURRENT_FN])
+        except NoTaskSpecifiedCondition:
+            msg_verbose('Nothing to %s.' % "conclude" if conclude else "halt")
             return
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
-
         data = self._load_task_data(group, subgroup, task)
+
+        task_state = state(data)
+        if task_state != State.DOING:
+            if not conclude:
+                msg_verbose('Not working on the task.')
+                return
+            elif task_state == State.CONCLUDED:
+                msg_verbose('Task has already been concluded.')
+                return
 
         if cancel:
             data_clock_cancel(data)
@@ -956,38 +1003,53 @@ class Dit:
             msg_normal("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-        # set current as halted
         if self._is_current(group, subgroup, task):
-            self.current_halted = True
+            if conclude:
+                if not self._previous_empty():
+                    group, subgroup, task = self._previous_pop()
+                    self._save_previous()
+                    self._set_current(group, subgroup, task, True)
+                else:
+                    self._clear_current()
+            else:
+                self.current_halted = True
             self._save_current()
+        else:
+            self._previous_remove(group, subgroup, task)
+            self._save_previous()
 
-    @command("a", "", SELECT_BY_NAME)
+    @command("a", "", None)
     def append(self, argv):
+        self.raise_unrecognized_argument(argv)
+
         try:
-            (group, subgroup, task) = self._backward_parser(argv or [CURRENT_FN])
-        except NoTaskSpecifiedCondition as ex:
-            msg_verbose('No task selected.')
+            (group, subgroup, task) = self._backward_parser([CURRENT_FN])
+        except NoTaskSpecifiedCondition:
+            msg_verbose('No current task to append to.')
             return
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
-
         data = self._load_task_data(group, subgroup, task)
+        task_state = state(data)
+
+        if task_state != State.HALTED:
+            msg_verbose("Can only append if task is halted, but task is %s."
+                        % task_state.name)
+            return
+
         data_clock_append(data)
-        msg_normal("Continuing: %s" % _(group, subgroup, task))
+        msg_normal("Continuing work on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
+        self.current_halted = False
+        self._save_current()
 
-        # set current
-        if self._is_current(group, subgroup, task):
-            self._set_current(group, subgroup, task)
-            self._save_current()
-
-    @command("x", "", SELECT_BY_NAME)
+    @command("x", "", None)
     def cancel(self, argv):
-        self.halt(argv, cancel=True)
+        self.raise_unrecognized_argument(argv)
+        self.halt([], cancel=True)
 
     @command("r", "", None)
     def resume(self, argv):
+        self.raise_unrecognized_argument(argv)
         self.workon([CURRENT_FN])
 
     @command("s", "--new", SELECT_BY_NAME)
@@ -997,8 +1059,12 @@ class Dit:
 
     @command("b", "", None)
     def switchback(self, argv):
-        self.halt([])
-        self.workon([PREVIOUS_FN])
+        self.raise_unrecognized_argument(argv)
+        if self._previous_empty():
+            msg_verbose("No previous task to switch back to.")
+        else:
+            self.halt([])
+            self.workon([PREVIOUS_FN])
 
     @command("c", "", SELECT_BY_NAME)
     def conclude(self, argv):
@@ -1047,7 +1113,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % opt)
 
         if statussing and group is None:
-            group, subgroup, task = self._use_current()
+            group, subgroup, task = self._get_current()
 
         if statussing and task:
             options['concluded'] = True

@@ -4,7 +4,6 @@ Using directory: ditdir
 Selected: ././t1
 Working on: ././t1
 Task saved: ././t1
-PREVIOUS saved: _/_/_
 CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
@@ -44,16 +43,12 @@ CURRENT saved: ././t1 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Using directory: ditdir
-Selected: ././_
-Nothing to halt.
+Selected: ././t1
+Not working on the task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
 Using directory: ditdir
-Selected: ././t1
-Already clocked out.
-Halted: ././t1
-Task saved: ././t1
-CURRENT saved: ././t1 (halted)
+ERROR: Unrecognized argument: t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0
 Using directory: ditdir
@@ -76,7 +71,7 @@ Selected: ././_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:02:09
+  * Updated at: 2016-09-10 19:01:59
   ~ Time spent: 1m0s
 
 [0/0/1] t4
@@ -100,31 +95,23 @@ CURRENT saved: ././t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel t10
 Using directory: ditdir
-Selected: ././t10
-Was not clocked in.
-Canceled: ././t10
-Task saved: ././t10
+ERROR: Unrecognized argument: t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Using directory: ditdir
 Selected: ././t10
-Working on: ././t10
-Task saved: ././t10
-PREVIOUS saved: ././t1
-CURRENT saved: ././t10
+Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel t1
+Using directory: ditdir
+ERROR: Unrecognized argument: t1
+---------------------------------------------------
+$ dit -v -d ./ditdir cancel
 Using directory: ditdir
 Selected: ././t1
 Canceled: ././t1
 Task saved: ././t1
----------------------------------------------------
-$ dit -v -d ./ditdir cancel
-Using directory: ditdir
-Selected: ././t10
-Canceled: ././t10
-Task saved: ././t10
-CURRENT saved: ././t10 (halted)
+CURRENT saved: ././t1 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir list
 Using directory: ditdir
@@ -156,6 +143,7 @@ Using directory: ditdir
 Selected: ././t10
 Working on: ././t10
 Task saved: ././t10
+PREVIOUS saved. It has 1 task now.
 CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
@@ -170,7 +158,7 @@ Using directory: ditdir
 Selected: ././t4
 Working on: ././t4
 Task saved: ././t4
-PREVIOUS saved: ././t10
+PREVIOUS saved. It has 2 tasks now.
 CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
@@ -180,45 +168,32 @@ Halted: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4 (halted)
 ---------------------------------------------------
-$ dit -v -d ./ditdir status
+$ dit -v -d ./ditdir workon CURRENT
 Using directory: ditdir
-Selected: ././_
-
-[0/0/0] t1
-  . . t1
-  * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:03:09
-  ~ Time spent: 1m0s
-
-[0/0/1] t4
-  . . t4
-  * Created at: 2016-09-10 18:58:29
-  * Updated at: 2016-09-10 19:04:39
-  ~ Time spent: 20s
-
-[0/0/2] t7
-  . . t7
-  * Created at: 2016-09-10 18:58:59
-
-[0/0/3] t10
-  . . t10
-  * Created at: 2016-09-10 18:59:29
-  * Updated at: 2016-09-10 19:03:59
-  ~ Time spent: 20s
+Selected: ././t4
+Working on: ././t4
+Task saved: ././t4
+CURRENT saved: ././t4
 ---------------------------------------------------
-$ dit -v -d ./ditdir workon t10
+$ dit -v -d ./ditdir halt
+Using directory: ditdir
+Selected: ././t4
+Halted: ././t4
+Task saved: ././t4
+CURRENT saved: ././t4 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir workon PREVIOUS
 Using directory: ditdir
 Selected: ././t10
 Working on: ././t10
 Task saved: ././t10
-PREVIOUS saved: ././t4
+PREVIOUS saved. It has 2 tasks now.
 CURRENT saved: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir conclude
+$ dit -v -d ./ditdir halt
 Using directory: ditdir
 Selected: ././t10
 Halted: ././t10
-Concluded: ././t10
 Task saved: ././t10
 CURRENT saved: ././t10 (halted)
 ---------------------------------------------------
@@ -229,72 +204,107 @@ Selected: ././_
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:03:09
+  * Updated at: 2016-09-10 19:02:29
   ~ Time spent: 1m0s
 
 [0/0/1] t4
   . . t4
   * Created at: 2016-09-10 18:58:29
-  * Updated at: 2016-09-10 19:04:39
-  ~ Time spent: 20s
+  * Updated at: 2016-09-10 19:04:29
+  ~ Time spent: 40s
 
 [0/0/2] t7
   . . t7
   * Created at: 2016-09-10 18:58:59
----------------------------------------------------
-$ dit -v -d ./ditdir workon t7
-Using directory: ditdir
-Selected: ././t7
-Working on: ././t7
-Task saved: ././t7
-PREVIOUS saved: ././t10
-CURRENT saved: ././t7
----------------------------------------------------
-$ dit -v -d ./ditdir workon t7
-Using directory: ditdir
-Selected: ././t7
-Already clocked in.
-Working on: ././t7
-Task saved: ././t7
-CURRENT saved: ././t7
----------------------------------------------------
-$ dit -v -d ./ditdir status
-Using directory: ditdir
-Selected: ././t7
 
-[0/0/2] t7
-  . . t7
-  * Created at: 2016-09-10 18:58:59
-  * Updated at: 2016-09-10 19:05:59
+[0/0/3] t10
+  . . t10
+  * Created at: 2016-09-10 18:59:29
+  * Updated at: 2016-09-10 19:05:09
+  ~ Time spent: 40s
 ---------------------------------------------------
-$ dit -v -d ./ditdir workon 0/0/0
+$ dit -v -d ./ditdir workon t10
 Using directory: ditdir
-Selected: ././t1
-Working on: ././t1
-Task saved: ././t1
-PREVIOUS saved: ././t7
-CURRENT saved: ././t1
+Selected: ././t10
+Working on: ././t10
+Task saved: ././t10
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t10
+Halted: ././t10
+Concluded: ././t10
+Task saved: ././t10
+PREVIOUS saved. It has 1 task now.
+CURRENT saved: ././t4 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-Selected: ././t1
+Selected: ././_
 
 [0/0/0] t1
   . . t1
   * Created at: 2016-09-10 18:57:59
-  * Updated at: 2016-09-10 19:06:19
+  * Updated at: 2016-09-10 19:02:29
   ~ Time spent: 1m0s
+
+[0/0/1] t4
+  . . t4
+  * Created at: 2016-09-10 18:58:29
+  * Updated at: 2016-09-10 19:04:29
+  ~ Time spent: 40s
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t7
+Using directory: ditdir
+Selected: ././t7
+Working on: ././t7
+Task saved: ././t7
+PREVIOUS saved. It has 2 tasks now.
+CURRENT saved: ././t7
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t7
+Using directory: ditdir
+Selected: ././t7
+Already working on a task.
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Using directory: ditdir
+Selected: ././t7
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+  * Updated at: 2016-09-10 19:06:19
+---------------------------------------------------
+$ dit -v -d ./ditdir workon 0/0/0
+Using directory: ditdir
+Selected: ././t1
+Already working on a task.
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Using directory: ditdir
+Selected: ././t7
+
+[0/0/2] t7
+  . . t7
+  * Created at: 2016-09-10 18:58:59
+  * Updated at: 2016-09-10 19:06:19
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto g4/t5
 Using directory: ditdir
-Selected: ././t1
-Halted: ././t1
-Task saved: ././t1
-CURRENT saved: ././t1 (halted)
+Selected: ././t7
+Halted: ././t7
+Task saved: ././t7
+CURRENT saved: ././t7 (halted)
 Selected: g4/./t5
 Working on: g4/./t5
 Task saved: g4/./t5
-PREVIOUS saved: ././t1
+PREVIOUS saved. It has 3 tasks now.
 CURRENT saved: g4/./t5
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 4/0/0
@@ -306,7 +316,7 @@ CURRENT saved: g4/./t5 (halted)
 Selected: g5/./t6
 Working on: g5/./t6
 Task saved: g5/./t6
-PREVIOUS saved: g4/./t5
+PREVIOUS saved. It has 4 tasks now.
 CURRENT saved: g5/./t6
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto 1/0
@@ -318,7 +328,7 @@ CURRENT saved: g5/./t6 (halted)
 Selected: g5/g6/t8
 Working on: g5/g6/t8
 Task saved: g5/g6/t8
-PREVIOUS saved: g5/./t6
+PREVIOUS saved. It has 5 tasks now.
 CURRENT saved: g5/g6/t8
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
@@ -374,7 +384,7 @@ Using directory: ditdir
 Selected: ././t10
 Working on: ././t10
 Task saved: ././t10
-PREVIOUS saved: g5/g6/t8
+PREVIOUS saved. It has 6 tasks now.
 CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
@@ -385,5 +395,4 @@ Selected: ././t10
   . . t10
   * Created at: 2016-09-10 18:59:29
   * Updated at: 2016-09-10 19:08:59
-  * Concluded at: 2016-09-10 19:05:19
-  ~ Time spent: 40s
+  ~ Time spent: 1m0s
