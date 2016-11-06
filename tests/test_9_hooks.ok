@@ -21,6 +21,20 @@ before: ./ditdir list
 Executing hook: before_read
 before_read: ./ditdir list
 Selected: ././t1
+
+[0/0/0] t1
+  . . t1
+  * Created at: 2016-09-10 18:57:59
+  * Concluded at: 2016-09-10 19:14:49
+  ~ Time spent: 1m40s
+  Notes:
+  * this is another note
+  Properties:
+  * abu: din
+  Logbook:
+  + [2016-09-10 19:00:59]--[2016-09-10 19:01:19]
+  + [2016-09-10 19:13:09]--[2016-09-10 19:13:29]
+  + [2016-09-10 19:14:19]--[2016-09-10 19:14:39]
 Executing hook: after_read
 after_read: ./ditdir list
 Executing hook: after

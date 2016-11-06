@@ -59,24 +59,32 @@ Selected: g5/./t9
 INDEX saved.
 Created: g5/./t9
 ---------------------------------------------------
-$ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
-Using directory: ditdir
-Selected: ././t7
-ERROR: Task file already exists: ./ditdir/t7
----------------------------------------------------
 $ dit -v -d ./ditdir new t10 -: '. . t10'
 Using directory: ditdir
 Selected: ././t10
 INDEX saved.
 Created: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir new :abu -: 'fails: invalid task name'
+$ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
 Using directory: ditdir
-ERROR: Invalid task name: :abu
+Selected: ././t7
+ERROR: Task file already exists: ./ditdir/t7
 ---------------------------------------------------
-$ dit -v -d ./ditdir new .bo/bar -: 'fails: invalid group name'
+$ dit -v -d ./ditdir new _foo -: 'fails: invalid task name'
 Using directory: ditdir
-ERROR: Invalid group name: .bo
+ERROR: Invalid task name: _foo
+---------------------------------------------------
+$ dit -v -d ./ditdir new .foo -: 'fails: invalid task name'
+Using directory: ditdir
+ERROR: Invalid task name: .foo
+---------------------------------------------------
+$ dit -v -d ./ditdir new _foo/bar -: 'fails: invalid group name'
+Using directory: ditdir
+ERROR: Invalid group name: _foo
+---------------------------------------------------
+$ dit -v -d ./ditdir new .foo/bar -: 'fails: invalid group name'
+Using directory: ditdir
+ERROR: Invalid group name: .foo
 ---------------------------------------------------
 $ find './ditdir' -type f | sort
 ./ditdir/g1/t2
