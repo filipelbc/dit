@@ -198,7 +198,7 @@ Already working on a task.
 $ dit -v -d ./ditdir append
 Using directory: ditdir
 Selected: ././t4
-Can only append if task is halted, but task is DOING.
+Can only append if task is halted.
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel
 Using directory: ditdir
