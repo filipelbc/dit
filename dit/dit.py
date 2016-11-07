@@ -161,6 +161,7 @@ COMMENT_CHAR = "#"
 NONE_CHAR = "_"
 ROOT_NAME_CHAR = "."
 ROOT_NAME = ""
+COMPLETION_SEP_CHAR = "\n"
 
 DEFAULT_BASE_DIR = ".dit"
 DEFAULT_BASE_PATH = "~/" + DEFAULT_BASE_DIR
@@ -218,11 +219,11 @@ def msg_usage():
 
 COMMAND_INFO = {}
 
-SELECT_BY_NAME = "N"
-SELECT_BY_GNAME = "G"
+SELECT_BACKWARD = "forward"
+SELECT_FORWARD = "backward"
 
 
-def command(letter, options, select, readonly=False):
+def command(letter=None, options=[], select=None, readonly=False):
     def wrapper(cmd):
         global COMMAND_INFO
         name = cmd.__name__.replace("_", "-")
@@ -285,6 +286,33 @@ def _(name, *more_names):
     for name in more_names:
         s += SEPARATOR_CHAR + task_name_to_string(name)
     return s
+
+# ==========================================
+# Selector
+
+ID_SELECTOR = "id"
+GID_SELECTOR = "gid"
+NAME_SELECTOR = "name"
+GNAME_SELECTOR = "gname"
+
+
+def selector_clean_root(names):
+    return [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
+
+
+def selector_split(string):
+    return selector_clean_root(string.split(SEPARATOR_CHAR))
+
+
+def selector_to_tuple(string, kind=NAME_SELECTOR):
+    sel = selector_split(string)
+    if len(sel) > 3:
+        raise DitException("Invalid <%s> format." % kind)
+    if kind in [ID_SELECTOR, NAME_SELECTOR]:
+        sel = [None] * (3 - len(sel)) + sel
+    else:
+        sel = sel + [None] * (3 - len(sel))
+    return sel
 
 # ===========================================
 # I/O
@@ -591,14 +619,12 @@ class Dit:
         self.previous_stack = [i for i in self.previous_stack if i != s]
 
     def _previous_pop(self):
-        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
-                for name in self.previous_stack.pop().split(SEPARATOR_CHAR)]
+        return selector_split(self.previous_stack.pop())
 
     def _previous_peek(self):
         if self._previous_empty():
             return (None, None, None)
-        return [name if name != ROOT_NAME_CHAR else ROOT_NAME
-                for name in self.previous_stack[-1].split(SEPARATOR_CHAR)]
+        return selector_split(self.previous_stack[-1])
 
     def _save_previous(self):
         save_json_file(self._previous_path(), self.previous_stack)
@@ -794,38 +820,24 @@ class Dit:
 
         return names
 
-    def _gid_parser(self, selection):
-        idxs = selection.split(SEPARATOR_CHAR)
-        if len(idxs) > 3:
-            raise DitException("Invalid <gid> format.")
-
-        # replaces missing subgroup or task with None
-        idxs = idxs + [None] * (3 - len(idxs))
-
+    def _gid_parser(self, string):
+        idxs = selector_to_tuple(string, GID_SELECTOR)
         return self._idxs_to_names(idxs, self.index)
 
-    def _id_parser(self, selection):
-        idxs = selection.split(SEPARATOR_CHAR)
-        if len(idxs) > 3:
-            raise DitException("Invalid <id> format.")
+    def _id_parser(self, string):
+        idxs = selector_to_tuple(string, ID_SELECTOR)
 
         # replaces missing group or subgroup with current
         group_idx, subgroup_idx = self._current_idxs()
-        if len(idxs) == 1:
-            idxs = [group_idx, subgroup_idx] + idxs
-        elif len(idxs) == 2:
-            idxs = [group_idx] + idxs
+        if idxs[0] is None:
+            idxs[0] = group_idx
+        if idxs[1] is None:
+            idxs[1] = subgroup_idx
 
         return self._idxs_to_names(idxs, self.index)
 
-    def _gname_parser(self, selection):
-        names = selection.split(SEPARATOR_CHAR)
-        if len(names) > 3:
-            raise DitException("Invalid <gname> format.")
-        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME
-                 for name in names]
-        names = names + [None] * (3 - len(names))
-        group, subgroup, task = names
+    def _gname_parser(self, string):
+        (group, subgroup, task) = selector_to_tuple(string, GNAME_SELECTOR)
 
         for name in [group, subgroup]:
             if name and not is_valid_group_name(name):
@@ -838,15 +850,8 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _name_parser(self, selection):
-        names = selection.split(SEPARATOR_CHAR)
-        if len(names) > 3:
-            raise DitException("Invalid <name> format.")
-        names = [name if name != ROOT_NAME_CHAR else ROOT_NAME
-                 for name in names]
-        names = [None] * (3 - len(names)) + names
-
-        group, subgroup, task = names
+    def _name_parser(self, string):
+        (group, subgroup, task) = selector_to_tuple(string, NAME_SELECTOR)
 
         if group is None:
             if self.current_group is not None:
@@ -872,7 +877,7 @@ class Dit:
         return (group, subgroup, task)
 
     def _backward_parser(self, argv):
-        group, subgroup, task = self._get_current()
+        (group, subgroup, task) = self._get_current()
 
         if len(argv) > 0 and not argv[0].startswith("-"):
             selection = argv.pop(0)
@@ -933,7 +938,7 @@ class Dit:
     # ===========================================
     # Commands
 
-    @command("n", "-: --:", SELECT_BY_NAME)
+    @command("n", ["-:", "--:"], SELECT_BACKWARD)
     def new(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -956,7 +961,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    @command("w", "--new", SELECT_BY_NAME)
+    @command("w", ["--new"], SELECT_BACKWARD)
     def workon(self, argv):
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
@@ -996,7 +1001,7 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    @command("h", "", None)
+    @command("h")
     def halt(self, argv, conclude=False, cancel=False):
         try:
             if conclude:
@@ -1045,7 +1050,7 @@ class Dit:
             self._previous_remove(group, subgroup, task)
             self._save_previous()
 
-    @command("a", "", None)
+    @command("a")
     def append(self, argv):
         self.raise_unrecognized_argument(argv)
 
@@ -1069,22 +1074,22 @@ class Dit:
         self.current_halted = False
         self._save_current()
 
-    @command("x", "", None)
+    @command("x")
     def cancel(self, argv):
         self.raise_unrecognized_argument(argv)
         self.halt([], cancel=True)
 
-    @command("r", "", None)
+    @command("r")
     def resume(self, argv):
         self.raise_unrecognized_argument(argv)
         self.workon([CURRENT_FN])
 
-    @command("s", "--new", SELECT_BY_NAME)
+    @command("s", ["--new"], SELECT_BACKWARD)
     def switchto(self, argv):
         self.halt([])
         self.workon(argv)
 
-    @command("b", "", None)
+    @command("b")
     def switchback(self, argv):
         self.raise_unrecognized_argument(argv)
         if self._previous_empty():
@@ -1093,19 +1098,19 @@ class Dit:
             self.halt([])
             self.workon([PREVIOUS_FN])
 
-    @command("c", "", SELECT_BY_NAME)
+    @command("c", select=SELECT_BACKWARD)
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", "--concluded --verbose --all", SELECT_BY_GNAME, True)
+    @command("q", ["--concluded", "--verbose", "--all"], SELECT_FORWARD, True)
     def status(self, argv):
         self.export(argv, statussing=True)
 
-    @command("l", "--concluded --verbose --all", SELECT_BY_GNAME, True)
+    @command("l", ["--concluded", "--verbose", "--all"], SELECT_FORWARD, True)
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("e", "--concluded --verbose --all --output", SELECT_BY_GNAME, True)
+    @command("e", ["--concluded", "--verbose", "--all", "--output"], SELECT_FORWARD, True)
     def export(self, argv, listing=False, statussing=False):
         all = False
         output = None
@@ -1178,7 +1183,7 @@ class Dit:
         if output not in [None, "stdout"]:
             file.close()
 
-    @command("t", "-: --:", SELECT_BY_NAME)
+    @command("t", ["-:", "--:"], SELECT_BACKWARD)
     def note(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1202,7 +1207,7 @@ class Dit:
         msg_normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-    @command("p", "-: --:", SELECT_BY_NAME)
+    @command("p", ["-:", "--:"], SELECT_BACKWARD)
     def set(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1235,7 +1240,7 @@ class Dit:
         msg_normal("Set property of: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-    @command("m", "", SELECT_BY_NAME)
+    @command("m", select=SELECT_BACKWARD)
     def edit(self, argv):
         group, subgroup, task = self._backward_parser(argv)
 
@@ -1255,7 +1260,7 @@ class Dit:
         else:
             msg_normal("Operation cancelled.")
 
-    @command("", "", None)
+    @command()
     def rebuild_index(self, argv):
         self._rebuild_index()
         self._save_index()
@@ -1340,13 +1345,12 @@ def completion_gname(dit, names):
                     break
             break
 
-    return '\n'.join(comp_options)
+    return COMPLETION_SEP_CHAR.join(comp_options)
 
 
 def completion_selection(cmd, directory, selection):
 
-    names = selection.split(SEPARATOR_CHAR)
-    names = [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
+    names = selector_split(selection)
     if len(names) > 3:
         return ""
 
@@ -1362,22 +1366,26 @@ def completion_selection(cmd, directory, selection):
 
     select = COMMAND_INFO[cmd]['select']
 
-    if select in [SELECT_BY_GNAME, SELECT_BY_NAME]:
+    if select in [SELECT_FORWARD, SELECT_BACKWARD]:
         return completion_gname(dit, names)
     else:
         return ""
 
 
 def completion_cmd_name():
-    return '\n'.join([cmd for cmd in COMMAND_INFO])
+    return COMPLETION_SEP_CHAR.join([cmd for cmd in COMMAND_INFO])
 
 
 def completion_cmd_option(cmd):
-    return COMMAND_INFO[cmd]['options']
+    return COMPLETION_SEP_CHAR.join(COMMAND_INFO[cmd]['options'])
 
 
 def completion_option():
-    return "--verbose\n--directory\n--help\n--no-hooks\n--check-hooks"
+    return COMPLETION_SEP_CHAR.join(["--check-hooks",
+                                     "--directory",
+                                     "--help",
+                                     "--no-hooks",
+                                     "--verbose"])
 
 
 def completion():
@@ -1403,6 +1411,7 @@ def completion():
         return ""
 
     word = line[idx] if len(line) > idx else ""
+    comp_options = ""
 
     if word == "" or word[0].isalpha():
         if cmd:
@@ -1412,15 +1421,11 @@ def completion():
     elif word.startswith((ROOT_NAME_CHAR, SEPARATOR_CHAR)):
         if cmd:
             comp_options = completion_selection(cmd, directory, word)
-        else:
-            comp_options = ""
     elif word.startswith('-'):
         if cmd:
             comp_options = completion_cmd_option(cmd)
         else:
             comp_options = completion_option()
-    else:
-        comp_options = ""
 
     sys.stdout.write(comp_options)
 
