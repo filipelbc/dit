@@ -2,10 +2,10 @@
 $ setup_fetcher
 ---------------------------------------------------
 $ dit -v -d ./ditdir new --fetch g5/g6/t11
-Fetcher arguments: ./ditdir g5 g6 t11
 Using directory: ditdir
 Selected: g5/g6/t11
 Fetching data with `./ditdir/g5/_data_fetcher`.
+Fetcher arguments: ./ditdir g5 g6 t11
 INDEX saved.
 Created: g5/g6/t11
 ---------------------------------------------------
