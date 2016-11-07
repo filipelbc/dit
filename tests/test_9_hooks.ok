@@ -1,0 +1,37 @@
+---------------------------------------------------
+$ setup_hooks
+---------------------------------------------------
+$ dit -v -d ./ditdir workon ././t1
+Using directory: ditdir
+Executing hook: before
+before: ./ditdir workon
+Executing hook: before_write
+before_write: ./ditdir workon
+Selected: ././t1
+Already working on a task.
+Executing hook: after_write
+after_write: ./ditdir workon
+Executing hook: after
+after: ./ditdir workon
+---------------------------------------------------
+$ dit -v -d ./ditdir list ././t1
+Using directory: ditdir
+Executing hook: before
+before: ./ditdir list
+Executing hook: before_read
+before_read: ./ditdir list
+Selected: ././t1
+Executing hook: after_read
+after_read: ./ditdir list
+Executing hook: after
+after: ./ditdir list
+---------------------------------------------------
+$ dit -v -d ./ditdir --no-hooks list ././t1
+Using directory: ditdir
+Selected: ././t1
+---------------------------------------------------
+$ dit -v -d ./ditdir --check-hooks list ././t1
+Using directory: ditdir
+Executing hook: before
+before: ./ditdir list
+ERROR: Hook 'before' returned with non-zero code.

@@ -3,7 +3,7 @@ $ dit <TAB><TAB>
 a append b c cancel conclude e edit export h halt l list m n new note p q r rebuild-index resume s set status switchback switchto t w workon x 
 ---------------------------------------------------
 $ dit -<TAB><TAB>
---directory --help --verbose 
+--check-hooks --directory --help --no-hooks --verbose 
 ---------------------------------------------------
 $ dit -d <TAB><TAB>
 ditdir extra 
