@@ -1131,8 +1131,8 @@ class Dit:
         (group, subgroup, task) = self._get_current_task()
         self._export_task(group, subgroup, task)
 
-        while not self._previous_empty():
-            (group, subgroup, task) = self._previous_pop()
+        for selection in reversed(self.previous_stack):
+            (group, subgroup, task) = selector_split(selection)
             self._export_task(group, subgroup, task)
 
         self.exporter.end()
