@@ -144,7 +144,7 @@ class NoTaskSpecifiedCondition(DitException):
     pass
 
 
-class HookException(Exception):
+class SubprocessException(Exception):
     pass
 
 # ===========================================
@@ -154,6 +154,7 @@ CURRENT_FN = "CURRENT"
 PREVIOUS_FN = "PREVIOUS"
 INDEX_FN = "INDEX"
 HOOKS_DIR = "HOOKS"
+FETCHER_FN = "_data_fetcher"
 
 PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN, HOOKS_DIR]
 
@@ -229,14 +230,14 @@ def command(letter=None, options=[], select=None, readonly=False):
         global COMMAND_INFO
         name = cmd.__name__.replace("_", "-")
         if name in COMMAND_INFO:
-            raise Exception("Method '%s' is already registered as command.")
+            raise Exception("Method `%s` is already registered as command.")
         COMMAND_INFO[name] = {'name': cmd.__name__,
                               'letter': letter,
                               'options': options,
                               'select': select,
                               'readonly': readonly}
         if letter and letter in COMMAND_INFO:
-            raise Exception("Letter '%s' is already registered as command.")
+            raise Exception("Letter `%s` is already registered as command.")
         if letter:
             COMMAND_INFO[letter] = COMMAND_INFO[cmd.__name__]
         return cmd
@@ -355,7 +356,10 @@ def prompt(header, initial=None, extension='txt'):
             f.write(COMMENT_CHAR + ' ' + header + '\n')
             if initial:
                 f.write(initial)
-        subprocess.run([editor, input_fp])
+        try:
+            subprocess.run([editor, input_fp], check=True)
+        except subprocess.CalledProcessError:
+            raise SubprocessException("%s %s" % (editor, input_fp))
         with open(input_fp, 'r') as f:
             lines = [line for line in f.readlines()
                      if not line.startswith(COMMENT_CHAR)]
@@ -384,6 +388,14 @@ def is_valid_task_data(data):
 
 # ===========================================
 # Task Data Manipulation
+
+NEW_TASK_DATA = {
+    "description": None,
+    "logbook": [],
+    "properties": [],
+    "notes": [],
+    "created_at": None,
+}
 
 
 def state(task_data):
@@ -456,16 +468,6 @@ def data_conclude(data):
     data['concluded_at'] = now()
 
 
-def data_new(description=None):
-    return {
-        "description": description,
-        "logbook": [],
-        "properties": [],
-        "notes": [],
-        "created_at": now()
-    }
-
-
 def data_add_note(data, note_text):
     if 'notes' not in data:
         data['notes'] = []
@@ -523,6 +525,22 @@ class Dit:
     def _hook_path(self, hook):
         return os.path.join(self.base_path, HOOKS_DIR, hook)
 
+    def _plugin_path(self, name, group, subgroup):
+        try_paths = [
+            os.path.join(self.base_path, group, subgroup, name),
+            os.path.join(self.base_path, group, name),
+            os.path.join(self.base_path, name),
+        ]
+        for path in try_paths:
+            if os.path.isfile(path):
+                return path
+        return None
+
+    def _raise_task_exists(self, group, subgroup, task):
+        path = os.path.join(self.base_path, group, subgroup, task)
+        if os.path.exists(path):
+            raise DitException("Already exists: %s" % path)
+
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
         if not os.path.isfile(path):
@@ -545,15 +563,6 @@ class Dit:
     # ===========================================
     # Task management
 
-    def _create_task(self, group, subgroup, task, description):
-        task_fp = self._make_task_path(group, subgroup, task)
-        if os.path.isfile(task_fp):
-            raise DitException("Task file already exists: %s" % task_fp)
-        data = data_new(description)
-        save_json_file(task_fp, data)
-        self._add_to_index(group, subgroup, task)
-        self._save_index()
-
     def _load_task_data(self, group, subgroup, task):
         task_fp = self._get_task_path(group, subgroup, task)
         data = load_json_file(task_fp)
@@ -567,6 +576,13 @@ class Dit:
         data['updated_at'] = now()
         save_json_file(task_fp, data)
         msg_verbose("Task saved: %s" % _(group, subgroup, task))
+
+    def _create_task(self, group, subgroup, task, data):
+        task_fp = self._make_task_path(group, subgroup, task)
+        data['created_at'] = now()
+        save_json_file(task_fp, data)
+        self._add_to_index(group, subgroup, task)
+        self._save_index()
 
     # Current Task
 
@@ -778,9 +794,8 @@ class Dit:
                                                  s, j,
                                                  t, k,
                                                  True)
-                                break
-                        break
-                break
+                                return True
+        return False
 
     # ===========================================
     # Parsers
@@ -923,7 +938,7 @@ class Dit:
             return self._gname_parser(selection)
 
     @staticmethod
-    def raise_unrecognized_argument(argv):
+    def _raise_unrecognized_argument(argv):
         if len(argv) > 0:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
@@ -932,37 +947,74 @@ class Dit:
 
     def _call_hook(self, hook, cmd_name):
         if HOOKS_ENABLED:
-            hook_fn = self._hook_path(hook)
-            if os.path.isfile(hook_fn):
+            hook_fp = self._hook_path(hook)
+            if os.path.isfile(hook_fp):
                 msg_verbose("Executing hook: %s" % hook)
                 try:
-                    subprocess.run([hook_fn, self.base_path, cmd_name],
+                    subprocess.run([hook_fp, self.base_path, cmd_name],
                                    check=CHECK_HOOKS)
                 except subprocess.CalledProcessError:
-                    raise HookException(hook)
+                    raise SubprocessException(hook_fp)
+
+    def _fetch_data_for(self, group, subgroup, task):
+        fetcher_fp = self._plugin_path(FETCHER_FN, group, subgroup)
+        if not fetcher_fp:
+            raise DitException("Data fetcher script `%s` not found." % FETCHER_FN)
+        else:
+            msg_normal("Fetching data with `%s`." % fetcher_fp)
+
+        task_fp = self._make_task_path(group, subgroup, task)
+
+        try:
+            subprocess.run([fetcher_fp, self.base_path, group, subgroup, task], check=True)
+        except subprocess.CalledProcessError:
+            raise SubprocessException(fetcher_fp)
+
+        if not os.path.isfile(task_fp):
+            raise DitException("`%s` not found: it seems no data was fetched."
+                               % task_fp)
+
+        return self._load_task_data(group, subgroup, task)
 
     # ===========================================
     # Commands
 
     @command("n", ["-:", "--:"], SELECT_BACKWARD)
     def new(self, argv):
+        description = None
+        fetch = False
+
+        if len(argv) > 1 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--fetch", "-f"]:
+                fetch = True
+            else:
+                raise ArgumentException("No such option: %s" % opt)
+
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
-
         (group, subgroup, task) = self._name_parser(argv.pop(0))
         msg_selected(group, subgroup, task)
 
-        description = None
-        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
-            argv.pop(0)
-            description = argv.pop(0)
+        if len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["-:", "--:"]:
+                description = argv.pop(0)
+            else:
+                raise ArgumentException("No such option: %s" % opt)
 
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
+        self._raise_task_exists(group, subgroup, task)
 
-        if description is None:
-            description = prompt('Description')
+        if fetch:
+            data = self._fetch_data_for(group, subgroup, task)
+        else:
+            data = NEW_TASK_DATA
 
-        self._create_task(group, subgroup, task, description)
+        if not data.get('description', None):
+            data['description'] = description or prompt('Description')
+
+        self._create_task(group, subgroup, task, data)
         msg_normal("Created: %s" % _(group, subgroup, task))
 
         return (group, subgroup, task)
@@ -978,7 +1030,7 @@ class Dit:
         else:
             (group, subgroup, task) = self._backward_parser(argv)
 
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
 
         if not self.current_halted:
             msg_verbose("Already working on a task.")
@@ -1012,7 +1064,7 @@ class Dit:
         try:
             if conclude:
                 (group, subgroup, task) = self._backward_parser(argv)
-            self.raise_unrecognized_argument(argv)
+            self._raise_unrecognized_argument(argv)
             if not conclude:
                 (group, subgroup, task) = self._backward_parser([CURRENT_FN])
         except NoTaskSpecifiedCondition:
@@ -1058,7 +1110,7 @@ class Dit:
 
     @command("a")
     def append(self, argv):
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
 
         try:
             (group, subgroup, task) = self._backward_parser([CURRENT_FN])
@@ -1070,8 +1122,7 @@ class Dit:
         task_state = state(data)
 
         if task_state != State.HALTED:
-            msg_verbose("Can only append if task is halted, but task is %s."
-                        % task_state.name)
+            msg_verbose("Can only append if task is halted.")
             return
 
         data_clock_append(data)
@@ -1082,12 +1133,12 @@ class Dit:
 
     @command("x")
     def cancel(self, argv):
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
         self.halt([], cancel=True)
 
     @command("r")
     def resume(self, argv):
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
         self.workon([CURRENT_FN])
 
     @command("s", ["--new"], SELECT_BACKWARD)
@@ -1097,7 +1148,7 @@ class Dit:
 
     @command("b")
     def switchback(self, argv):
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
         if self._previous_empty():
             msg_verbose("No previous task to switch back to.")
         else:
@@ -1121,7 +1172,7 @@ class Dit:
                 options['verbose'] = True
             else:
                 raise ArgumentException("No such option: %s" % opt)
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
 
         self.exporter = import_module('dit.ditexporter')
         self.exporter.setup(sys.stdout, options)
@@ -1170,7 +1221,7 @@ class Dit:
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
 
-        self.raise_unrecognized_argument(argv)
+        self._raise_unrecognized_argument(argv)
 
         msg_selected(group, subgroup, task)
         if task:
@@ -1194,7 +1245,8 @@ class Dit:
         if all:
             self._export_all()
         elif task:
-            self._export_task(group, subgroup, task)
+            if not self._export_task(group, subgroup, task):
+                raise DitException('Task not found in index.')
         elif subgroup is not None:
             self._export_subgroup(group, subgroup)
         elif group is not None:
@@ -1242,7 +1294,7 @@ class Dit:
             if len(argv) > 0:
                 prop_value = argv.pop(0)
             else:
-                prop_value = prompt("Value for '%s'" % prop_name)
+                prop_value = prompt("Value for property: %s" % prop_name)
 
         if len(argv) > 0:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
@@ -1270,14 +1322,13 @@ class Dit:
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
-        header = "Editing: " + _(group, subgroup, task)
-
-        new_data_raw = prompt(header, data_pretty, "json")
+        selector = _(group, subgroup, task)
+        new_data_raw = prompt("Editing: %s" % selector, data_pretty, "json")
 
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if is_valid_task_data(new_data):
-                msg_normal("Manually edited: %s" % _(group, subgroup, task))
+                msg_normal("Manually edited: %s" % selector)
                 self._save_task(group, subgroup, task, new_data)
             else:
                 msg_normal("Invalid data type, should be a dictionary.")
@@ -1470,5 +1521,5 @@ def main():
         msg_error("Missing argument.")
     except json.decoder.JSONDecodeError:
         msg_error("Invalid JSON.")
-    except HookException as err:
-        msg_error("Hook '%s' returned with non-zero code." % err)
+    except SubprocessException as err:
+        msg_error("`%s` returned with non-zero code, aborting." % err)

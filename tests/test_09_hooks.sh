@@ -25,3 +25,5 @@ setup_hooks
 ./ditcmd --no-hooks list ././t1
 
 ./ditcmd --check-hooks list ././t1
+
+rm -rf ditdir/HOOKS

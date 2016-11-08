@@ -62,4 +62,4 @@ $ dit -v -d ./ditdir --check-hooks list ././t1
 Using directory: ditdir
 Executing hook: before
 before: ./ditdir list
-ERROR: Hook 'before' returned with non-zero code.
+ERROR: `./ditdir/HOOKS/before` returned with non-zero code, aborting.
