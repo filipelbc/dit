@@ -6,7 +6,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   --directory, -d
     Specifies the directory where the tasks are stored. If not specified, the
-    closest ".dit" directory in the tree is used. If not found, '~/.dit' is
+    closest ".dit" directory in the tree is used. If not found, "~/.dit" is
     used.
 
   --verbose, -v
@@ -25,29 +25,29 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
       --new, -n
-        Same as 'new' followed by 'workon'.
+        Same as "new" followed by "workon".
 
     halt
       Stops clocking the CURRENT task.
 
     append
-      Undoes the previous 'halt'.
+      Undoes the previous "halt".
 
     cancel
-      Undoes the previous 'workon' (but the CURRENT task is not changed back).
+      Undoes the previous "workon" (but the CURRENT task is not changed back).
 
     resume
-      Same as 'workon CURRENT'.
+      Same as "workon CURRENT".
 
     switchto <id> | <name> | --new, -n <name> [-: "description"]
-      Same as 'halt' followed by 'workon'.
+      Same as "halt" followed by "workon".
 
     switchback
-      Same as 'halt' followed by 'workon PREVIOUS'. If there is no PREVIOUS
+      Same as "halt" followed by "workon PREVIOUS". If there is no PREVIOUS
       task, nothing is done.
 
     conclude [<id> | <name>]
-      Concludes the CURRENT task or the selected one. Implies a 'halt'. It may
+      Concludes the CURRENT task or the selected one. Implies a "halt". It may
       set the CURRENT and/or PREVIOUS tasks.
 
   Printing <command>'s:
@@ -66,11 +66,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
         file extension if present.
 
     list
-      This is a convenience alias for 'export', with "--output stdout".
+      This is a convenience alias for "export --output stdout".
 
     status [<gid> | <gname>]
-      Prints an overview of the data for the CURRENT task or subgroup, or
-      for the selected one.
+      Prints an overview of the data for the CURRENT and PREVIOUS tasks.
 
   Task editing <command>'s:
 
@@ -90,6 +89,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       Rebuild the INDEX file. For use in case of manual modification of the
       contents of "--directory".
 
+  Clarifications:
+
   "-:"
     Arguments preceeded by "-:" are necessary. If omited, then: a) if the
     $EDITOR environment variable is set, a text file will be open for
@@ -99,15 +100,15 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   <gname>: "group-name"[/"subgroup-name"[/"task-name"]] | CURRENT | PREVIOUS
 
-  CURRENT is a reference to the most recent task that received a 'workon'
-  and has not been 'concluded'. PREVIOUS is a reference to the second most
+  CURRENT is a reference to the most recent task that received a "workon"
+  and has not been "concluded". PREVIOUS is a reference to the second most
   recent.
 
   Note that a "*-name" must begin with a letter to be valid. Group- and
   subgroup-names can be empty or a dot, which means no group and/or subgroup.
 
   Also note that CURRENT and PREVIOUS are not valid arguments for the command
-  'new'.
+  "new".
 
   <id>: [["group-id"/]"subgroup-id"/]"task-id"
 
@@ -574,6 +575,11 @@ class Dit:
                 self.current_subgroup,
                 None if self.current_halted else self.current_task)
 
+    def _get_current_task(self):
+        return (self.current_group,
+                self.current_subgroup,
+                self.current_task)
+
     def _clear_current(self):
         self._set_current(None, None, None)
 
@@ -928,7 +934,7 @@ class Dit:
         if HOOKS_ENABLED:
             hook_fn = self._hook_path(hook)
             if os.path.isfile(hook_fn):
-                msg_normal("Executing hook: %s" % hook)
+                msg_verbose("Executing hook: %s" % hook)
                 try:
                     subprocess.run([hook_fn, self.base_path, cmd_name],
                                    check=CHECK_HOOKS)
@@ -1102,28 +1108,51 @@ class Dit:
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", ["--concluded", "--verbose", "--all"], SELECT_FORWARD, True)
+    @command("q", ["--verbose"], readonly=True)
     def status(self, argv):
-        self.export(argv, statussing=True)
+        options = {
+            'verbose': False,
+            'statussing': True,
+        }
+
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--verbose", "-v"]:
+                options['verbose'] = True
+            else:
+                raise ArgumentException("No such option: %s" % opt)
+        self.raise_unrecognized_argument(argv)
+
+        self.exporter = import_module('dit.ditexporter')
+        self.exporter.setup(sys.stdout, options)
+
+        self.exporter.begin()
+
+        (group, subgroup, task) = self._get_current_task()
+        self._export_task(group, subgroup, task)
+
+        for selection in reversed(self.previous_stack):
+            (group, subgroup, task) = selector_split(selection)
+            self._export_task(group, subgroup, task)
+
+        self.exporter.end()
 
     @command("l", ["--concluded", "--verbose", "--all"], SELECT_FORWARD, True)
     def list(self, argv):
         self.export(argv, listing=True)
 
     @command("e", ["--concluded", "--verbose", "--all", "--output"], SELECT_FORWARD, True)
-    def export(self, argv, listing=False, statussing=False):
+    def export(self, argv, listing=False):
         all = False
         output = None
 
-        options = {'concluded': False,
-                   'verbose': False}
+        options = {
+            'concluded': False,
+            'verbose': False,
+        }
 
-        if statussing:
-            group = None
-            subgroup = None
-        else:
-            group = self.current_group
-            subgroup = self.current_subgroup
+        group = self.current_group
+        subgroup = self.current_subgroup
         task = None
 
         while len(argv) > 0 and argv[0].startswith("-"):
@@ -1134,23 +1163,18 @@ class Dit:
                 options['verbose'] = True
             elif opt in ["--all", "-a"]:
                 all = True
-            elif opt in ["--output", "-o"] and not (listing or statussing):
+            elif opt in ["--output", "-o"] and not listing:
                 output = argv.pop(0)
             else:
                 raise ArgumentException("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
 
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % opt)
-
-        if statussing and group is None:
-            group, subgroup, task = self._get_current()
-
-        if statussing and task:
-            options['concluded'] = True
+        self.raise_unrecognized_argument(argv)
 
         msg_selected(group, subgroup, task)
+        if task:
+            options['concluded'] = True
 
         if output in [None, "stdout"]:
             file = sys.stdout
@@ -1163,7 +1187,7 @@ class Dit:
             raise DitException("Unrecognized format: %s", fmt)
 
         self.exporter = import_module('dit.' + fmt + 'exporter')
-        self.exporter.setup(file, options, statussing, listing)
+        self.exporter.setup(file, options)
 
         self.exporter.begin()
 
@@ -1185,7 +1209,7 @@ class Dit:
 
     @command("t", ["-:", "--:"], SELECT_BACKWARD)
     def note(self, argv):
-        group, subgroup, task = self._backward_parser(argv)
+        (group, subgroup, task) = self._backward_parser(argv)
 
         note_text = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -1209,7 +1233,7 @@ class Dit:
 
     @command("p", ["-:", "--:"], SELECT_BACKWARD)
     def set(self, argv):
-        group, subgroup, task = self._backward_parser(argv)
+        (group, subgroup, task) = self._backward_parser(argv)
 
         prop_name = None
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
@@ -1242,7 +1266,7 @@ class Dit:
 
     @command("m", select=SELECT_BACKWARD)
     def edit(self, argv):
-        group, subgroup, task = self._backward_parser(argv)
+        (group, subgroup, task) = self._backward_parser(argv)
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
@@ -1329,7 +1353,7 @@ def completion_gname(dit, names):
 
     names[-1] = None
     names = names + [None] * (3 - len(names))
-    group, subgroup, task = names
+    (group, subgroup, task) = names
 
     comp_options = []
     for i, g in enumerate(dit.index):

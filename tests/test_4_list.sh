@@ -7,3 +7,5 @@
 ./ditcmd list PREVIOUS
 
 ./ditcmd list CURRENT
+
+./ditcmd status --verbose
