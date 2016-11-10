@@ -1,3 +1,4 @@
+.PHONY: install install-completion venv clean
 
 install:
 	python3 setup.py install

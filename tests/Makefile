@@ -1,3 +1,4 @@
+.PHONY: all is_venv clean set_env ok run ci
 
 all: is_venv clean set_env
 	make -C .. install
