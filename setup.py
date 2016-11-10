@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='dit',
-    version='0.4dev0',
+    version='0.5',
 
     description='A command line work time tracker and task list management system.',
 
@@ -28,7 +28,7 @@ setup(
 
     packages=['dit'],
 
-    install_requires=[],
+    install_requires=['tzlocal'],
 
     extras_require={
         'dev': [],
