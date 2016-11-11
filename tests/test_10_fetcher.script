@@ -5,13 +5,10 @@ echo "Fetcher arguments: $@"
 cat <<EOF > ./ditdir/g5/g6/t11
 
 {
-  "description": "g5 g6 t11 was fetched",
-  "properties": [
-    {
-      "name": "from",
-      "value": "somewhere"
-    }
-  ],
+  "title": "g5 g6 t11 was fetched",
+  "properties": {
+    "from": "somewhere"
+  },
   "notes": [
     "initial note"
   ]
