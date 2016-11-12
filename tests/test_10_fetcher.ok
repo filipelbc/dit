@@ -161,7 +161,7 @@ Using directory: ditdir
 Selected: g1/./t2
 Fetching data with `./ditdir/g1/_data_fetcher`.
 Fetcher arguments: ./ditdir g1 . t2
-Expected `data.title` to be a `str` but got a `list`.
 Expected `data.notes` to be a `list` but got a `dict`.
 Expected `data.properties` to be a `dict` but got a `list`.
+Expected `data.title` to be a `str` but got a `list`.
 ERROR: Fetched data is invalid: ./ditdir/g1/t2.json

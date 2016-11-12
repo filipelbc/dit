@@ -484,8 +484,8 @@ def is_valid_task_data(data):
         'title': str,
     }
     ans = True
-    for key in types:
-        if key in data and not isinstance(data[key], types[key]):
+    for key in sorted(types.keys() & data.keys()):
+        if not isinstance(data[key], types[key]):
             msg_verbose("Expected `data.%s` to be a `%s` but got a `%s`."
                         % (key,
                            types[key].__name__,
@@ -1209,10 +1209,11 @@ class Dit:
             self._save_current()
 
         # update PREVIOUS
-        if from_selector in self.previous_stack:
-            self.previous_stack = [s if s != from_selector else to_selector
-                                   for s in self.previous_stack]
-            self._save_previous()
+        for i in range(0, len(self.previous_stack)):
+            if self.previous_stack[i] == from_selector:
+                self.previous_stack[i] = to_selector
+                self._save_previous()
+                break
 
         # update INDEX
         self._remove_from_index(from_group, from_subgroup, from_task)
