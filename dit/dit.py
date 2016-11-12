@@ -124,6 +124,7 @@ import sys
 from enum import Enum
 from getpass import getuser
 from importlib import import_module
+from importlib.util import find_spec
 from tempfile import gettempdir
 
 from .data_utils import now
@@ -202,6 +203,17 @@ def run_subprocess(*args, **kwargs):
         sys.stdout.flush()
     return subprocess.run(*args, **kwargs)
 
+
+def load_plugin(plugin_name):
+    external = "dit_%s" % plugin_name
+    if find_spec(external):
+        return import_module(external)
+    internal = "dit.%s" % plugin_name
+    if find_spec(internal):
+        return import_module(internal)
+    raise DitException("%s submodule not found."
+                       "Your dit installation might be corrupt."
+                       % plugin_name)
 
 # ===========================================
 # Message output
@@ -1199,9 +1211,8 @@ class Dit:
                 raise ArgumentException("No such option: %s" % opt)
         self._raise_unrecognized_argument(argv)
 
-        self.exporter = import_module('dit.ditexporter')
+        self.exporter = load_plugin('ditexporter')
         self.exporter.setup(sys.stdout, options)
-
         self.exporter.begin()
 
         (group, subgroup, task) = self._get_current_task()
@@ -1220,7 +1231,7 @@ class Dit:
     @command("e", ["--concluded", "--verbose", "--all", "--output", "--format"], SELECT_FORWARD, True)
     def export(self, argv, listing=False):
         all = False
-        output = None
+        output_file = None
         output_format = None
 
         options = {
@@ -1241,7 +1252,7 @@ class Dit:
             elif opt in ["--all", "-a"]:
                 all = True
             elif opt in ["--output", "-o"] and not listing:
-                output = argv.pop(0)
+                output_file = argv.pop(0)
             elif opt in ["--format", "-f"] and not listing:
                 output_format = argv.pop(0)
             else:
@@ -1255,19 +1266,17 @@ class Dit:
         if task:
             options['concluded'] = True
 
-        if output in [None, "stdout"]:
+        if output_file in [None, "stdout"]:
             file = sys.stdout
             output_format = output_format or 'dit'
         else:
-            file = open(output, 'w')
-            output_format = output_format or output.split(".")[-1]
+            file = open(output_file, 'w')
+            if not output_format:
+                __, ext = os.path.splittext(output_file)
+                output_format = output_format or ext[1:]
 
-        if output_format not in ['dit', 'org']:
-            raise DitException("Unrecognized format: %s", output_format)
-
-        self.exporter = import_module('dit.' + output_format + 'exporter')
+        self.exporter = load_plugin("%sexporter" % output_format)
         self.exporter.setup(file, options)
-
         self.exporter.begin()
 
         if all:
@@ -1284,7 +1293,7 @@ class Dit:
 
         self.exporter.end()
 
-        if output not in [None, "stdout"]:
+        if output_file not in [None, "stdout"]:
             file.close()
 
     @command("t", ["-:", "--:"], SELECT_BACKWARD)
