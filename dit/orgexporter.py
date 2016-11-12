@@ -50,8 +50,8 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     properties = data.get('properties', [])
     if properties:
         write(":PROPERTIES:")
-    for prop in properties:
-        write(":%s: %s" % (prop, properties[prop]))
+    for prop_name in properties:
+        write(":%s: %s" % (prop_name, properties[prop_name]))
     if properties:
         write(":END:")
 

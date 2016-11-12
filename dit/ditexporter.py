@@ -89,8 +89,8 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
 
         if properties:
             write('  Properties:')
-        for prop in properties:
-            write('  * %s: %s' % (prop, properties[prop]))
+        for prop_name in properties:
+            write('  * %s: %s' % (prop_name, properties[prop_name]))
 
     if not statussing:
         if logbook:
