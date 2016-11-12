@@ -17,11 +17,11 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Workflow <command>'s:
 
-    new <name> [-: "description"]
-      Creates a new task. You will be prompted for the "description" if it is
+    new <name> [-: "title"]
+      Creates a new task. You will be prompted for the "title" if it is
       not provided.
 
-    workon <id> | <name> | --new, -n <name> [-: "description"]
+    workon <id> | <name> | --new, -n <name> [-: "title"]
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
       --new, -n
@@ -39,7 +39,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     resume
       Same as "workon CURRENT".
 
-    switchto <id> | <name> | --new, -n <name> [-: "description"]
+    switchto <id> | <name> | --new, -n <name> [-: "title"]
       Same as "halt" followed by "workon".
 
     switchback
@@ -205,6 +205,10 @@ def msg_normal(message):
     sys.stdout.flush()
 
 
+def msg_yn_question(message):
+    return input("%s [Y/n] " % message) == "Y"
+
+
 def msg_verbose(message):
     if VERBOSE:
         msg_normal(message)
@@ -361,26 +365,28 @@ def make_tmp_fp(name, extension):
 
 def prompt(header, initial=None, extension='txt'):
     editor = get_system_editor()
-    if editor:
-        input_fp = make_tmp_fp(header, extension)
-        with open(input_fp, 'w') as f:
-            f.write(COMMENT_CHAR + ' ' + header + '\n')
-            if initial:
-                f.write(initial)
-        try:
-            subprocess.run([editor, input_fp], check=True)
-        except subprocess.CalledProcessError:
-            raise SubprocessException("%s %s" % (editor, input_fp))
-        with open(input_fp, 'r') as f:
-            lines = [line for line in f.readlines()
-                     if not line.startswith(COMMENT_CHAR)]
-        return (''.join(lines)).strip()
+    if sys.stdout.isatty():
+        if editor:
+            input_fp = make_tmp_fp(header, extension)
+            with open(input_fp, 'w') as f:
+                f.write(COMMENT_CHAR + ' ' + header + '\n')
+                if initial:
+                    f.write(initial)
+            try:
+                subprocess.run([editor, input_fp], check=True)
+            except subprocess.CalledProcessError:
+                raise SubprocessException("%s %s" % (editor, input_fp))
+            with open(input_fp, 'r') as f:
+                lines = [line for line in f.readlines()
+                         if not line.startswith(COMMENT_CHAR)]
+            return (''.join(lines)).strip()
 
-    elif not initial:
-        return input(header + ': ').strip()
-
+        elif not initial:
+            return input(header + ': ').strip()
+        else:
+            raise DitException("$EDITOR environment variable is not set.")
     else:
-        raise DitException("$EDITOR environment variable is not set.")
+        raise DitException('Cannot prompt while not running interactively.')
 
 # ===========================================
 # Task Verification
@@ -401,9 +407,9 @@ def is_valid_task_data(data):
 # Task Data Manipulation
 
 NEW_TASK_DATA = {
-    "description": None,
+    "title": None,
     "logbook": [],
-    "properties": [],
+    "properties": {},
     "notes": [],
     "created_at": None,
 }
@@ -487,15 +493,16 @@ def data_add_note(data, note_text):
 
 def data_set_property(data, prop_name, prop_value):
     if 'properties' not in data:
-        data['properties'] = []
+        data['properties'] = {}
 
     properties = data['properties']
-    for prop in properties:
-        if prop_name == prop['name']:
-            msg_warning('Property overwritten, previous value was: %s' % prop['value'])
-            prop['value'] = prop_value
-            return
-    properties.append({'name': prop_name, 'value': prop_value})
+    if prop_name in properties:
+        if not msg_yn_question('Property `%s` already exists with value: %s\n'
+                               'Do you want to overwrite?' %
+                               (prop_name, properties[prop_name])):
+            return False
+    properties[prop_name] = prop_value
+    return True
 
 # ===========================================
 # Dit Class
@@ -992,7 +999,7 @@ class Dit:
 
     @command("n", ["-:", "--:"], SELECT_BACKWARD)
     def new(self, argv):
-        description = None
+        title = None
         fetch = False
 
         if len(argv) > 1 and argv[0].startswith("-"):
@@ -1010,7 +1017,7 @@ class Dit:
         if len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["-:", "--:"]:
-                description = argv.pop(0)
+                title = argv.pop(0)
             else:
                 raise ArgumentException("No such option: %s" % opt)
 
@@ -1022,8 +1029,8 @@ class Dit:
         else:
             data = NEW_TASK_DATA
 
-        if not data.get('description', None):
-            data['description'] = description or prompt('Description')
+        if not data.get('title', None):
+            data['title'] = title or prompt('title')
 
         self._create_task(group, subgroup, task, data)
         msg_normal("Created: %s" % _(group, subgroup, task))
@@ -1283,7 +1290,7 @@ class Dit:
             raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
         if note_text is None:
-            note_text = prompt("Description")
+            note_text = prompt("Title")
 
         if not note_text:
             msg_normal("Operation cancelled.")
@@ -1323,9 +1330,11 @@ class Dit:
             return
 
         data = self._load_task_data(group, subgroup, task)
-        data_set_property(data, prop_name, prop_value)
-        msg_normal("Set property of: %s" % _(group, subgroup, task))
-        self._save_task(group, subgroup, task, data)
+        if data_set_property(data, prop_name, prop_value):
+            msg_normal("Set property of: %s" % _(group, subgroup, task))
+            self._save_task(group, subgroup, task, data)
+        else:
+            msg_normal('Operation cancelled.')
 
     @command("m", select=SELECT_BACKWARD)
     def edit(self, argv):

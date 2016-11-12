@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 
-file = None
-statussing = False
-listing = False
-options = {}
+_file = None
+_options = {
+    'concluded': False,
+}
 
 
-def setup(_file, _options, _statussing, _listing):
-    global file, options, statussing, listing
-    file = _file
-    options = _options
-    listing = _listing
-    statussing = _statussing
+def write(string=''):
+    _file.write('\n%s' % string)
+
+
+def setup(file, options):
+    global _file
+    global _options
+    _file = file
+    _options.update(options)
 
 
 def begin():
@@ -23,38 +26,45 @@ def end():
 
 
 def group(group, group_id):
-    file.write("\n* %s\n" % group)
+    write("* %s\n" % group)
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    file.write("\n** %s\n" % subgroup)
+    write("** %s\n" % subgroup)
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
-    if data.get('concluded_at', None) and not options.get('concluded', False):
+    # options
+    concluded = _options.get('concluded')
+
+    # data
+    concluded_at = data.get('concluded_at', None)
+
+    if concluded_at and not concluded:
         return
 
-    description = data.get('description', None)
-    file.write("\n*** %s" % description)
+    # write
+    title = data.get('title', None)
+    write("*** %s" % title)
 
-    notes = data.get('notes', [])
-    for note in notes:
-        file.write("\n  + %s" % note)
-
-    props = data.get('properties', [])
-    if props:
-        file.write("\n:PROPERTIES:")
-    for prop in props:
-        file.write("\n:%s: %s" % (prop['name'], prop['value']))
-    if props:
-        file.write("\n:END:")
+    properties = data.get('properties', [])
+    if properties:
+        write(":PROPERTIES:")
+    for prop_name in properties:
+        write(":%s: %s" % (prop_name, properties[prop_name]))
+    if properties:
+        write(":END:")
 
     logbook = data.get('logbook', [])
     if logbook:
-        file.write("\n:LOGBOOK:")
+        write(":LOGBOOK:")
     for log in logbook:
-        file.write("\nCLOCK: [%s]--[%s]" % (log['in'], log['out']))
+        write("CLOCK: [%s]--[%s]" % (log['in'], log['out']))
     if logbook:
-        file.write("\n:END:")
+        write(":END:")
 
-    file.write("\n")
+    notes = data.get('notes', [])
+    for note in notes:
+        write("- %s" % note)
+
+    write()

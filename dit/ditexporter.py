@@ -51,9 +51,9 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
 
     created_at = data.get('created_at', None)
     updated_at = data.get('updated_at', None)
-    description = data.get('description', None)
+    title = data.get('title', None)
     notes = data.get('notes', [])
-    props = data.get('properties', [])
+    properties = data.get('properties', {})
     logbook = data.get('logbook', [])
 
     if logbook:
@@ -64,8 +64,8 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # write
     write('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task))
 
-    if description:
-        write('  %s' % description)
+    if title:
+        write('  %s' % title)
 
     if created_at and not statussing:
         write('  * Created at: %s' % created_at)
@@ -87,10 +87,10 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         for note in notes:
             write('  * %s' % note)
 
-        if props:
+        if properties:
             write('  Properties:')
-        for prop in props:
-            write('  * %s: %s' % (prop['name'], prop['value']))
+        for prop_name in properties:
+            write('  * %s: %s' % (prop_name, properties[prop_name]))
 
     if not statussing:
         if logbook:
