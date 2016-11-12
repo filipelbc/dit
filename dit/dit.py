@@ -196,13 +196,19 @@ def get_system_editor():
         editor = os.environ.get('EDITOR', None)
     return editor
 
+
+def run_subprocess(*args, **kwargs):
+    if not sys.stdout.isatty():
+        sys.stdout.flush()
+    return subprocess.run(*args, **kwargs)
+
+
 # ===========================================
 # Message output
 
 
 def msg_normal(message):
     sys.stdout.write("%s\n" % message)
-    sys.stdout.flush()
 
 
 def msg_yn_question(message):
@@ -220,8 +226,9 @@ def msg_warning(message):
 
 
 def msg_error(message):
+    if not sys.stdout.isatty():
+        sys.stdout.flush()  # this is needed since stderr is never buffered
     sys.stderr.write("ERROR: %s\n" % message)
-    sys.stdout.flush()
 
 
 def msg_selected(group, subgroup, task):
@@ -373,7 +380,7 @@ def prompt(header, initial=None, extension='txt'):
                 if initial:
                     f.write(initial)
             try:
-                subprocess.run([editor, input_fp], check=True)
+                run_subprocess([editor, input_fp], check=True)
             except subprocess.CalledProcessError:
                 raise SubprocessException("%s %s" % (editor, input_fp))
             with open(input_fp, 'r') as f:
@@ -969,7 +976,7 @@ class Dit:
             if os.path.isfile(hook_fp):
                 msg_verbose("Executing hook: %s" % hook)
                 try:
-                    subprocess.run([hook_fp, self.base_path, cmd_name],
+                    run_subprocess([hook_fp, self.base_path, cmd_name],
                                    check=CHECK_HOOKS)
                 except subprocess.CalledProcessError:
                     raise SubprocessException(hook_fp)
@@ -984,7 +991,7 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
 
         try:
-            subprocess.run([fetcher_fp, self.base_path, group, subgroup, task], check=True)
+            run_subprocess([fetcher_fp, self.base_path, group, subgroup, task], check=True)
         except subprocess.CalledProcessError:
             raise SubprocessException(fetcher_fp)
 
