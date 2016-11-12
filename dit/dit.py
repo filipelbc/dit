@@ -186,6 +186,17 @@ HOOKS_ENABLED = True
 CHECK_HOOKS = False
 
 # ===========================================
+# System
+
+
+def get_system_editor():
+    # preference to the visual editor
+    editor = os.environ.get('VISUAL', None)
+    if not editor:
+        editor = os.environ.get('EDITOR', None)
+    return editor
+
+# ===========================================
 # Message output
 
 
@@ -349,7 +360,7 @@ def make_tmp_fp(name, extension):
 
 
 def prompt(header, initial=None, extension='txt'):
-    editor = os.environ.get('EDITOR', None)
+    editor = get_system_editor()
     if editor:
         input_fp = make_tmp_fp(header, extension)
         with open(input_fp, 'w') as f:
