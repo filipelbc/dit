@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+echo "Fetcher arguments: $@"
+
+cat <<EOF > $1/$2/$3/$4.json
+
+{
+  "title": ["$2 $3 $4 was fetched"],
+  "properties": [
+    {"from": "somewhere"}
+  ],
+  "notes": {
+    "note": "fetched note"
+  }
+}
+
+EOF
