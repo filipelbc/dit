@@ -39,7 +39,7 @@ $ dit -v -d ./ditdir new --fetch g4/./t13
 Using directory: ditdir
 Selected: g4/./t13
 Fetching data with `./ditdir/g4/_data_fetcher`.
-ERROR: `./ditdir/g4/t13` not found: it seems no data was fetched.
+ERROR: `./ditdir/g4/t13.json` not found: it seems no data was fetched.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --verbose g4/./t13
 Using directory: ditdir

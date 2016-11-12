@@ -317,14 +317,14 @@ def command(letter=None, options=[], select=None, readonly=False):
         global COMMAND_INFO
         name = cmd.__name__.replace("_", "-")
         if name in COMMAND_INFO:
-            raise Exception("Method `%s` is already registered as command.")
+            raise Exception("Method `%s` is already registered as command." % name)
         COMMAND_INFO[name] = {'name': cmd.__name__,
                               'letter': letter,
                               'options': options,
                               'select': select,
                               'readonly': readonly}
         if letter and letter in COMMAND_INFO:
-            raise Exception("Letter `%s` is already registered as command.")
+            raise Exception("Letter `%s` is already registered as command." % letter)
         if letter:
             COMMAND_INFO[letter] = COMMAND_INFO[cmd.__name__]
         return cmd
@@ -473,7 +473,25 @@ def is_valid_group_name(name):
 
 
 def is_valid_task_data(data):
-    return isinstance(data, dict)
+    if not isinstance(data, dict):
+        msg_verbose("Expected data to be a `dict` but got a `%s`."
+                    % data.__class__.__name__)
+        return False
+    types = {
+        'properties': dict,
+        'logbook': list,
+        'notes': list,
+        'title': str,
+    }
+    ans = True
+    for key in types:
+        if key in data and not isinstance(data[key], types[key]):
+            msg_verbose("Expected `data.%s` to be a `%s` but got a `%s`."
+                        % (key,
+                           types[key].__name__,
+                           data[key].__class__.__name__))
+            ans = False
+    return ans
 
 # ===========================================
 # Task Data Manipulation
@@ -575,6 +593,23 @@ def data_set_property(data, prop_name, prop_value):
             return False
     properties[prop_name] = prop_value
     return True
+
+
+def data_update(current, other):
+    other.pop('logbook', [])  # do not merge logbook!
+
+    for key in other:
+        if key in current:
+            if key == 'properties':
+                current[key].update(other[key])
+            elif key == 'notes':
+                current[key] += other[key]
+            else:
+                current[key] = other[key]
+        else:
+            current[key] = other[key]
+
+    return current
 
 # ===========================================
 # Dit Class
@@ -773,6 +808,18 @@ class Dit:
 
         self.index[group_id][1][subgroup_id][1].append(task)
 
+    def _remove_from_index(self, group, subgroup, task):
+        for g in self.index:
+            if g[0] == group:
+                for s in g[1]:
+                    if s[0] == subgroup:
+                        for k, t in enumerate(s[1]):
+                            if t == task:
+                                s[1][k] = ""
+                                break
+                        break
+                break
+
     def _save_index(self):
         save_json_file(self._index_path(), self.index)
         msg_verbose("%s saved." % INDEX_FN)
@@ -823,6 +870,8 @@ class Dit:
     # these are for internal use
 
     def _export_t_k(self, g, i, s, j, t, k, force_header=False):
+        if not t:
+            return
         if force_header:
             if i > 0:
                 self.exporter.group(g[0], i)
@@ -987,7 +1036,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _backward_parser(self, argv):
+    def _backward_parser(self, argv, throw=True):
         (group, subgroup, task) = self._get_current()
 
         if len(argv) > 0 and not argv[0].startswith("-"):
@@ -1007,7 +1056,7 @@ class Dit:
 
         msg_selected(group, subgroup, task)
 
-        if not task:
+        if not task and throw:
             raise NoTaskSpecifiedCondition("No task specified.")
 
         return (group, subgroup, task)
@@ -1049,27 +1098,34 @@ class Dit:
     def _fetch_data_for(self, group, subgroup, task):
         fetcher_fp = self._plugin_path(FETCHER_FN, group, subgroup)
         if not fetcher_fp:
-            raise DitException("Data fetcher script `%s` not found." % FETCHER_FN)
+            raise DitException("Data fetcher script `%s` not found."
+                               % FETCHER_FN)
         else:
             msg_normal("Fetching data with `%s`." % fetcher_fp)
 
-        task_fp = self._make_task_path(group, subgroup, task)
+        fetch_fp = self._make_task_path(group, subgroup, task) + ".json"
 
         try:
-            run_subprocess([fetcher_fp, self.base_path, group, subgroup, task], check=True)
+            run_subprocess([
+                fetcher_fp, self.base_path, _(group), _(subgroup), _(task)
+            ], check=True)
         except subprocess.CalledProcessError:
             raise SubprocessException(fetcher_fp)
 
-        if not os.path.isfile(task_fp):
+        if not os.path.isfile(fetch_fp):
             raise DitException("`%s` not found: it seems no data was fetched."
-                               % task_fp)
+                               % fetch_fp)
 
-        return self._load_task_data(group, subgroup, task)
+        data = load_json_file(fetch_fp)
+        if not is_valid_task_data(data):
+            raise DitException("Fetched data is invalid: %s" % fetch_fp)
+        os.remove(fetch_fp)
+        return data
 
     # ===========================================
     # Commands
 
-    @command("n", ["-:", "--:"], SELECT_BACKWARD)
+    @command("n", ["-:", "--:", "--fetch"], SELECT_BACKWARD)
     def new(self, argv):
         title = None
         fetch = False
@@ -1096,10 +1152,10 @@ class Dit:
         self._raise_unrecognized_argument(argv)
         self._raise_task_exists(group, subgroup, task)
 
+        data = NEW_TASK_DATA
         if fetch:
-            data = self._fetch_data_for(group, subgroup, task)
-        else:
-            data = NEW_TASK_DATA
+            fetched_data = self._fetch_data_for(group, subgroup, task)
+            data = data_update(data, fetched_data)
 
         if not data.get('title', None):
             data['title'] = title or prompt('title')
@@ -1108,6 +1164,63 @@ class Dit:
         msg_normal("Created: %s" % _(group, subgroup, task))
 
         return (group, subgroup, task)
+
+    @command("f", [], SELECT_BACKWARD)
+    def fetch(self, argv):
+        (group, subgroup, task) = self._backward_parser(argv)
+
+        self._raise_unrecognized_argument(argv)
+
+        fetched_data = self._fetch_data_for(group, subgroup, task)
+        if not fetched_data:
+            msg_verbose('Nothing to do: feched data is empty.')
+            return
+
+        initial_data = self._load_task_data(group, subgroup, task)
+        new_data = data_update(initial_data, fetched_data)
+        self._save_task(group, subgroup, task, new_data)
+
+    @command("m", ["--fetch"], SELECT_BACKWARD)
+    def move(self, argv):
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--fetch", "-f"]:
+                fetch = True
+            else:
+                raise ArgumentException("No such option: %s" % opt)
+
+        (from_group, from_subgroup, from_task) = self._backward_parser(argv)
+        (to_group, to_subgroup, to_task) = self._backward_parser(argv)
+
+        self._raise_task_exists(to_group, to_subgroup, to_task)
+
+        from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
+        to_fp = os.path.join(self.base_path, to_group, to_subgroup, to_task)
+
+        from_selector = _(from_group, from_subgroup, from_task)
+        to_selector = _(to_group, to_subgroup, to_task)
+
+        os.rename(from_fp, to_fp)
+        msg_normal("Task %s moved to %s" % (from_selector, to_selector))
+
+        # update CURRENT
+        if self._is_current(from_group, from_subgroup, from_task):
+            self._set_current(to_group, to_subgroup, to_task, self.current_halted)
+            self._save_current()
+
+        # update PREVIOUS
+        if from_selector in self.previous_stack:
+            self.previous_stack = [s if s != from_selector else to_selector
+                                   for s in self.previous_stack]
+            self._save_previous()
+
+        # update INDEX
+        self._remove_from_index(from_group, from_subgroup, from_task)
+        self._add_to_index(to_group, to_subgroup, to_task)
+        self._save_index()
+
+        if fetch:
+            self.fetch([to_selector])
 
     @command("w", ["--new"], SELECT_BACKWARD)
     def workon(self, argv):
@@ -1151,13 +1264,14 @@ class Dit:
 
     @command("h")
     def halt(self, argv, conclude=False, cancel=False):
-        try:
-            if conclude:
-                (group, subgroup, task) = self._backward_parser(argv)
+        if conclude:
+            (group, subgroup, task) = self._backward_parser(argv, throw=False)
             self._raise_unrecognized_argument(argv)
-            if not conclude:
-                (group, subgroup, task) = self._backward_parser([CURRENT_FN])
-        except NoTaskSpecifiedCondition:
+        else:
+            self._raise_unrecognized_argument(argv)
+            (group, subgroup, task) = self._backward_parser([CURRENT_FN], throw=False)
+
+        if not task:
             msg_verbose('Nothing to %s.' % "conclude" if conclude else "halt")
             return
 
@@ -1281,7 +1395,7 @@ class Dit:
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("e", ["--concluded", "--verbose", "--all", "--output", "--format"], SELECT_FORWARD, True)
+    @command("o", ["--concluded", "--verbose", "--all", "--output", "--format"], SELECT_FORWARD, True)
     def export(self, argv, listing=False):
         all = False
         output_file = None
@@ -1408,7 +1522,7 @@ class Dit:
         else:
             msg_normal('Operation cancelled.')
 
-    @command("m", select=SELECT_BACKWARD)
+    @command("e", [], SELECT_BACKWARD)
     def edit(self, argv):
         (group, subgroup, task) = self._backward_parser(argv)
 
@@ -1423,7 +1537,7 @@ class Dit:
                 msg_normal("Manually edited: %s" % selector)
                 self._save_task(group, subgroup, task, new_data)
             else:
-                msg_normal("Invalid data type, should be a dictionary.")
+                msg_error("Invalid data. Operation cancelled.")
         else:
             msg_normal("Operation cancelled.")
 
