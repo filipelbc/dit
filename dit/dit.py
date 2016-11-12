@@ -1217,10 +1217,11 @@ class Dit:
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("e", ["--concluded", "--verbose", "--all", "--output"], SELECT_FORWARD, True)
+    @command("e", ["--concluded", "--verbose", "--all", "--output", "--format"], SELECT_FORWARD, True)
     def export(self, argv, listing=False):
         all = False
         output = None
+        output_format = None
 
         options = {
             'concluded': False,
@@ -1241,6 +1242,8 @@ class Dit:
                 all = True
             elif opt in ["--output", "-o"] and not listing:
                 output = argv.pop(0)
+            elif opt in ["--format", "-f"] and not listing:
+                output_format = argv.pop(0)
             else:
                 raise ArgumentException("No such option: %s" % opt)
         if len(argv) > 0:
@@ -1254,15 +1257,15 @@ class Dit:
 
         if output in [None, "stdout"]:
             file = sys.stdout
-            fmt = 'dit'
+            output_format = output_format or 'dit'
         else:
             file = open(output, 'w')
-            fmt = output.split(".")[-1]
+            output_format = output_format or output.split(".")[-1]
 
-        if fmt not in ['dit', 'org']:
-            raise DitException("Unrecognized format: %s", fmt)
+        if output_format not in ['dit', 'org']:
+            raise DitException("Unrecognized format: %s", output_format)
 
-        self.exporter = import_module('dit.' + fmt + 'exporter')
+        self.exporter = import_module('dit.' + output_format + 'exporter')
         self.exporter.setup(file, options)
 
         self.exporter.begin()
