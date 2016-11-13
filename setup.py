@@ -4,7 +4,7 @@ setup(
     name='dit',
     version='0.6',
 
-    description='A command line work time tracker and task list management system.',
+    description='A CLI work time tracking tool.',
 
     url='https://github.com/filipelbc/dit',
 

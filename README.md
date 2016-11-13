@@ -2,7 +2,7 @@
 
 # dit
 
-A command line work time tracker and task list management system.
+A CLI work time tracking tool.
 
 ## Installation
 
