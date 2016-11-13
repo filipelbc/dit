@@ -162,7 +162,7 @@ CURRENT saved: ././t4 (halted)
 $ dit -v -d ./ditdir append
 Using directory: ditdir
 Selected: ././t4
-Continuing work on: ././t4
+Appending work on: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
@@ -192,7 +192,6 @@ CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir resume
 Using directory: ditdir
-Selected: ././t4
 Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir append
@@ -372,8 +371,7 @@ No previous task to switch back to.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon PREVIOUS
 Using directory: ditdir
-Selected: _/_/_
-ERROR: No task specified.
+Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list PREVIOUS
 Using directory: ditdir

@@ -101,7 +101,6 @@ CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
 Using directory: ditdir
-Selected: ././t1
 Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
@@ -222,7 +221,6 @@ CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
 Using directory: ditdir
-Selected: ././t7
 Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
@@ -247,7 +245,6 @@ Using directory: ditdir
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0/0/0
 Using directory: ditdir
-Selected: ././t1
 Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status

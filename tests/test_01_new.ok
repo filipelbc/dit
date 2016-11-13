@@ -68,7 +68,7 @@ Created: ././t10
 $ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
 Using directory: ditdir
 Selected: ././t7
-ERROR: Already exists: ./ditdir/t7
+ERROR: Task already exists: ./ditdir/t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir new _foo -: 'fails: invalid task name'
 Using directory: ditdir

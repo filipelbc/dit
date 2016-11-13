@@ -15,6 +15,12 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   --help, -h
     Prints this message and quits.
 
+  --check-hooks
+    Stop with error when hook process fails.
+
+  --no-hooks
+    Disable the use of hooks.
+
   Workflow <command>'s:
 
     new [--fetch, -f] <name> [-: "title"]
@@ -23,7 +29,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --fetch, -n
         Use data fetcher plugin.
 
-    workon <id> | <name> | --new, -n <name> [-: "title"]
+    workon <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
       --new, -n
@@ -664,7 +670,7 @@ class Dit:
     def _raise_task_exists(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
         if os.path.exists(path):
-            raise DitException("Already exists: %s" % path)
+            raise DitException("Task already exists: %s" % path)
 
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
@@ -1130,7 +1136,7 @@ class Dit:
         title = None
         fetch = False
 
-        if len(argv) > 1 and argv[0].startswith("-"):
+        while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--fetch", "-f"]:
                 fetch = True
@@ -1142,7 +1148,7 @@ class Dit:
         (group, subgroup, task) = self._name_parser(argv.pop(0))
         msg_selected(group, subgroup, task)
 
-        if len(argv) > 0 and argv[0].startswith("-"):
+        while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["-:", "--:"]:
                 title = argv.pop(0)
@@ -1158,7 +1164,7 @@ class Dit:
             data = data_update(data, fetched_data)
 
         if not data.get('title', None):
-            data['title'] = title or prompt('title')
+            data['title'] = title or prompt('Task title')
 
         self._create_task(group, subgroup, task, data)
         msg_normal("Created: %s" % _(group, subgroup, task))
@@ -1168,7 +1174,6 @@ class Dit:
     @command("f", [], SELECT_BACKWARD)
     def fetch(self, argv):
         (group, subgroup, task) = self._backward_parser(argv)
-
         self._raise_unrecognized_argument(argv)
 
         fetched_data = self._fetch_data_for(group, subgroup, task)
@@ -1188,10 +1193,9 @@ class Dit:
                 fetch = True
             else:
                 raise ArgumentException("No such option: %s" % opt)
-
-        (from_group, from_subgroup, from_task) = self._backward_parser(argv)
-        (to_group, to_subgroup, to_task) = self._backward_parser(argv)
-
+        (from_group, from_subgroup, from_task) = self._name_parser(argv.pop(0))
+        (to_group, to_subgroup, to_task) = self._name_parser(argv.pop(0))
+        self._raise_unrecognized_argument(argv)
         self._raise_task_exists(to_group, to_subgroup, to_task)
 
         from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
@@ -1228,17 +1232,16 @@ class Dit:
         if len(argv) < 1:
             raise ArgumentException("Missing argument.")
 
+        if not self.current_halted:
+            msg_verbose("Already working on a task.")
+            return
+
         if argv[0] in ["--new", "-n"]:
             argv.pop(0)
             (group, subgroup, task) = self.new(argv)
         else:
             (group, subgroup, task) = self._backward_parser(argv)
-
         self._raise_unrecognized_argument(argv)
-
-        if not self.current_halted:
-            msg_verbose("Already working on a task.")
-            return
 
         data = self._load_task_data(group, subgroup, task)
 
@@ -1331,7 +1334,7 @@ class Dit:
             return
 
         data_clock_append(data)
-        msg_normal("Continuing work on: %s" % _(group, subgroup, task))
+        msg_normal("Appending work on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
         self.current_halted = False
         self._save_current()
@@ -1379,7 +1382,7 @@ class Dit:
                 raise ArgumentException("No such option: %s" % opt)
         self._raise_unrecognized_argument(argv)
 
-        self.exporter = load_plugin('ditexporter')
+        self.exporter = load_plugin('dit_exporter')
         self.exporter.setup(sys.stdout, options)
         self.exporter.begin()
 
@@ -1427,7 +1430,6 @@ class Dit:
                 raise ArgumentException("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
-
         self._raise_unrecognized_argument(argv)
 
         msg_selected(group, subgroup, task)
@@ -1443,7 +1445,7 @@ class Dit:
                 __, ext = os.path.splittext(output_file)
                 output_format = output_format or ext[1:]
 
-        self.exporter = load_plugin("%sexporter" % output_format)
+        self.exporter = load_plugin("%s_exporter" % output_format)
         self.exporter.setup(file, options)
         self.exporter.begin()
 
@@ -1472,12 +1474,10 @@ class Dit:
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
             argv.pop(0)
             note_text = argv.pop(0)
-
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self._raise_unrecognized_argument(argv)
 
         if note_text is None:
-            note_text = prompt("Title")
+            note_text = prompt("New note")
 
         if not note_text:
             msg_normal("Operation cancelled.")
@@ -1500,9 +1500,7 @@ class Dit:
                 prop_value = argv.pop(0)
             else:
                 prop_value = prompt("Value for property: %s" % prop_name)
-
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
+        self._raise_unrecognized_argument(argv)
 
         if prop_name is None:
             prop = prompt("Name and Value for property").split('\n', 1)
@@ -1512,20 +1510,17 @@ class Dit:
             else:
                 prop_value = ''
 
-        if not prop_name:
-            msg_normal("Operation cancelled.")
-            return
-
         data = self._load_task_data(group, subgroup, task)
-        if data_set_property(data, prop_name, prop_value):
+        if prop_name and data_set_property(data, prop_name, prop_value):
             msg_normal("Set property of: %s" % _(group, subgroup, task))
             self._save_task(group, subgroup, task, data)
         else:
-            msg_normal('Operation cancelled.')
+            msg_normal("Operation cancelled.")
 
     @command("e", [], SELECT_BACKWARD)
     def edit(self, argv):
         (group, subgroup, task) = self._backward_parser(argv)
+        self._raise_unrecognized_argument(argv)
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
@@ -1544,6 +1539,7 @@ class Dit:
 
     @command()
     def rebuild_index(self, argv):
+        self._raise_unrecognized_argument(argv)
         self._rebuild_index()
         self._save_index()
 
@@ -1636,11 +1632,11 @@ def completion_selection(cmd, directory, selection):
     if len(names) > 3:
         return ""
 
-    dit = Dit()
     path = discover_base_path(directory)
     if not os.path.exists(path):
         return ""
 
+    dit = Dit()
     dit.base_path = path
     dit._load_index()
     if not dit.index:
