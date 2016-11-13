@@ -1,6 +1,6 @@
 ---------------------------------------------------
 $ dit <TAB><TAB>
-a append b c cancel conclude e edit export h halt l list m n new note p q r rebuild-index resume s set status switchback switchto t w workon x 
+a append b c cancel conclude e edit export f fetch h halt l list m move n new note o p q r rebuild-index resume s set status switchback switchto t w workon x 
 ---------------------------------------------------
 $ dit -<TAB><TAB>
 --check-hooks --directory --help --no-hooks --verbose 
@@ -9,12 +9,12 @@ $ dit -d <TAB><TAB>
 ditdir extra 
 ---------------------------------------------------
 $ dit -d ditdir <TAB><TAB>
-a append b c cancel conclude e edit export h halt l list m n new note p q r rebuild-index resume s set status switchback switchto t w workon x 
+a append b c cancel conclude e edit export f fetch h halt l list m move n new note o p q r rebuild-index resume s set status switchback switchto t w workon x 
 ---------------------------------------------------
 $ dit -d ditdir e<TAB><TAB>
 e edit export 
 ---------------------------------------------------
-$ dit -d ditdir e -<TAB><TAB>
+$ dit -d ditdir o -<TAB><TAB>
 --all --concluded --format --output --verbose 
 ---------------------------------------------------
 $ dit -d ditdir w <TAB><TAB>

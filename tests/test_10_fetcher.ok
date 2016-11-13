@@ -21,7 +21,7 @@ Selected: g5/g6/t11
   g5 g6 t11 was fetched
   * Created at: 2016-09-10 19:19:39 -0200
   Notes:
-  * initial note
+  * fetched note
   Properties:
   * from: somewhere
 ---------------------------------------------------
@@ -39,9 +39,129 @@ $ dit -v -d ./ditdir new --fetch g4/./t13
 Using directory: ditdir
 Selected: g4/./t13
 Fetching data with `./ditdir/g4/_data_fetcher`.
-ERROR: `./ditdir/g4/t13` not found: it seems no data was fetched.
+ERROR: `./ditdir/g4/t13.json` not found: it seems no data was fetched.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --verbose g4/./t13
 Using directory: ditdir
 Selected: g4/./t13
 ERROR: Task not found in index.
+---------------------------------------------------
+$ dit -v -d ./ditdir switchto --new g5/g6/t14 -: 'Move task tester'
+Using directory: ditdir
+Selected: ././t7
+Halted: ././t7
+Task saved: ././t7
+CURRENT saved: ././t7 (halted)
+Selected: g5/g6/t14
+INDEX saved.
+Created: g5/g6/t14
+Working on: g5/g6/t14
+Task saved: g5/g6/t14
+PREVIOUS saved. It has 1 task now.
+CURRENT saved: g5/g6/t14
+---------------------------------------------------
+$ dit -v -d ./ditdir set -: foo bar
+Using directory: ditdir
+Selected: g5/g6/t14
+Set property of: g5/g6/t14
+Task saved: g5/g6/t14
+---------------------------------------------------
+$ dit -v -d ./ditdir set -: from elsewhere
+Using directory: ditdir
+Selected: g5/g6/t14
+Set property of: g5/g6/t14
+Task saved: g5/g6/t14
+---------------------------------------------------
+$ dit -v -d ./ditdir note -: wololo
+Using directory: ditdir
+Selected: g5/g6/t14
+Noted added to: g5/g6/t14
+Task saved: g5/g6/t14
+---------------------------------------------------
+$ dit -v -d ./ditdir halt
+Using directory: ditdir
+Selected: g5/g6/t14
+Halted: g5/g6/t14
+Task saved: g5/g6/t14
+CURRENT saved: g5/g6/t14 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir list --verbose g5/g6
+Using directory: ditdir
+Selected: g5/g6/_
+
+[4] g5
+
+[4/1] g6
+
+[4/1/1] t11
+  g5 g6 t11 was fetched
+  * Created at: 2016-09-10 19:19:39 -0200
+  Notes:
+  * fetched note
+  Properties:
+  * from: somewhere
+
+[4/1/2] t14
+  Move task tester
+  * Created at: 2016-09-10 19:20:09 -0200
+  * Updated at: 2016-09-10 19:21:19 -0200
+  ~ Time spent: 50s
+  Notes:
+  * wololo
+  Properties:
+  * foo: bar
+  * from: elsewhere
+  Logbook:
+  + [2016-09-10 19:20:19 -0200]--[2016-09-10 19:21:09 -0200]
+---------------------------------------------------
+$ dit -v -d ./ditdir move --fetch g5/g6/t14 g5/g6/t15
+Using directory: ditdir
+Selected: g5/g6/t14
+Selected: g5/g6/t15
+Task g5/g6/t14 moved to g5/g6/t15
+CURRENT saved: g5/g6/t15 (halted)
+INDEX saved.
+Selected: g5/g6/t15
+Fetching data with `./ditdir/g5/_data_fetcher`.
+Fetcher arguments: ./ditdir g5 g6 t15
+Task saved: g5/g6/t15
+---------------------------------------------------
+$ dit -v -d ./ditdir list --verbose g5/g6
+Using directory: ditdir
+Selected: g5/g6/_
+
+[4] g5
+
+[4/1] g6
+
+[4/1/1] t11
+  g5 g6 t11 was fetched
+  * Created at: 2016-09-10 19:19:39 -0200
+  Notes:
+  * fetched note
+  Properties:
+  * from: somewhere
+
+[4/1/3] t15
+  g5 g6 t15 was fetched
+  * Created at: 2016-09-10 19:20:09 -0200
+  * Updated at: 2016-09-10 19:21:29 -0200
+  ~ Time spent: 50s
+  Notes:
+  * wololo
+  * fetched note
+  Properties:
+  * foo: bar
+  * from: somewhere
+  Logbook:
+  + [2016-09-10 19:20:19 -0200]--[2016-09-10 19:21:09 -0200]
+---------------------------------------------------
+$ dit -v -d ./ditdir fetch g1//t2
+Using directory: ditdir
+Selected: g1/./t2
+Fetching data with `./ditdir/g1/_data_fetcher`.
+Fetcher arguments: ./ditdir g1 . t2
+Expected `data.notes` to be a `list` but got a `dict`.
+Expected `data.properties` to be a `dict` but got a `list`.
+Expected `data.title` to be a `str` but got a `list`.
+ERROR: Fetched data is invalid: ./ditdir/g1/t2.json

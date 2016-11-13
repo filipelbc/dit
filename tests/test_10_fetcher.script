@@ -2,15 +2,15 @@
 
 echo "Fetcher arguments: $@"
 
-cat <<EOF > ./ditdir/g5/g6/t11
+cat <<EOF > $1/$2/$3/$4.json
 
 {
-  "title": "g5 g6 t11 was fetched",
+  "title": "$2 $3 $4 was fetched",
   "properties": {
     "from": "somewhere"
   },
   "notes": [
-    "initial note"
+    "fetched note"
   ]
 }
 
