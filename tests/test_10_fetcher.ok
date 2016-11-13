@@ -116,8 +116,6 @@ Selected: g5/g6/_
 ---------------------------------------------------
 $ dit -v -d ./ditdir move --fetch g5/g6/t14 g5/g6/t15
 Using directory: ditdir
-Selected: g5/g6/t14
-Selected: g5/g6/t15
 Task g5/g6/t14 moved to g5/g6/t15
 CURRENT saved: g5/g6/t15 (halted)
 INDEX saved.
