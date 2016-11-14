@@ -10,8 +10,8 @@ _options = {
 }
 
 
-def write(string=''):
-    _file.write('\n%s' % string)
+def _write(string=''):
+    _file.write('%s\n' % string)
 
 
 def setup(file, options):
@@ -30,11 +30,11 @@ def end():
 
 
 def group(group, group_id):
-    write('[%s] %s\n' % (group_id, group))
+    _write('[%s] %s' % (group_id, group))
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    write('[%s/%s] %s\n' % (group_id, subgroup_id, subgroup))
+    _write('[%s/%s] %s' % (group_id, subgroup_id, subgroup))
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
@@ -62,46 +62,45 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         time_spent = None
 
     # write
-    write('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task))
+    _write('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task))
 
     if title:
-        write('  %s' % title)
+        _write('  %s' % title)
 
-    if created_at and not statussing:
-        write('  * Created at: %s' % created_at)
+    if created_at and verbose and not statussing:
+        _write('  - Created at: %s' % created_at)
 
-    if verbose or statussing:
-        if updated_at:
-            write('  * Updated at: %s' % updated_at)
+    if updated_at and verbose:
+        _write('  - Updated at: %s' % updated_at)
 
-    if concluded:
-        if concluded_at:
-            write('  * Concluded at: %s' % concluded_at)
+    if concluded_at and verbose:
+        _write('  - Concluded at: %s' % concluded_at)
 
     if time_spent:
-        write('  ~ Time spent: %s' % time_spent)
+        _write('  - Time spent: %s' % time_spent)
 
-    if not statussing or (verbose and statussing):
-        if notes:
-            write('  Notes:')
+    if notes and (verbose or not statussing):
+        _write('  Notes:')
         for note in notes:
-            write('  * %s' % note)
+            _write('  - %s' % note)
 
-        if properties:
-            write('  Properties:')
+    if properties and (verbose or not statussing):
+        _write('  Properties:')
         for prop_name in sorted(properties.keys()):
-            write('  * %s: %s' % (prop_name, properties[prop_name]))
+            _write('  - %s: %s' % (prop_name, properties[prop_name]))
 
-    if not statussing:
-        if logbook:
-            write('  Logbook:')
+    if logbook:
+        if not statussing:
+            _write('  Logbook:')
 
-        i = 0 if verbose else -3
+        if statussing:
+            i = -1
+        elif verbose:
+            i = 0
+        else:
+            i = -3
+
+        prefix = '' if statussing else '- '
+
         for log in logbook[i:]:
-            write('  + [%s]--[%s]' % (log['in'], log['out']))
-    else:
-        if logbook:
-            log = logbook[-1]
-            write('  [%s]--[%s]' % (log['in'], log['out']))
-
-    write()
+            _write('  %s[%s]--[%s]' % (prefix, log['in'], log['out']))

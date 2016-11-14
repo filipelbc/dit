@@ -1187,6 +1187,7 @@ class Dit:
 
     @command("m", ["--fetch"], SELECT_BACKWARD)
     def move(self, argv):
+        fetch = False
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--fetch", "-f"]:
@@ -1199,12 +1200,14 @@ class Dit:
         self._raise_task_exists(to_group, to_subgroup, to_task)
 
         from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
-        to_fp = os.path.join(self.base_path, to_group, to_subgroup, to_task)
 
         from_selector = _(from_group, from_subgroup, from_task)
         to_selector = _(to_group, to_subgroup, to_task)
 
-        os.rename(from_fp, to_fp)
+        data = self._load_task_data(from_group, from_subgroup, from_task)
+        self._create_task(to_group, to_subgroup, to_task, data)
+
+        os.remove(from_fp)
         msg_normal("Task %s moved to %s" % (from_selector, to_selector))
 
         # update CURRENT
@@ -1219,9 +1222,8 @@ class Dit:
                 self._save_previous()
                 break
 
-        # update INDEX
+        # clean INDEX
         self._remove_from_index(from_group, from_subgroup, from_task)
-        self._add_to_index(to_group, to_subgroup, to_task)
         self._save_index()
 
         if fetch:
@@ -1442,7 +1444,7 @@ class Dit:
         else:
             file = open(output_file, 'w')
             if not output_format:
-                __, ext = os.path.splittext(output_file)
+                __, ext = os.path.splitext(output_file)
                 output_format = output_format or ext[1:]
 
         self.exporter = load_plugin("%s_exporter" % output_format)

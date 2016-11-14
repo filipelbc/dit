@@ -33,5 +33,9 @@ setup_fetcher
 
 ./ditcmd move --fetch g5/g6/t14 g5/g6/t15
 ./ditcmd list --verbose g5/g6
+./ditcmd move g5/g6/t15 g5/g7/t16
 
 ./ditcmd fetch g1//t2
+
+./ditcmd list --all
+./ditcmd status

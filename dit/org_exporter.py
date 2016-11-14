@@ -1,13 +1,32 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
+from .dit import State, state
+from .data_utils import DATETIME_FORMAT
+
 _file = None
 _options = {
     'concluded': False,
 }
 
 
-def write(string=''):
-    _file.write('\n%s' % string)
+def _(string):
+    return datetime.strptime(string, DATETIME_FORMAT).strftime(r'%Y-%m-%d %a %H:%M')
+
+
+def _get_state(data):
+    s = state(data)
+    if s == State.TODO:
+        return "TODO "
+    elif s == State.CONCLUDED:
+        return "DONE "
+    else:
+        return ""
+
+
+def _write(string=''):
+    _file.write('%s\n' % string)
 
 
 def setup(file, options):
@@ -26,11 +45,13 @@ def end():
 
 
 def group(group, group_id):
-    write("* %s\n" % group)
+    _write("* %s" % group)
+    _write()
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    write("** %s\n" % subgroup)
+    _write("** %s" % subgroup)
+    _write()
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
@@ -45,26 +66,32 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
 
     # write
     title = data.get('title', None)
-    write("*** %s" % title)
+    _write("*** %s%s" % (_get_state(data), title))
 
     properties = data.get('properties', [])
     if properties:
-        write(":PROPERTIES:")
+        _write(":PROPERTIES:")
     for prop_name in sorted(properties.keys()):
-        write(":%s: %s" % (prop_name, properties[prop_name]))
+        _write(":%s: %s" % (prop_name, properties[prop_name]))
     if properties:
-        write(":END:")
+        _write(":END:")
+
+    if concluded_at:
+        _write("CLOSED: [%s]" % _(concluded_at))
 
     logbook = data.get('logbook', [])
     if logbook:
-        write(":LOGBOOK:")
+        _write(":LOGBOOK:")
     for log in logbook:
-        write("CLOCK: [%s]--[%s]" % (log['in'], log['out']))
+        if log['out']:
+            _write("CLOCK: [%s]--[%s]" % (_(log['in']), _(log['out'])))
+        else:
+            _write("CLOCK: [%s]" % _(log['in']))
     if logbook:
-        write(":END:")
+        _write(":END:")
 
     notes = data.get('notes', [])
     for note in notes:
-        write("- %s" % note)
+        _write("- %s" % note)
 
-    write()
+    _write()

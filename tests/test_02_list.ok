@@ -2,335 +2,206 @@
 $ dit -v -d ./ditdir list
 Using directory: ditdir
 Selected: _/_/_
-
 [0/0/0] t1
   . . t1
-  * Created at: 2016-09-10 18:57:59 -0200
-
 [0/0/1] t4
   . . t4
-  * Created at: 2016-09-10 18:58:29 -0200
-
 [0/0/2] t7
   . . t7
-  * Created at: 2016-09-10 18:58:59 -0200
-
 [0/0/3] t10
   . . t10
-  * Created at: 2016-09-10 18:59:29 -0200
-
 [1] g1
-
 [1/0/0] t2
   g1 . t2
-  * Created at: 2016-09-10 18:58:09 -0200
-
 [2] g2
-
 [2/1] g3
-
 [2/1/0] t3
   g2 g3 t3
-  * Created at: 2016-09-10 18:58:19 -0200
-
 [3] g4
-
 [3/0/0] t5
   g4 . t5
-  * Created at: 2016-09-10 18:58:39 -0200
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --all
 Using directory: ditdir
 Selected: _/_/_
-
 [0/0/0] t1
   . . t1
-  * Created at: 2016-09-10 18:57:59 -0200
-
 [0/0/1] t4
   . . t4
-  * Created at: 2016-09-10 18:58:29 -0200
-
 [0/0/2] t7
   . . t7
-  * Created at: 2016-09-10 18:58:59 -0200
-
 [0/0/3] t10
   . . t10
-  * Created at: 2016-09-10 18:59:29 -0200
-
 [1] g1
-
 [1/0/0] t2
   g1 . t2
-  * Created at: 2016-09-10 18:58:09 -0200
-
 [2] g2
-
 [2/1] g3
-
 [2/1/0] t3
   g2 g3 t3
-  * Created at: 2016-09-10 18:58:19 -0200
-
 [3] g4
-
 [3/0/0] t5
   g4 . t5
-  * Created at: 2016-09-10 18:58:39 -0200
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 0
 Using directory: ditdir
 Selected: ./_/_
-
 [0/0/0] t1
   . . t1
-  * Created at: 2016-09-10 18:57:59 -0200
-
 [0/0/1] t4
   . . t4
-  * Created at: 2016-09-10 18:58:29 -0200
-
 [0/0/2] t7
   . . t7
-  * Created at: 2016-09-10 18:58:59 -0200
-
 [0/0/3] t10
   . . t10
-  * Created at: 2016-09-10 18:59:29 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5
 Using directory: ditdir
 Selected: g5/_/_
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g5
 Using directory: ditdir
 Selected: g5/_/_
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4
 Using directory: ditdir
 Selected: g5/_/_
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/.
 Using directory: ditdir
 Selected: g5/./_
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/0
 Using directory: ditdir
 Selected: g5/./_
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
-
 [4/0/1] t9
   g5 . t9
-  * Created at: 2016-09-10 18:59:19 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/g6
 Using directory: ditdir
 Selected: g5/g6/_
-
 [4] g5
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/1
 Using directory: ditdir
 Selected: g5/g6/_
-
 [4] g5
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/g6/t8
 Using directory: ditdir
 Selected: g5/g6/t8
-
 [4] g5
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/1/0
 Using directory: ditdir
 Selected: g5/g6/t8
-
 [4] g5
-
 [4/1] g6
-
 [4/1/0] t8
   g5 g6 t8
-  * Created at: 2016-09-10 18:59:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5/./t6
 Using directory: ditdir
 Selected: g5/./t6
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g5/t6
 Using directory: ditdir
 Selected: g5/./t6
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 4/0/0
 Using directory: ditdir
 Selected: g5/./t6
-
 [4] g5
-
 [4/0/0] t6
   g5 . t6
-  * Created at: 2016-09-10 18:58:49 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list /g2
 Using directory: ditdir
 Selected: g2/_/_
-
 [2] g2
-
 [2/1] g3
-
 [2/1/0] t3
   g2 g3 t3
-  * Created at: 2016-09-10 18:58:19 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 2
 Using directory: ditdir
 Selected: g2/_/_
-
 [2] g2
-
 [2/1] g3
-
 [2/1/0] t3
   g2 g3 t3
-  * Created at: 2016-09-10 18:58:19 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g2/
 Using directory: ditdir
 Selected: g2/./_
-
 [2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 2/0
 Using directory: ditdir
 Selected: g2/./_
-
 [2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list t10
@@ -348,35 +219,25 @@ ERROR: Invalid index: 5
 $ dit -v -d ./ditdir list //t10
 Using directory: ditdir
 Selected: ././t10
-
 [0/0/3] t10
   . . t10
-  * Created at: 2016-09-10 18:59:29 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 0/0/3
 Using directory: ditdir
 Selected: ././t10
-
 [0/0/3] t10
   . . t10
-  * Created at: 2016-09-10 18:59:29 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g1//t2
 Using directory: ditdir
 Selected: g1/./t2
-
 [1] g1
-
 [1/0/0] t2
   g1 . t2
-  * Created at: 2016-09-10 18:58:09 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 1/0/0
 Using directory: ditdir
 Selected: g1/./t2
-
 [1] g1
-
 [1/0/0] t2
   g1 . t2
-  * Created at: 2016-09-10 18:58:09 -0200

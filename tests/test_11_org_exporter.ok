@@ -1,0 +1,120 @@
+---------------------------------------------------
+$ dit -v -d ./ditdir workon ././t10
+Using directory: ditdir
+Selected: ././t10
+Working on: ././t10
+Task saved: ././t10
+PREVIOUS saved. It has 2 tasks now.
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir export --all --concluded --format org
+Using directory: ditdir
+Selected: ././_
+*** DONE . . t1
+:PROPERTIES:
+:abu: din
+:END:
+CLOSED: [2016-09-10 Sat 19:14]
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 18:59]--[2016-09-10 Sat 18:59]
+CLOCK: [2016-09-10 Sat 19:00]--[2016-09-10 Sat 19:00]
+CLOCK: [2016-09-10 Sat 19:00]--[2016-09-10 Sat 19:01]
+CLOCK: [2016-09-10 Sat 19:13]--[2016-09-10 Sat 19:13]
+CLOCK: [2016-09-10 Sat 19:14]--[2016-09-10 Sat 19:14]
+:END:
+- this is another note
+
+*** . . t10
+:PROPERTIES:
+:foo: bar
+:END:
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:02]--[2016-09-10 Sat 19:02]
+CLOCK: [2016-09-10 Sat 19:04]--[2016-09-10 Sat 19:04]
+CLOCK: [2016-09-10 Sat 19:04]--[2016-09-10 Sat 19:05]
+CLOCK: [2016-09-10 Sat 19:08]--[2016-09-10 Sat 19:09]
+CLOCK: [2016-09-10 Sat 19:10]--[2016-09-10 Sat 19:10]
+CLOCK: [2016-09-10 Sat 19:15]--[2016-09-10 Sat 19:16]
+CLOCK: [2016-09-10 Sat 19:21]
+:END:
+- this is a note
+
+*** DONE . . t4
+CLOSED: [2016-09-10 Sat 19:15]
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:02]--[2016-09-10 Sat 19:03]
+CLOCK: [2016-09-10 Sat 19:03]--[2016-09-10 Sat 19:03]
+CLOCK: [2016-09-10 Sat 19:09]--[2016-09-10 Sat 19:10]
+CLOCK: [2016-09-10 Sat 19:11]--[2016-09-10 Sat 19:11]
+CLOCK: [2016-09-10 Sat 19:11]--[2016-09-10 Sat 19:12]
+CLOCK: [2016-09-10 Sat 19:15]--[2016-09-10 Sat 19:15]
+:END:
+
+*** . . t7
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:05]--[2016-09-10 Sat 19:05]
+CLOCK: [2016-09-10 Sat 19:19]--[2016-09-10 Sat 19:19]
+:END:
+
+* g1
+
+*** TODO g1 . t2
+
+* g2
+
+** g3
+
+*** TODO g2 g3 t3
+
+* g4
+
+*** DONE g4 . t5
+CLOSED: [2016-09-10 Sat 19:18]
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:06]--[2016-09-10 Sat 19:06]
+CLOCK: [2016-09-10 Sat 19:18]--[2016-09-10 Sat 19:18]
+:END:
+
+* g5
+
+*** DONE g5 . t6
+:PROPERTIES:
+:jas: min
+:END:
+CLOSED: [2016-09-10 Sat 19:18]
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:06]--[2016-09-10 Sat 19:07]
+CLOCK: [2016-09-10 Sat 19:17]--[2016-09-10 Sat 19:17]
+:END:
+- note note note
+
+*** TODO g5 . t9
+
+** g6
+
+*** DONE g5 g6 t8
+CLOSED: [2016-09-10 Sat 19:17]
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:07]--[2016-09-10 Sat 19:07]
+CLOCK: [2016-09-10 Sat 19:16]--[2016-09-10 Sat 19:17]
+:END:
+
+*** TODO g5 g6 t11 was fetched
+:PROPERTIES:
+:from: somewhere
+:END:
+- fetched note
+
+** g7
+
+*** g5 g6 t15 was fetched
+:PROPERTIES:
+:foo: bar
+:from: somewhere
+:END:
+:LOGBOOK:
+CLOCK: [2016-09-10 Sat 19:20]--[2016-09-10 Sat 19:21]
+:END:
+- wololo
+- fetched note
+
