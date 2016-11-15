@@ -69,6 +69,8 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
         Select all groups and subgroups.
       --verbose, -v
         All information is exported.
+      --compact, -z
+        Do not write separate headers for group, subgroup and task names.
       --output, -o
         File to which to write. Defaults to "stdout".
       --format, -f
@@ -1376,6 +1378,7 @@ class Dit:
         options = {
             'verbose': False,
             'statussing': True,
+            'compact_header': True,
         }
 
         while len(argv) > 0 and argv[0].startswith("-"):
@@ -1424,6 +1427,8 @@ class Dit:
                 options['concluded'] = True
             elif opt in ["--verbose", "-v"]:
                 options['verbose'] = True
+            elif opt in ["--compact", "-z"]:
+                options['compact_header'] = True
             elif opt in ["--all", "-a"]:
                 all = True
             elif opt in ["--output", "-o"] and not listing:
