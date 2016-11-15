@@ -1,11 +1,11 @@
 ---------------------------------------------------
-$ dit -v -d ./ditdir note -: 'this is a note'
+$ dit -v -d ./ditdir note -: 'This is a simple note.'
 Using directory: ditdir
 Selected: ././t10
 Noted added to: ././t10
 Task saved: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir note t1 -: 'this is another note'
+$ dit -v -d ./ditdir note t1 -: 'This is another simple note.'
 Using directory: ditdir
 Selected: ././t1
 Noted added to: ././t1
@@ -16,19 +16,19 @@ Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
-$ dit -v -d ./ditdir note g5/t6 -: 'note note note'
+$ dit -v -d ./ditdir note g5/t6 -: 'Note, note, note! This one is a very long note.'
 Using directory: ditdir
 Selected: g5/./t6
 Noted added to: g5/./t6
 Task saved: g5/./t6
 ---------------------------------------------------
-$ dit -v -d ./ditdir set -: foo bar
+$ dit -v -d ./ditdir set -: pName pValue
 Using directory: ditdir
 Selected: ././t10
 Set property of: ././t10
 Task saved: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir set t1 -: abu din
+$ dit -v -d ./ditdir set t1 -: 'Some Name' 'Some Value'
 Using directory: ditdir
 Selected: ././t1
 Set property of: ././t1
@@ -39,7 +39,7 @@ Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
-$ dit -v -d ./ditdir set g5/t6 -: jas min
+$ dit -v -d ./ditdir set g5/t6 -: s_name s_value
 Using directory: ditdir
 Selected: g5/./t6
 Set property of: g5/./t6
@@ -49,35 +49,35 @@ $ dit -v -d ./ditdir list --concluded .
 Using directory: ditdir
 Selected: ./_/_
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   Notes:
-  - this is another note
+  - This is another simple note.
   Properties:
-  - abu: din
+  - Some Name: Some Value
   Logbook:
   - [2016-09-10 18:59:39 -0200]--[2016-09-10 18:59:59 -0200]
   - [2016-09-10 19:00:19 -0200]--[2016-09-10 19:00:39 -0200]
   - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 [0/0/1] t10
-  . . t10
+  Group . Subgroup . Task t10
   - Time spent: 1m0s
   Notes:
-  - this is a note
+  - This is a simple note.
   Properties:
-  - foo: bar
+  - pName: pValue
   Logbook:
   - [2016-09-10 19:04:09 -0200]--[2016-09-10 19:04:29 -0200]
   - [2016-09-10 19:04:49 -0200]--[2016-09-10 19:05:09 -0200]
   - [2016-09-10 19:08:19 -0200]--[None]
 [0/0/2] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   Logbook:
   - [2016-09-10 19:02:49 -0200]--[2016-09-10 19:03:09 -0200]
   - [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/3] t7
-  . . t7
+  Group . Subgroup . Task t7
   - Time spent: 20s
   Logbook:
   - [2016-09-10 19:05:39 -0200]--[2016-09-10 19:05:59 -0200]
@@ -87,11 +87,11 @@ Using directory: ditdir
 Selected: g5/./t6
 [4] g5
 [4/0/0] t6
-  g5 . t6
+  Group g5 Subgroup . Task t6
   - Time spent: 20s
   Notes:
-  - note note note
+  - Note, note, note! This one is a very long note.
   Properties:
-  - jas: min
+  - s_name: s_value
   Logbook:
   - [2016-09-10 19:06:59 -0200]--[2016-09-10 19:07:19 -0200]

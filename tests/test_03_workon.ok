@@ -53,7 +53,7 @@ ERROR: Unrecognized argument: t1
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -83,7 +83,7 @@ Not working on the task.
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -153,15 +153,15 @@ CURRENT saved: ././t10 (halted)
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/3] t10
-  . . t10
+  Group . Subgroup . Task t10
   - Time spent: 40s
   [2016-09-10 19:04:09 -0200]--[2016-09-10 19:04:29 -0200]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -189,11 +189,11 @@ Task has already been concluded.
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -212,14 +212,14 @@ Already working on a task.
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/2] t7
-  . . t7
+  Group . Subgroup . Task t7
   [2016-09-10 19:05:39 -0200]--[None]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -230,14 +230,14 @@ Already working on a task.
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/2] t7
-  . . t7
+  Group . Subgroup . Task t7
   [2016-09-10 19:05:39 -0200]--[None]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -282,28 +282,28 @@ Using directory: ditdir
 [4] g5
 [4/1] g6
 [4/1/0] t8
-  g5 g6 t8
+  Group g5 Subgroup g6 Task t8
   [2016-09-10 19:07:39 -0200]--[None]
 [4] g5
 [4/0/0] t6
-  g5 . t6
+  Group g5 Subgroup . Task t6
   - Time spent: 20s
   [2016-09-10 19:06:59 -0200]--[2016-09-10 19:07:19 -0200]
 [3] g4
 [3/0/0] t5
-  g4 . t5
+  Group g4 Subgroup . Task t5
   - Time spent: 20s
   [2016-09-10 19:06:19 -0200]--[2016-09-10 19:06:39 -0200]
 [0/0/2] t7
-  . . t7
+  Group . Subgroup . Task t7
   - Time spent: 20s
   [2016-09-10 19:05:39 -0200]--[2016-09-10 19:05:59 -0200]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -319,29 +319,29 @@ Using directory: ditdir
 [4] g5
 [4/1] g6
 [4/1/0] t8
-  g5 g6 t8
+  Group g5 Subgroup g6 Task t8
   - Time spent: 20s
   [2016-09-10 19:07:39 -0200]--[2016-09-10 19:07:59 -0200]
 [4] g5
 [4/0/0] t6
-  g5 . t6
+  Group g5 Subgroup . Task t6
   - Time spent: 20s
   [2016-09-10 19:06:59 -0200]--[2016-09-10 19:07:19 -0200]
 [3] g4
 [3/0/0] t5
-  g4 . t5
+  Group g4 Subgroup . Task t5
   - Time spent: 20s
   [2016-09-10 19:06:19 -0200]--[2016-09-10 19:06:39 -0200]
 [0/0/2] t7
-  . . t7
+  Group . Subgroup . Task t7
   - Time spent: 20s
   [2016-09-10 19:05:39 -0200]--[2016-09-10 19:05:59 -0200]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
 ---------------------------------------------------
@@ -370,34 +370,34 @@ CURRENT saved: ././t10
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/3] t10
-  . . t10
+  Group . Subgroup . Task t10
   - Time spent: 1m0s
   [2016-09-10 19:08:19 -0200]--[None]
 [4] g5
 [4/1] g6
 [4/1/0] t8
-  g5 g6 t8
+  Group g5 Subgroup g6 Task t8
   - Time spent: 20s
   [2016-09-10 19:07:39 -0200]--[2016-09-10 19:07:59 -0200]
 [4] g5
 [4/0/0] t6
-  g5 . t6
+  Group g5 Subgroup . Task t6
   - Time spent: 20s
   [2016-09-10 19:06:59 -0200]--[2016-09-10 19:07:19 -0200]
 [3] g4
 [3/0/0] t5
-  g4 . t5
+  Group g4 Subgroup . Task t5
   - Time spent: 20s
   [2016-09-10 19:06:19 -0200]--[2016-09-10 19:06:39 -0200]
 [0/0/2] t7
-  . . t7
+  Group . Subgroup . Task t7
   - Time spent: 20s
   [2016-09-10 19:05:39 -0200]--[2016-09-10 19:05:59 -0200]
 [0/0/1] t4
-  . . t4
+  Group . Subgroup . Task t4
   - Time spent: 40s
   [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m0s
   [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]

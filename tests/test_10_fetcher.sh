@@ -24,10 +24,10 @@ setup_fetcher
 ./ditcmd new --fetch g4/./t13  # no data fetched
 ./ditcmd list --verbose g4/./t13  # no task found
 
-./ditcmd switchto --new g5/g6/t14 -: "Move task tester"
-./ditcmd set -: foo bar
-./ditcmd set -: from elsewhere
-./ditcmd note -: wololo
+./ditcmd switchto --new g5/g6/t14 -: "This task will be moved a lot!"
+./ditcmd set -: ISSUE NUMBER
+./ditcmd set -: From Elsewhere
+./ditcmd note -: 'Wololo!'
 ./ditcmd halt
 ./ditcmd list --verbose g5/g6
 
