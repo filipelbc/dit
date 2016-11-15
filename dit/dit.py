@@ -299,7 +299,9 @@ def msg_warning(message):
 def msg_error(message):
     if not sys.stdout.isatty():
         sys.stdout.flush()  # this is needed since stderr is never buffered
-    sys.stderr.write("ERROR: %s\n" % message)
+
+    error = "\033[0;41;97mERROR:\033[0m" if sys.stderr.isatty() else "ERROR:"
+    sys.stderr.write("%s %s\n" % (error, message))
 
 
 def msg_selected(group, subgroup, task):
