@@ -50,37 +50,37 @@ Using directory: ditdir
 Selected: ./_/_
 [0/0/0] t1
   Group . Subgroup . Task t1
-  - Time spent: 1m0s
-  Notes:
-  - This is another simple note.
   Properties:
   - Some Name: Some Value
-  Logbook:
-  - [2016-09-10 18:59:39 -0200]--[2016-09-10 18:59:59 -0200]
-  - [2016-09-10 19:00:19 -0200]--[2016-09-10 19:00:39 -0200]
-  - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
+  Notes:
+  - This is another simple note.
+  Total time spent: 1m
+  Last logbook entries:
+  - 2016-09-10 18:59:39 -0200 ~ 2016-09-10 18:59:59 -0200
+  - 2016-09-10 19:00:19 -0200 ~ 2016-09-10 19:00:39 -0200
+  - 2016-09-10 19:00:59 -0200 ~ 2016-09-10 19:01:19 -0200
 [0/0/1] t10
   Group . Subgroup . Task t10
-  - Time spent: 1m0s
-  Notes:
-  - This is a simple note.
   Properties:
   - pName: pValue
-  Logbook:
-  - [2016-09-10 19:04:09 -0200]--[2016-09-10 19:04:29 -0200]
-  - [2016-09-10 19:04:49 -0200]--[2016-09-10 19:05:09 -0200]
-  - [2016-09-10 19:08:19 -0200]--[None]
+  Notes:
+  - This is a simple note.
+  Total time spent: 1m
+  Last logbook entries:
+  - 2016-09-10 19:04:09 -0200 ~ 2016-09-10 19:04:29 -0200
+  - 2016-09-10 19:04:49 -0200 ~ 2016-09-10 19:05:09 -0200
+  - 2016-09-10 19:08:19 -0200
 [0/0/2] t4
   Group . Subgroup . Task t4
-  - Time spent: 40s
-  Logbook:
-  - [2016-09-10 19:02:49 -0200]--[2016-09-10 19:03:09 -0200]
-  - [2016-09-10 19:03:29 -0200]--[2016-09-10 19:03:49 -0200]
+  Total time spent: 40s
+  Last logbook entries:
+  - 2016-09-10 19:02:49 -0200 ~ 2016-09-10 19:03:09 -0200
+  - 2016-09-10 19:03:29 -0200 ~ 2016-09-10 19:03:49 -0200
 [0/0/3] t7
   Group . Subgroup . Task t7
-  - Time spent: 20s
-  Logbook:
-  - [2016-09-10 19:05:39 -0200]--[2016-09-10 19:05:59 -0200]
+  Total time spent: 20s
+  Last logbook entries:
+  - 2016-09-10 19:05:39 -0200 ~ 2016-09-10 19:05:59 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir list g5//t6
 Using directory: ditdir
@@ -88,10 +88,10 @@ Selected: g5/./t6
 [4] g5
 [4/0/0] t6
   Group g5 Subgroup . Task t6
-  - Time spent: 20s
-  Notes:
-  - Note, note, note! This one is a very long note.
   Properties:
   - s_name: s_value
-  Logbook:
-  - [2016-09-10 19:06:59 -0200]--[2016-09-10 19:07:19 -0200]
+  Notes:
+  - Note, note, note! This one is a very long note.
+  Total time spent: 20s
+  Last logbook entries:
+  - 2016-09-10 19:06:59 -0200 ~ 2016-09-10 19:07:19 -0200
