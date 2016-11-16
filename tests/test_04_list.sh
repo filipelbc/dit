@@ -2,6 +2,8 @@
 
 ./ditcmd list
 
+./ditcmd list --all
+
 ./ditcmd list --concluded
 
 ./ditcmd list PREVIOUS

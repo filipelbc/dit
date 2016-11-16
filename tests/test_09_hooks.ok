@@ -20,20 +20,17 @@ before: ./ditdir list
 Executing hook: before_read
 before_read: ./ditdir list
 Selected: ././t1
-
 [0/0/0] t1
   . . t1
-  * Created at: 2016-09-10 18:57:59 -0200
-  * Concluded at: 2016-09-10 19:14:49 -0200
-  ~ Time spent: 1m40s
+  - Time spent: 1m40s
   Notes:
-  * this is another note
+  - this is another note
   Properties:
-  * abu: din
+  - abu: din
   Logbook:
-  + [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
-  + [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]
-  + [2016-09-10 19:14:19 -0200]--[2016-09-10 19:14:39 -0200]
+  - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
+  - [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]
+  - [2016-09-10 19:14:19 -0200]--[2016-09-10 19:14:39 -0200]
 Executing hook: after_read
 after_read: ./ditdir list
 Executing hook: after
@@ -42,20 +39,17 @@ after: ./ditdir list
 $ dit -v -d ./ditdir --no-hooks list ././t1
 Using directory: ditdir
 Selected: ././t1
-
 [0/0/0] t1
   . . t1
-  * Created at: 2016-09-10 18:57:59 -0200
-  * Concluded at: 2016-09-10 19:14:49 -0200
-  ~ Time spent: 1m40s
+  - Time spent: 1m40s
   Notes:
-  * this is another note
+  - this is another note
   Properties:
-  * abu: din
+  - abu: din
   Logbook:
-  + [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
-  + [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]
-  + [2016-09-10 19:14:19 -0200]--[2016-09-10 19:14:39 -0200]
+  - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
+  - [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]
+  - [2016-09-10 19:14:19 -0200]--[2016-09-10 19:14:39 -0200]
 ---------------------------------------------------
 $ dit -v -d ./ditdir --check-hooks list ././t1
 Using directory: ditdir
