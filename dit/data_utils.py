@@ -17,9 +17,9 @@ def _timedelta_to_str(d):
     s = ""
     if hours != 0:
         s += "%sh" % hours
-    if minutes != 0 or hours != 0:
+    if minutes != 0:
         s += "%sm" % minutes
-    if seconds != 0 or minutes != 0 or hours != 0:
+    if seconds != 0:
         s += "%ss" % seconds
     return s
 

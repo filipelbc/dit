@@ -8,6 +8,7 @@ _options = {
     'verbose': False,
     'concluded': False,
     'statussing': False,
+    'compact_header': False,
 }
 
 
@@ -45,6 +46,10 @@ def _write(string=''):
     _file.write('%s\n' % string)
 
 
+def _write_p(name, string=''):
+    _write('  %s%s' % (_cp(name + ':'), (' ' + string) if string else ''))
+
+
 def setup(file, options):
     global _file
     global _options
@@ -63,10 +68,14 @@ def end():
 
 
 def group(group, group_id):
+    if _options.get('compact_header'):
+        return
     _write(_cg('[%s] %s' % (group_id, group)))
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
+    if _options.get('compact_header'):
+        return
     _write(_cs('[%s/%s] %s' % (group_id, subgroup_id, subgroup)))
 
 
@@ -89,51 +98,56 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     properties = data.get('properties', {})
     logbook = data.get('logbook', [])
 
-    if logbook:
-        time_spent = time_spent_on(logbook)
-    else:
-        time_spent = None
-
     # write
-    _write(_ct('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task)))
+    if _options.get('compact_header'):
+        _write(_cg('[%s/%s/%s]' % (group_id, subgroup_id, task_id)) + ' ' +
+               _ct('%s/%s/%s' % (group, subgroup, task)))
+    else:
+        _write(_ct('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task)))
 
     if title:
         _write('  %s' % _ci(title))
 
-    if created_at and verbose and not statussing:
-        _write('  - Created at: %s' % created_at)
-
-    if updated_at and verbose:
-        _write('  - Updated at: %s' % updated_at)
-
-    if concluded_at and verbose:
-        _write('  - Concluded at: %s' % concluded_at)
-
-    if time_spent:
-        _write('  - Time spent: %s' % time_spent)
-
-    if notes and (verbose or not statussing):
-        _write(_cp('  Notes:'))
-        for note in notes:
-            _write('  - %s' % note)
-
     if properties and (verbose or not statussing):
-        _write(_cp('  Properties:'))
+        _write_p('Properties')
         for prop_name in sorted(properties.keys()):
             _write('  - %s: %s' % (prop_name, properties[prop_name]))
 
+    if notes and (verbose or not statussing):
+        _write_p('Notes')
+        for note in notes:
+            _write('  - %s' % note)
+
+    if created_at and verbose and not statussing:
+        _write_p('Created at', created_at)
+
+    if updated_at and verbose and not statussing:
+        _write_p('Updated at', updated_at)
+
+    if concluded_at and verbose:
+        _write_p('Concluded at', concluded_at)
+
     if logbook:
-        if not statussing:
-            _write(_cp('  Logbook:'))
-
-        if statussing:
-            i = -1
-        elif verbose:
-            i = 0
+        if statussing and not verbose:
+            log = logbook[-1]
+            _write('  Spent %s; %s.' % (time_spent_on(logbook),
+                                        ('clocked out at %s' % log['out'])
+                                        if log['out'] else
+                                        ('clocked in at %s' % log['in'])))
         else:
-            i = -3
+            _write_p('Total time spent', time_spent_on(logbook))
+            if statussing:
+                _write(_cp('  Last logbook entry:'))
+                i = -1
+            elif verbose:
+                _write(_cp('  Logbook:'))
+                i = 0
+            else:
+                _write(_cp('  Last logbook entries:'))
+                i = -3
 
-        prefix = '' if statussing else '- '
-
-        for log in logbook[i:]:
-            _write('  %s[%s]--[%s]' % (prefix, log['in'], log['out']))
+            for log in logbook[i:]:
+                if log['out']:
+                    _write('  - %s ~ %s' % (log['in'], log['out']))
+                else:
+                    _write('  - %s' % log['in'])
