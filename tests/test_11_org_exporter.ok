@@ -10,9 +10,9 @@ CURRENT saved: ././t10
 $ dit -v -d ./ditdir export --all --concluded --format org
 Using directory: ditdir
 Selected: ././_
-*** DONE . . t1
+*** DONE Group . Subgroup . Task t1
 :PROPERTIES:
-:abu: din
+:Some Name: Some Value
 :END:
 CLOSED: [2016-09-10 Sat 19:14]
 :LOGBOOK:
@@ -22,11 +22,11 @@ CLOCK: [2016-09-10 Sat 19:00]--[2016-09-10 Sat 19:01]
 CLOCK: [2016-09-10 Sat 19:13]--[2016-09-10 Sat 19:13]
 CLOCK: [2016-09-10 Sat 19:14]--[2016-09-10 Sat 19:14]
 :END:
-- this is another note
+- This is another simple note.
 
-*** . . t10
+*** Group . Subgroup . Task t10
 :PROPERTIES:
-:foo: bar
+:pName: pValue
 :END:
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:02]--[2016-09-10 Sat 19:02]
@@ -37,9 +37,9 @@ CLOCK: [2016-09-10 Sat 19:10]--[2016-09-10 Sat 19:10]
 CLOCK: [2016-09-10 Sat 19:15]--[2016-09-10 Sat 19:16]
 CLOCK: [2016-09-10 Sat 19:21]
 :END:
-- this is a note
+- This is a simple note.
 
-*** DONE . . t4
+*** DONE Group . Subgroup . Task t4
 CLOSED: [2016-09-10 Sat 19:15]
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:02]--[2016-09-10 Sat 19:03]
@@ -50,7 +50,7 @@ CLOCK: [2016-09-10 Sat 19:11]--[2016-09-10 Sat 19:12]
 CLOCK: [2016-09-10 Sat 19:15]--[2016-09-10 Sat 19:15]
 :END:
 
-*** . . t7
+*** Group . Subgroup . Task t7
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:05]--[2016-09-10 Sat 19:05]
 CLOCK: [2016-09-10 Sat 19:19]--[2016-09-10 Sat 19:19]
@@ -58,17 +58,17 @@ CLOCK: [2016-09-10 Sat 19:19]--[2016-09-10 Sat 19:19]
 
 * g1
 
-*** TODO g1 . t2
+*** TODO Group g1 Subgroup . Task t2
 
 * g2
 
 ** g3
 
-*** TODO g2 g3 t3
+*** TODO Group g2 Subgroup g3 Task t3
 
 * g4
 
-*** DONE g4 . t5
+*** DONE Group g4 Subgroup . Task t5
 CLOSED: [2016-09-10 Sat 19:18]
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:06]--[2016-09-10 Sat 19:06]
@@ -77,44 +77,44 @@ CLOCK: [2016-09-10 Sat 19:18]--[2016-09-10 Sat 19:18]
 
 * g5
 
-*** DONE g5 . t6
+*** DONE Group g5 Subgroup . Task t6
 :PROPERTIES:
-:jas: min
+:s_name: s_value
 :END:
 CLOSED: [2016-09-10 Sat 19:18]
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:06]--[2016-09-10 Sat 19:07]
 CLOCK: [2016-09-10 Sat 19:17]--[2016-09-10 Sat 19:17]
 :END:
-- note note note
+- Note, note, note! This one is a very long note.
 
-*** TODO g5 . t9
+*** TODO Group g5 Subgroup . Task t9
 
 ** g6
 
-*** DONE g5 g6 t8
+*** DONE Group g5 Subgroup g6 Task t8
 CLOSED: [2016-09-10 Sat 19:17]
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:07]--[2016-09-10 Sat 19:07]
 CLOCK: [2016-09-10 Sat 19:16]--[2016-09-10 Sat 19:17]
 :END:
 
-*** TODO g5 g6 t11 was fetched
+*** TODO The task g5 g6 t11 has fetched data.
 :PROPERTIES:
-:from: somewhere
+:From: Somewhere
 :END:
-- fetched note
+- This note was fetched.
 
 ** g7
 
-*** g5 g6 t15 was fetched
+*** The task g5 g6 t15 has fetched data.
 :PROPERTIES:
-:foo: bar
-:from: somewhere
+:From: Somewhere
+:ISSUE: NUMBER
 :END:
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 19:20]--[2016-09-10 Sat 19:21]
 :END:
-- wololo
-- fetched note
+- Wololo!
+- This note was fetched.
 

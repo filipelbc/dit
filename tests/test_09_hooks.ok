@@ -21,12 +21,12 @@ Executing hook: before_read
 before_read: ./ditdir list
 Selected: ././t1
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m40s
   Notes:
-  - this is another note
+  - This is another simple note.
   Properties:
-  - abu: din
+  - Some Name: Some Value
   Logbook:
   - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
   - [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]
@@ -40,12 +40,12 @@ $ dit -v -d ./ditdir --no-hooks list ././t1
 Using directory: ditdir
 Selected: ././t1
 [0/0/0] t1
-  . . t1
+  Group . Subgroup . Task t1
   - Time spent: 1m40s
   Notes:
-  - this is another note
+  - This is another simple note.
   Properties:
-  - abu: din
+  - Some Name: Some Value
   Logbook:
   - [2016-09-10 19:00:59 -0200]--[2016-09-10 19:01:19 -0200]
   - [2016-09-10 19:13:09 -0200]--[2016-09-10 19:13:29 -0200]

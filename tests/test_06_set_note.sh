@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-./ditcmd note -: 'this is a note'
+./ditcmd note -: 'This is a simple note.'
 
-./ditcmd note t1 -: 'this is another note'
+./ditcmd note t1 -: 'This is another simple note.'
 
 ./ditcmd note t1 -: ''
 
-./ditcmd note g5/t6 -: 'note note note'
+./ditcmd note g5/t6 -: 'Note, note, note! This one is a very long note.'
 
-./ditcmd set -: foo bar
+./ditcmd set -: pName pValue
 
-./ditcmd set t1 -: abu din
+./ditcmd set t1 -: "Some Name" "Some Value"
 
 ./ditcmd set t1 -: '' ''
 
-./ditcmd set g5/t6 -: jas min
+./ditcmd set g5/t6 -: s_name s_value
 
 ./ditcmd list --concluded .
 

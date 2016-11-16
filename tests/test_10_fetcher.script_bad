@@ -5,12 +5,12 @@ echo "Fetcher arguments: $@"
 cat <<EOF > $1/$2/$3/$4.json
 
 {
-  "title": ["$2 $3 $4 was fetched"],
+  "title": ["This would fetch to $2 $3 $4, but has bad data format."],
   "properties": [
-    {"from": "somewhere"}
+    {"From": "Somewhere"}
   ],
   "notes": {
-    "note": "fetched note"
+    "note": "A would-be-fetched note."
   }
 }
 
