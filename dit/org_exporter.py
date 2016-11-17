@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from .dit import State, state
-from .data_utils import DATETIME_FORMAT
+from .utils import DATETIME_FORMAT
 
 _file = None
 _options = {
@@ -56,11 +56,10 @@ def subgroup(group, group_id, subgroup, subgroup_id):
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # options
-    concluded = _options.get('concluded')
+    concluded = _options['concluded']
 
     # data
-    concluded_at = data.get('concluded_at', None)
-
+    concluded_at = data.get('concluded_at')
     if concluded_at and not concluded:
         return
 

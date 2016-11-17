@@ -188,26 +188,11 @@ from importlib import import_module
 from importlib.util import find_spec
 from tempfile import gettempdir
 
-from .data_utils import now
-
-# ===========================================
-# Custom Exceptions
-
-
-class DitException(Exception):
-    pass
-
-
-class ArgumentException(DitException):
-    pass
-
-
-class NoTaskSpecifiedCondition(DitException):
-    pass
-
-
-class SubprocessException(Exception):
-    pass
+from .exceptions import (DitException,
+                         ArgumentException,
+                         NoTaskSpecifiedCondition,
+                         SubprocessException)
+from .utils import now
 
 # ===========================================
 # Constants
@@ -253,9 +238,9 @@ CHECK_HOOKS = False
 
 def get_system_editor():
     # preference to the visual editor
-    editor = os.environ.get('VISUAL', None)
+    editor = os.environ.get('VISUAL')
     if not editor:
-        editor = os.environ.get('EDITOR', None)
+        editor = os.environ.get('EDITOR')
     return editor
 
 
@@ -321,6 +306,28 @@ COMMAND_INFO = {}
 SELECT_BACKWARD = "forward"
 SELECT_FORWARD = "backward"
 
+FILTER_OPTIONS = [
+    "--from",
+    "--to",
+    "--where",
+]
+
+LIST_OPTIONS = [
+    "--all",
+    "--verbose",
+    "--concluded",
+    "--compact",
+    "--sum",
+] + FILTER_OPTIONS
+
+DIT_OPTIONS = [
+    "--check-hooks",
+    "--directory",
+    "--help",
+    "--no-hooks",
+    "--verbose",
+]
+
 
 def command(letter=None, options=[], select=None, readonly=False):
     def wrapper(cmd):
@@ -372,7 +379,7 @@ def path_to_string(path):
     return os.path.relpath(path)
 
 
-def task_name_to_string(name):
+def name_to_string(name):
     if name is None:
         return NONE_CHAR
     elif name == ROOT_NAME:
@@ -380,11 +387,13 @@ def task_name_to_string(name):
     return name
 
 
-def _(name, *more_names):
-    s = task_name_to_string(name)
+def names_to_string(name, *more_names):
+    s = name_to_string(name)
     for name in more_names:
-        s += SEPARATOR_CHAR + task_name_to_string(name)
+        s += SEPARATOR_CHAR + name_to_string(name)
     return s
+
+_ = names_to_string
 
 # ==========================================
 # Selector
@@ -516,7 +525,7 @@ NEW_TASK_DATA = {
 
 
 def state(task_data):
-    if task_data.get('concluded_at', None):
+    if task_data.get('concluded_at'):
         return State.CONCLUDED
     logbook = task_data.get('logbook', [])
     if len(logbook) > 0:
@@ -579,7 +588,7 @@ def data_clock_cancel(data):
 
 
 def data_conclude(data):
-    if data.get('concluded_at', None):
+    if data.get('concluded_at'):
         msg_normal("Already concluded.")
         return
     data['concluded_at'] = now()
@@ -1167,7 +1176,7 @@ class Dit:
             fetched_data = self._fetch_data_for(group, subgroup, task)
             data = data_update(data, fetched_data)
 
-        if not data.get('title', None):
+        if not data.get('title'):
             data['title'] = title or prompt('Task title')
 
         self._create_task(group, subgroup, task, data)
@@ -1373,21 +1382,32 @@ class Dit:
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", ["--verbose"], readonly=True)
+    @command("q", ["--verbose"] + FILTER_OPTIONS, readonly=True)
     def status(self, argv):
         options = {
-            'verbose': False,
             'statussing': True,
             'compact_header': True,
         }
+        filters = {}
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 options['verbose'] = True
+            elif opt in ["--sum", "-s"]:
+                options["sum"] = True
+            elif opt in ["--from"]:
+                filters["from"] = argv.pop(0)
+            elif opt in ["--to"]:
+                filters["to"] = argv.pop(0)
+            elif opt in ["--where"]:
+                filters["where"] = [argv.pop(0), argv.pop(0)]
             else:
                 raise ArgumentException("No such option: %s" % opt)
         self._raise_unrecognized_argument(argv)
+
+        if filters:
+            options['filters'] = filters
 
         self.exporter = load_plugin('dit_exporter')
         self.exporter.setup(sys.stdout, options)
@@ -1402,20 +1422,18 @@ class Dit:
 
         self.exporter.end()
 
-    @command("l", ["--concluded", "--verbose", "--all"], SELECT_FORWARD, True)
+    @command("l", LIST_OPTIONS, SELECT_FORWARD, True)
     def list(self, argv):
         self.export(argv, listing=True)
 
-    @command("o", ["--concluded", "--verbose", "--all", "--output", "--format"], SELECT_FORWARD, True)
+    @command("o", LIST_OPTIONS + ["--output", "--format"], SELECT_FORWARD, True)
     def export(self, argv, listing=False):
         all = False
         output_file = None
         output_format = None
 
-        options = {
-            'concluded': False,
-            'verbose': False,
-        }
+        options = {}
+        filters = {}
 
         group = self.current_group
         subgroup = self.current_subgroup
@@ -1423,14 +1441,22 @@ class Dit:
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
-            if opt in ["--concluded", "-c"]:
-                options['concluded'] = True
+            if opt in ["--all", "-a"]:
+                all = True
             elif opt in ["--verbose", "-v"]:
                 options['verbose'] = True
+            elif opt in ["--concluded", "-c"]:
+                options['concluded'] = True
             elif opt in ["--compact", "-z"]:
                 options['compact_header'] = True
-            elif opt in ["--all", "-a"]:
-                all = True
+            elif opt in ["--sum", "-s"]:
+                options["sum"] = True
+            elif opt in ["--from"]:
+                filters["from"] = argv.pop(0)
+            elif opt in ["--to"]:
+                filters["to"] = argv.pop(0)
+            elif opt in ["--where"]:
+                filters["where"] = [argv.pop(0), argv.pop(0)]
             elif opt in ["--output", "-o"] and not listing:
                 output_file = argv.pop(0)
             elif opt in ["--format", "-f"] and not listing:
@@ -1444,6 +1470,9 @@ class Dit:
         msg_selected(group, subgroup, task)
         if task:
             options['concluded'] = True
+
+        if filters:
+            options['filters'] = filters
 
         if output_file in [None, "stdout"]:
             file = sys.stdout
@@ -1668,11 +1697,7 @@ def completion_cmd_option(cmd):
 
 
 def completion_option():
-    return COMPLETION_SEP_CHAR.join(["--check-hooks",
-                                     "--directory",
-                                     "--help",
-                                     "--no-hooks",
-                                     "--verbose"])
+    return COMPLETION_SEP_CHAR.join(DIT_OPTIONS)
 
 
 def completion():
