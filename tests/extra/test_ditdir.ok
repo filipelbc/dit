@@ -9,7 +9,7 @@ Created: ditdir
 Using directory: ditdir
 Selected: _/_/_
 ---------------------------------------------------
-$ tar -xf test_ditdir.tgz
+$ tar -xzf test_ditdir.tar.gz
 ---------------------------------------------------
 $ mv .dit ../
 ---------------------------------------------------
@@ -18,13 +18,13 @@ Using directory: ../.dit
 Selected: _/_/_
 [0/0/0] Task 1
   Title of Task 1
-  Created at: 2016-01-01 00:00:00
+  Created at: 2016-01-01 00:00:00 +0200
 ---------------------------------------------------
 $ dit -v -d ditdir list --all -v
 Using directory: ditdir
 Selected: _/_/_
 [0/0/0] Task 2
   Title of Task 2
-  Created at: 2016-01-01 00:00:00
+  Created at: 2016-01-01 00:00:00 +0200
 ---------------------------------------------------
 $ rm -rf ../.dit ditdir

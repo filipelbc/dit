@@ -20,7 +20,7 @@ Selected: g5/g6/t11
   - From: Somewhere
   Notes:
   - This note was fetched.
-  Created at: 2016-09-10 19:19:39 -0200
+  Created at: 2016-09-10 20:18:03 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir new --fetch ././t12
 Using directory: ditdir
@@ -93,7 +93,7 @@ Selected: g5/g6/_
   - From: Somewhere
   Notes:
   - This note was fetched.
-  Created at: 2016-09-10 19:19:39 -0200
+  Created at: 2016-09-10 20:18:03 -0200
 [4/1/2] t14
   This task will be moved a lot!
   Properties:
@@ -101,11 +101,11 @@ Selected: g5/g6/_
   - ISSUE: NUMBER
   Notes:
   - Wololo!
-  Created at: 2016-09-10 19:20:09 -0200
-  Updated at: 2016-09-10 19:21:19 -0200
-  Total time spent: 50s
+  Created at: 2016-09-10 20:20:03 -0200
+  Updated at: 2016-09-10 20:24:43 -0200
+  Time spent: 3min 20s
   Logbook:
-  - 2016-09-10 19:20:19 -0200 ~ 2016-09-10 19:21:09 -0200
+  - 2016-09-10 20:20:43 -0200 ~ 2016-09-10 20:24:03 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir move --fetch g5/g6/t14 g5/g6/t15
 Using directory: ditdir
@@ -129,7 +129,7 @@ Selected: g5/g6/_
   - From: Somewhere
   Notes:
   - This note was fetched.
-  Created at: 2016-09-10 19:19:39 -0200
+  Created at: 2016-09-10 20:18:03 -0200
 [4/1/3] t15
   The task g5 g6 t15 has fetched data.
   Properties:
@@ -138,11 +138,11 @@ Selected: g5/g6/_
   Notes:
   - Wololo!
   - This note was fetched.
-  Created at: 2016-09-10 19:21:29 -0200
-  Updated at: 2016-09-10 19:21:39 -0200
-  Total time spent: 50s
+  Created at: 2016-09-10 20:25:23 -0200
+  Updated at: 2016-09-10 20:26:03 -0200
+  Time spent: 3min 20s
   Logbook:
-  - 2016-09-10 19:20:19 -0200 ~ 2016-09-10 19:21:09 -0200
+  - 2016-09-10 20:20:43 -0200 ~ 2016-09-10 20:24:03 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir move g5/g6/t15 g5/g7/t16
 Using directory: ditdir
@@ -167,10 +167,10 @@ Using directory: ditdir
 Selected: g5/g7/_
 [0/0/3] t7
   Group . Subgroup . Task t7
-  Total time spent: 50s
+  Time spent: 3min 20s
   Last logbook entries:
-  - 2016-09-10 19:05:39 -0200 ~ 2016-09-10 19:05:59 -0200
-  - 2016-09-10 19:19:19 -0200 ~ 2016-09-10 19:19:49 -0200
+  - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
+  - 2016-09-10 20:16:43 -0200 ~ 2016-09-10 20:18:43 -0200
 [1] g1
 [1/0/0] t2
   Group g1 Subgroup . Task t2
@@ -178,7 +178,6 @@ Selected: g5/g7/_
 [2/1] g3
 [2/1/0] t3
   Group g2 Subgroup g3 Task t3
-[3] g4
 [4] g5
 [4/0/1] t9
   Group g5 Subgroup . Task t9
@@ -198,15 +197,15 @@ Selected: g5/g7/_
   Notes:
   - Wololo!
   - This note was fetched.
-  Total time spent: 50s
+  Time spent: 3min 20s
   Last logbook entries:
-  - 2016-09-10 19:20:19 -0200 ~ 2016-09-10 19:21:09 -0200
+  - 2016-09-10 20:20:43 -0200 ~ 2016-09-10 20:24:03 -0200
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
 [4/2/0] g5/g7/t16
   The task g5 g6 t15 has fetched data.
-  Spent 50s; clocked out at 2016-09-10 19:21:09 -0200.
-[0/0/3] //t7
+  Spent 3min 20s. Clocked out at 2016-09-10 20:24:03 -0200.
+[0/0/3] ././t7
   Group . Subgroup . Task t7
-  Spent 50s; clocked out at 2016-09-10 19:19:49 -0200.
+  Spent 3min 20s. Clocked out at 2016-09-10 20:18:43 -0200.

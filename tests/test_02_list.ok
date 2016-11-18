@@ -197,12 +197,10 @@ Selected: g2/_/_
 $ dit -v -d ./ditdir list g2/
 Using directory: ditdir
 Selected: g2/./_
-[2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list 2/0
 Using directory: ditdir
 Selected: g2/./_
-[2] g2
 ---------------------------------------------------
 $ dit -v -d ./ditdir list t10
 Using directory: ditdir
