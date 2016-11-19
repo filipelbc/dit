@@ -47,7 +47,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     resume
       Same as "workon CURRENT".
 
-    switchto <id> | <name> | --new, -n <name> [-: "title"]
+    switchto <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
       Same as "halt" followed by "workon".
 
     switchback
@@ -60,20 +60,18 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Listing <command>'s:
 
-    export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
-           [--format, -f "format"] [<gid> | <gname>]
+    export [--all, -a] [--concluded, -c] [--compact, -z]
+           [--output, -o "file"] [--format, -f "format"] [<gid> | <gname>]
       Prints most information of the CURRENT subgroup or the selected one.
-      --concluded, -a
-        Include concluded tasks.
       --all, -a
         Select all groups and subgroups.
-      --verbose, -v
-        All information is exported.
+      --concluded, -c
+        Include concluded tasks.
       --compact, -z
-        Do not write separate headers for group, subgroup and task names.
-      --output, -o
+        Make the output more compact.
+      --output, -o "file-name"
         File to which to write. Defaults to "stdout".
-      --format, -f
+      --format, -f "format"
         Format to use. If not provided, the format is deduced from the file
         extension if present, else it defaults to dit's own format.
 
@@ -82,20 +80,33 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       none found.
 
     list
-      This is a convenience alias for "export --output stdout".
+      This is a convenience alias for "export --output stdout --format dit".
 
-    status [<gid> | <gname>]
+    status
       Prints an overview of the data for the CURRENT and PREVIOUS tasks.
 
+    Note that these commands also accept the following options:
+    --verbose, -v
+      More information is shown.
+    --sum, -s
+      Show the overall time spent on the listed tasks.
+    --from "date"
+      Only consider tasks and log entries from the given date on.
+    --to "date"
+      Only consider tasks and log entries up to the given date.
+    --where, -w "property-name" "property-value"
+      Only consider tasks that have the given property with the given value.
+      Note that name and value can be regular expressions.
+
   Task editing <command>'s:
+
+    fetch <name>
+      Use data fetcher plugin.
 
     move [--fetch, -f] <name> <name>
       Rename task or change its group and/or subgroup.
       --fetch, -f
         Use data fetcher plugin after moving.
-
-    fetch <name>
-      Use data fetcher plugin.
 
     note [<name> | <id>] [-: "text"]
       Adds a note to the CURRENT task or the specified one.
@@ -104,9 +115,9 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       Sets a property for the CURRENT task or the specified one.
 
     edit [<name> | <id>]
-      Opens the specified task for manual editing. Uses CURRENT task if none is
-      specified. It will look in environment variables $VISUAL or $EDITOR for a
-      text editor to use and if none is found it will do nothing.
+      Opens the specified task for manual editing. Uses CURRENT task or the
+      specified one. It will look in environment variables $VISUAL and $EDITOR
+      for a text editor to use and if none is found it will do nothing.
 
   Other <command>'s:
 
@@ -192,7 +203,7 @@ from .exceptions import (DitException,
                          ArgumentException,
                          NoTaskSpecifiedCondition,
                          SubprocessException)
-from .utils import now
+from .utils import now_str
 
 # ===========================================
 # Constants
@@ -307,18 +318,18 @@ SELECT_BACKWARD = "forward"
 SELECT_FORWARD = "backward"
 
 FILTER_OPTIONS = [
+    "--verbose",
+    "--sum",
     "--from",
     "--to",
     "--where",
 ]
 
-LIST_OPTIONS = [
+LIST_OPTIONS = FILTER_OPTIONS + [
     "--all",
-    "--verbose",
     "--concluded",
     "--compact",
-    "--sum",
-] + FILTER_OPTIONS
+]
 
 DIT_OPTIONS = [
     "--check-hooks",
@@ -546,7 +557,7 @@ def data_clock_in(data):
             msg_normal("Already clocked in.")
             return
     data.pop('concluded_at', None)
-    data['logbook'] = logbook + [{'in': now(), 'out': None}]
+    data['logbook'] = logbook + [{'in': now_str(), 'out': None}]
 
 
 def data_clock_append(data):
@@ -570,7 +581,7 @@ def data_clock_out(data):
     if last['out']:
         msg_normal("Already clocked out.")
         return
-    last['out'] = now()
+    last['out'] = now_str()
     data['logbook'] = logbook
 
 
@@ -591,7 +602,7 @@ def data_conclude(data):
     if data.get('concluded_at'):
         msg_normal("Already concluded.")
         return
-    data['concluded_at'] = now()
+    data['concluded_at'] = now_str()
 
 
 def data_add_note(data, note_text):
@@ -717,13 +728,13 @@ class Dit:
 
     def _save_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
-        data['updated_at'] = now()
+        data['updated_at'] = now_str()
         save_json_file(task_fp, data)
         msg_verbose("Task saved: %s" % _(group, subgroup, task))
 
     def _create_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
-        data['created_at'] = now()
+        data['created_at'] = now_str()
         save_json_file(task_fp, data)
         self._add_to_index(group, subgroup, task)
         self._save_index()
@@ -1184,64 +1195,6 @@ class Dit:
 
         return (group, subgroup, task)
 
-    @command("f", [], SELECT_BACKWARD)
-    def fetch(self, argv):
-        (group, subgroup, task) = self._backward_parser(argv)
-        self._raise_unrecognized_argument(argv)
-
-        fetched_data = self._fetch_data_for(group, subgroup, task)
-        if not fetched_data:
-            msg_verbose('Nothing to do: feched data is empty.')
-            return
-
-        initial_data = self._load_task_data(group, subgroup, task)
-        new_data = data_update(initial_data, fetched_data)
-        self._save_task(group, subgroup, task, new_data)
-
-    @command("m", ["--fetch"], SELECT_BACKWARD)
-    def move(self, argv):
-        fetch = False
-        while len(argv) > 0 and argv[0].startswith("-"):
-            opt = argv.pop(0)
-            if opt in ["--fetch", "-f"]:
-                fetch = True
-            else:
-                raise ArgumentException("No such option: %s" % opt)
-        (from_group, from_subgroup, from_task) = self._name_parser(argv.pop(0))
-        (to_group, to_subgroup, to_task) = self._name_parser(argv.pop(0))
-        self._raise_unrecognized_argument(argv)
-        self._raise_task_exists(to_group, to_subgroup, to_task)
-
-        from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
-
-        from_selector = _(from_group, from_subgroup, from_task)
-        to_selector = _(to_group, to_subgroup, to_task)
-
-        data = self._load_task_data(from_group, from_subgroup, from_task)
-        self._create_task(to_group, to_subgroup, to_task, data)
-
-        os.remove(from_fp)
-        msg_normal("Task %s moved to %s" % (from_selector, to_selector))
-
-        # update CURRENT
-        if self._is_current(from_group, from_subgroup, from_task):
-            self._set_current(to_group, to_subgroup, to_task, self.current_halted)
-            self._save_current()
-
-        # update PREVIOUS
-        for i in range(0, len(self.previous_stack)):
-            if self.previous_stack[i] == from_selector:
-                self.previous_stack[i] = to_selector
-                self._save_previous()
-                break
-
-        # clean INDEX
-        self._remove_from_index(from_group, from_subgroup, from_task)
-        self._save_index()
-
-        if fetch:
-            self.fetch([to_selector])
-
     @command("w", ["--new"], SELECT_BACKWARD)
     def workon(self, argv):
         if len(argv) < 1:
@@ -1382,7 +1335,7 @@ class Dit:
     def conclude(self, argv):
         self.halt(argv, conclude=True)
 
-    @command("q", ["--verbose"] + FILTER_OPTIONS, readonly=True)
+    @command("q", FILTER_OPTIONS, readonly=True)
     def status(self, argv):
         options = {
             'statussing': True,
@@ -1400,7 +1353,7 @@ class Dit:
                 filters["from"] = argv.pop(0)
             elif opt in ["--to"]:
                 filters["to"] = argv.pop(0)
-            elif opt in ["--where"]:
+            elif opt in ["--where", "-w"]:
                 filters["where"] = [argv.pop(0), argv.pop(0)]
             else:
                 raise ArgumentException("No such option: %s" % opt)
@@ -1441,22 +1394,22 @@ class Dit:
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
-            if opt in ["--all", "-a"]:
-                all = True
-            elif opt in ["--verbose", "-v"]:
+            if opt in ["--verbose", "-v"]:
                 options['verbose'] = True
-            elif opt in ["--concluded", "-c"]:
-                options['concluded'] = True
-            elif opt in ["--compact", "-z"]:
-                options['compact_header'] = True
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
                 filters["from"] = argv.pop(0)
             elif opt in ["--to"]:
                 filters["to"] = argv.pop(0)
-            elif opt in ["--where"]:
+            elif opt in ["--where", "-w"]:
                 filters["where"] = [argv.pop(0), argv.pop(0)]
+            elif opt in ["--all", "-a"]:
+                all = True
+            elif opt in ["--concluded", "-c"]:
+                options['concluded'] = True
+            elif opt in ["--compact", "-z"]:
+                options['compact_header'] = True
             elif opt in ["--output", "-o"] and not listing:
                 output_file = argv.pop(0)
             elif opt in ["--format", "-f"] and not listing:
@@ -1503,6 +1456,64 @@ class Dit:
 
         if output_file not in [None, "stdout"]:
             file.close()
+
+    @command("f", [], SELECT_BACKWARD)
+    def fetch(self, argv):
+        (group, subgroup, task) = self._backward_parser(argv)
+        self._raise_unrecognized_argument(argv)
+
+        fetched_data = self._fetch_data_for(group, subgroup, task)
+        if not fetched_data:
+            msg_verbose('Nothing to do: feched data is empty.')
+            return
+
+        initial_data = self._load_task_data(group, subgroup, task)
+        new_data = data_update(initial_data, fetched_data)
+        self._save_task(group, subgroup, task, new_data)
+
+    @command("m", ["--fetch"], SELECT_BACKWARD)
+    def move(self, argv):
+        fetch = False
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--fetch", "-f"]:
+                fetch = True
+            else:
+                raise ArgumentException("No such option: %s" % opt)
+        (from_group, from_subgroup, from_task) = self._name_parser(argv.pop(0))
+        (to_group, to_subgroup, to_task) = self._name_parser(argv.pop(0))
+        self._raise_unrecognized_argument(argv)
+        self._raise_task_exists(to_group, to_subgroup, to_task)
+
+        from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
+
+        from_selector = _(from_group, from_subgroup, from_task)
+        to_selector = _(to_group, to_subgroup, to_task)
+
+        data = self._load_task_data(from_group, from_subgroup, from_task)
+        self._create_task(to_group, to_subgroup, to_task, data)
+
+        os.remove(from_fp)
+        msg_normal("Task %s moved to %s" % (from_selector, to_selector))
+
+        # update CURRENT
+        if self._is_current(from_group, from_subgroup, from_task):
+            self._set_current(to_group, to_subgroup, to_task, self.current_halted)
+            self._save_current()
+
+        # update PREVIOUS
+        for i in range(0, len(self.previous_stack)):
+            if self.previous_stack[i] == from_selector:
+                self.previous_stack[i] = to_selector
+                self._save_previous()
+                break
+
+        # clean INDEX
+        self._remove_from_index(from_group, from_subgroup, from_task)
+        self._save_index()
+
+        if fetch:
+            self.fetch([to_selector])
 
     @command("t", ["-:", "--:"], SELECT_BACKWARD)
     def note(self, argv):

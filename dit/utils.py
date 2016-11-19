@@ -50,10 +50,9 @@ if os.path.isfile('DIT_TESTING'):
         now = _base_now + timedelta(seconds=(i * 40))
         with open('DIT_TESTING', 'w') as f:
             f.write(str(i + 1))
-        return dt2str(now)
+        return now
 
 else:
-
     LOCALZONE = get_localzone()
     TODAY = datetime.now(LOCALZONE).replace(hour=0,
                                             minute=0,
@@ -61,7 +60,11 @@ else:
                                             microsecond=0)
 
     def now():
-        return dt2str(datetime.now(LOCALZONE))
+        return datetime.now(LOCALZONE)
+
+
+def now_str():
+    return dt2str(now())
 
 
 def time_spent_on(logbook):
@@ -88,6 +91,13 @@ def convert_datetimes(data):
 
 def _interpret_date(string):
 
+    if string in ["now"]:
+        return now()
+    elif string in ["today", "td"]:
+        return TODAY
+    elif string == ["yesterday", "yd"]:
+        return TODAY - timedelta(days=-1)
+
     days_p = r'(?P<days>[+-]?\d+) ?d(ays?)?'
     hours_p = r'(?P<hours>[+-]?\d+) ?h(ours?)?'
     minutes_p = r'(?P<minutes>[+-]?\d+) ?min(utes?)?'
@@ -99,14 +109,11 @@ def _interpret_date(string):
     if days_m or hours_m or minutes_m:
         dt = TODAY
         if days_m:
-            days = days_m.group('days')
-            dt += timedelta(days=int(days))
+            dt += timedelta(days=int(days_m.group('days')))
         if hours_m:
-            hours = hours_m.group('hours')
-            dt += timedelta(hours=int(hours))
+            dt += timedelta(hours=int(hours_m.group('hours')))
         if minutes_m:
-            minutes = minutes_m.group('minutes')
-            dt += timedelta(minutes=int(minutes))
+            dt += timedelta(minutes=int(minutes_m.group('minutes')))
         return dt
 
     raise ArgumentException('Unrecognized date/time string: %s' % string)
