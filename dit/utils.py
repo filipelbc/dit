@@ -136,33 +136,27 @@ def apply_filter_to(data, to):
     logbook = data.get('logbook', [])
 
     i = 0
-    while i > - len(logbook):
+    for i in range(0, -len(logbook), -1):
         if logbook[i - 1]['in'] <= to:
             break
-        else:
-            i -= 1
-    if i != 0:
-        logbook = logbook[:i]
-
-    data['logbook'] = logbook
+    if i < 0:
+        data['logbook'] = logbook[:i]
     return data
 
 
 def apply_filter_from(data, fron):
-    if 'concluded_at' in data and fron >= data['concluded_at']:
+    if 'concluded_at' in data and fron >= data['concluded_at'] or \
+            'updated_at' in data and fron >= data['updated_at']:
         return {}
     logbook = data.get('logbook', [])
 
-    i = 0
-    while i < len(logbook):
-        if logbook[i]['in'] >= fron:
+    for i in range(len(logbook) + 1):
+        if i == len(logbook) or logbook[i]['in'] >= fron:
             break
-        else:
-            i += 1
-    if i != 0:
-        logbook = logbook[i:]
-
-    data['logbook'] = logbook
+    if i == len(logbook):
+        data['logbook'] = []
+    elif i > 0:
+        data['logbook'] = logbook[i:]
     return data
 
 
