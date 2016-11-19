@@ -129,7 +129,7 @@ CURRENT saved: ././t4 (halted)
 $ dit -v -d ./ditdir append
 Using directory: ditdir
 Selected: ././t4
-Appending work on: ././t4
+Appending to: ././t4
 Task saved: ././t4
 CURRENT saved: ././t4
 ---------------------------------------------------
@@ -159,12 +159,12 @@ CURRENT saved: ././t4
 ---------------------------------------------------
 $ dit -v -d ./ditdir resume
 Using directory: ditdir
-Already working on a task.
+Nothing to do: already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir append
 Using directory: ditdir
 Selected: ././t4
-Can only append if task is halted.
+Nothing to do: task is not halted.
 ---------------------------------------------------
 $ dit -v -d ./ditdir cancel
 Using directory: ditdir
@@ -176,7 +176,7 @@ CURRENT saved: ././t4 (halted)
 $ dit -v -d ./ditdir switchback
 Using directory: ditdir
 Selected: ././t4
-Not working on the task.
+Nothing to do: not working on the task.
 Selected: ././t1
 Working on: ././t1
 Task saved: ././t1
@@ -305,11 +305,11 @@ CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchback
 Using directory: ditdir
-No previous task to switch back to.
+Nothing to do: no previous task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon PREVIOUS
 Using directory: ditdir
-Already working on a task.
+Nothing to do: already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list PREVIOUS
 Using directory: ditdir

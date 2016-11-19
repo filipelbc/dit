@@ -44,7 +44,7 @@ CURRENT saved: ././t1 (halted)
 $ dit -v -d ./ditdir halt
 Using directory: ditdir
 Selected: ././t1
-Not working on the task.
+Nothing to do: not working on the task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt t1
 Using directory: ditdir
@@ -77,7 +77,7 @@ CURRENT saved: ././t1 (halted)
 $ dit -v -d ./ditdir cancel
 Using directory: ditdir
 Selected: ././t1
-Not working on the task.
+Nothing to do: not working on the task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
@@ -95,7 +95,7 @@ CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
 Using directory: ditdir
-Already working on a task.
+Nothing to do: already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Using directory: ditdir
@@ -179,7 +179,7 @@ CURRENT saved: ././t4 (halted)
 $ dit -v -d ./ditdir conclude t10
 Using directory: ditdir
 Selected: ././t10
-Task has already been concluded.
+Nothing to do: task is already concluded.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
@@ -200,7 +200,7 @@ CURRENT saved: ././t7
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
 Using directory: ditdir
-Already working on a task.
+Nothing to do: already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
@@ -216,7 +216,7 @@ Using directory: ditdir
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0/0/0
 Using directory: ditdir
-Already working on a task.
+Nothing to do: already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir

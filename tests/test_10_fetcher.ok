@@ -116,6 +116,7 @@ INDEX saved.
 Selected: g5/g6/t15
 Fetching data with `./ditdir/g5/_data_fetcher`.
 Fetcher arguments: ./ditdir g5 g6 t15
+Fetched data for: g5/g6/t15
 Task saved: g5/g6/t15
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --verbose g5/g6
@@ -157,9 +158,9 @@ Using directory: ditdir
 Selected: g1/./t2
 Fetching data with `./ditdir/g1/_data_fetcher`.
 Fetcher arguments: ./ditdir g1 . t2
-Expected `data.notes` to be a `list` but got a `dict`.
-Expected `data.properties` to be a `dict` but got a `list`.
-Expected `data.title` to be a `str` but got a `list`.
+WARNING: Expected `data.notes` to be a `list` but got a `dict`.
+WARNING: Expected `data.properties` to be a `dict` but got a `list`.
+WARNING: Expected `data.title` to be a `str` but got a `list`.
 ERROR: Fetched data is invalid: ./ditdir/g1/t2.json
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --all
