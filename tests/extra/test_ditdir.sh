@@ -4,7 +4,7 @@
 
 ./ditcmd -d "ditdir" list --all -v
 
-./step tar -xf test_ditdir.tgz
+./step tar -xzf test_ditdir.tar.gz
 
 ./step mv .dit ../
 

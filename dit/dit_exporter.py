@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from .data_utils import time_spent_on
+from datetime import timedelta
+
+from .dit import names_to_string
+from .utils import (dt2str, td2str,
+                    time_spent_on,
+                    convert_datetimes,
+                    init_filters, apply_filters)
 
 _file = None
 _isatty = False
@@ -9,37 +15,55 @@ _options = {
     'concluded': False,
     'statussing': False,
     'compact_header': False,
+    'sum': False,
+    'filters': {}
 }
+_overall_time_spent = timedelta()
+
+_group_string = None
+_subgroup_string = None
+
+# ===========================================
+# Colors
 
 
-def _cg(string):
+def _ca(string):
     if _isatty:
         return '\033[2;34m' + string + '\033[0m'
     return string
 
 
-def _cs(string):
+def _cb(string):
     if _isatty:
         return '\033[2;35m' + string + '\033[0m'
     return string
 
 
-def _ct(string):
+def _cc(string):
     if _isatty:
         return '\033[2;31m' + string + '\033[0m'
     return string
 
 
-def _ci(string):
+def _cd(string):
     if _isatty:
         return '\033[2;32m' + string + '\033[0m'
     return string
 
 
-def _cp(string):
+def _ce(string):
     if _isatty:
         return '\033[0;36m' + string + '\033[0m'
     return string
+
+
+def _cf(string):
+    if _isatty:
+        return '\033[0;34m' + string + '\033[0m'
+    return string
+
+# ===========================================
+# Write helpers
 
 
 def _write(string=''):
@@ -47,7 +71,10 @@ def _write(string=''):
 
 
 def _write_p(name, string=''):
-    _write('  %s%s' % (_cp(name + ':'), (' ' + string) if string else ''))
+    _write('  %s%s' % (_ce(name + ':'), (' ' + string) if string else ''))
+
+# ===========================================
+# API
 
 
 def setup(file, options):
@@ -58,55 +85,70 @@ def setup(file, options):
     _isatty = file.isatty()
     _options.update(options)
 
+    init_filters(_options['filters'])
+
 
 def begin():
     pass
 
 
 def end():
-    pass
+    if _options['sum']:
+        _write('\n%s %s' % (_cf("Overall time spent:"),
+                            td2str(_overall_time_spent)))
 
 
 def group(group, group_id):
-    if _options.get('compact_header'):
-        return
-    _write(_cg('[%s] %s' % (group_id, group)))
+    if not _options.get('compact_header'):
+        global _group_string
+        _group_string = _ca('[%s] %s' % (group_id, group))
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    if _options.get('compact_header'):
-        return
-    _write(_cs('[%s/%s] %s' % (group_id, subgroup_id, subgroup)))
+    if not _options.get('compact_header'):
+        global _subgroup_string
+        _subgroup_string = _cb('[%s/%s] %s' % (group_id, subgroup_id, subgroup))
 
 
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # options
-    verbose = _options.get('verbose')
-    concluded = _options.get('concluded')
-    statussing = _options.get('statussing')
+    verbose = _options['verbose']
+    concluded = _options['concluded']
+    statussing = _options['statussing']
+    filters = _options['filters']
 
-    # data
-    concluded_at = data.get('concluded_at', None)
-
-    if concluded_at and not concluded:
+    if data.get('concluded_at') and not concluded:
         return
 
-    created_at = data.get('created_at', None)
-    updated_at = data.get('updated_at', None)
-    title = data.get('title', None)
+    # data preprocessor
+    data = apply_filters(convert_datetimes(data), filters)
+    if not data:
+        return
+
+    created_at = data.get('created_at')
+    updated_at = data.get('updated_at')
+    concluded_at = data.get('concluded_at')
+    title = data.get('title')
     notes = data.get('notes', [])
     properties = data.get('properties', {})
     logbook = data.get('logbook', [])
 
     # write
     if _options.get('compact_header'):
-        _write(_cg('[%s/%s/%s]' % (group_id, subgroup_id, task_id)) + ' ' +
-               _ct('%s/%s/%s' % (group, subgroup, task)))
+        _write(_ca('[%s/%s/%s]' % (group_id, subgroup_id, task_id)) + ' ' +
+               _cc(names_to_string(group, subgroup, task)))
     else:
-        _write(_ct('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task)))
+        global _group_string, _subgroup_string
+        if _group_string:
+            _write(_group_string)
+            _group_string = None
+        if _subgroup_string:
+            _write(_subgroup_string)
+            _subgroup_string = None
+        _write(_cc('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task)))
 
     if title:
-        _write('  %s' % _ci(title))
+        _write('  %s' % _cd(title))
 
     if properties and (verbose or not statussing):
         _write_p('Properties')
@@ -119,35 +161,48 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
             _write('  - %s' % note)
 
     if created_at and verbose and not statussing:
-        _write_p('Created at', created_at)
+        _write_p('Created at', dt2str(created_at))
 
     if updated_at and verbose and not statussing:
-        _write_p('Updated at', updated_at)
+        _write_p('Updated at', dt2str(updated_at))
 
     if concluded_at and verbose:
-        _write_p('Concluded at', concluded_at)
+        _write_p('Concluded at', dt2str(concluded_at))
 
     if logbook:
+        global _overall_time_spent
+        time_spent = time_spent_on(logbook)
+        _overall_time_spent += time_spent
+
         if statussing and not verbose:
             log = logbook[-1]
-            _write('  Spent %s; %s.' % (time_spent_on(logbook),
-                                        ('clocked out at %s' % log['out'])
-                                        if log['out'] else
-                                        ('clocked in at %s' % log['in'])))
+            string = '  '
+
+            def _phrase(description, value):
+                return _ce(description) + ' ' + value + '. '
+
+            if time_spent:
+                string += "%s %s. " % (_ce('Spent'), td2str(time_spent))
+            if log['out']:
+                string += "%s %s." % (_ce('Clocked out at'), dt2str(log['out']))
+            else:
+                string += "%s %s." % (_cf('Clocked in at'), dt2str(log['in']))
+            _write(string)
+
         else:
-            _write_p('Total time spent', time_spent_on(logbook))
+            _write_p('Time spent', td2str(time_spent))
             if statussing:
-                _write(_cp('  Last logbook entry:'))
+                _write(_ce('  Last logbook entry:'))
                 i = -1
             elif verbose:
-                _write(_cp('  Logbook:'))
+                _write(_ce('  Logbook:'))
                 i = 0
             else:
-                _write(_cp('  Last logbook entries:'))
+                _write(_ce('  Last logbook entries:'))
                 i = -3
 
             for log in logbook[i:]:
+                string = '  - %s' % dt2str(log['in'])
                 if log['out']:
-                    _write('  - %s ~ %s' % (log['in'], log['out']))
-                else:
-                    _write('  - %s' % log['in'])
+                    string += ' ~ %s' % dt2str(log['out'])
+                _write(string)

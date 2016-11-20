@@ -15,7 +15,7 @@ $ dit -d ditdir e<TAB><TAB>
 e edit export 
 ---------------------------------------------------
 $ dit -d ditdir o -<TAB><TAB>
---all --concluded --format --output --verbose 
+--all --compact --concluded --format --from --output --sum --to --verbose --where 
 ---------------------------------------------------
 $ dit -d ditdir w <TAB><TAB>
 ./ g1/ g2/ g4/ g5/ 

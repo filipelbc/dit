@@ -52,9 +52,9 @@ ERROR: Unrecognized argument: t1
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/0] //t1
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t1
 Using directory: ditdir
@@ -81,9 +81,9 @@ Not working on the task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/0] //t1
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Using directory: ditdir
@@ -150,15 +150,15 @@ CURRENT saved: ././t10 (halted)
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/3] //t10
+[0/0/3] ././t10
   Group . Subgroup . Task t10
-  Spent 40s; clocked out at 2016-09-10 19:04:29 -0200.
-[0/0/1] //t4
+  Spent 2min 40s. Clocked out at 2016-09-10 19:17:23 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Using directory: ditdir
@@ -183,12 +183,12 @@ Task has already been concluded.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/1] //t4
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t7
 Using directory: ditdir
@@ -204,15 +204,15 @@ Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/2] //t7
+[0/0/2] ././t7
   Group . Subgroup . Task t7
-  Spent ; clocked in at 2016-09-10 19:05:39 -0200.
-[0/0/1] //t4
+  Clocked in at 2016-09-10 19:22:03 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon 0/0/0
 Using directory: ditdir
@@ -220,15 +220,15 @@ Already working on a task.
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/2] //t7
+[0/0/2] ././t7
   Group . Subgroup . Task t7
-  Spent ; clocked in at 2016-09-10 19:05:39 -0200.
-[0/0/1] //t4
+  Clocked in at 2016-09-10 19:22:03 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir switchto g4/t5
 Using directory: ditdir
@@ -270,22 +270,22 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [4/1/0] g5/g6/t8
   Group g5 Subgroup g6 Task t8
-  Spent ; clocked in at 2016-09-10 19:07:39 -0200.
-[4/0/0] g5//t6
+  Clocked in at 2016-09-10 19:30:03 -0200.
+[4/0/0] g5/./t6
   Group g5 Subgroup . Task t6
-  Spent 20s; clocked out at 2016-09-10 19:07:19 -0200.
-[3/0/0] g4//t5
+  Spent 1min 20s. Clocked out at 2016-09-10 19:28:43 -0200.
+[3/0/0] g4/./t5
   Group g4 Subgroup . Task t5
-  Spent 20s; clocked out at 2016-09-10 19:06:39 -0200.
-[0/0/2] //t7
+  Spent 1min 20s. Clocked out at 2016-09-10 19:26:03 -0200.
+[0/0/2] ././t7
   Group . Subgroup . Task t7
-  Spent 20s; clocked out at 2016-09-10 19:05:59 -0200.
-[0/0/1] //t4
+  Spent 1min 20s. Clocked out at 2016-09-10 19:23:23 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir halt
 Using directory: ditdir
@@ -298,22 +298,22 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [4/1/0] g5/g6/t8
   Group g5 Subgroup g6 Task t8
-  Spent 20s; clocked out at 2016-09-10 19:07:59 -0200.
-[4/0/0] g5//t6
+  Spent 1min 20s. Clocked out at 2016-09-10 19:31:23 -0200.
+[4/0/0] g5/./t6
   Group g5 Subgroup . Task t6
-  Spent 20s; clocked out at 2016-09-10 19:07:19 -0200.
-[3/0/0] g4//t5
+  Spent 1min 20s. Clocked out at 2016-09-10 19:28:43 -0200.
+[3/0/0] g4/./t5
   Group g4 Subgroup . Task t5
-  Spent 20s; clocked out at 2016-09-10 19:06:39 -0200.
-[0/0/2] //t7
+  Spent 1min 20s. Clocked out at 2016-09-10 19:26:03 -0200.
+[0/0/2] ././t7
   Group . Subgroup . Task t7
-  Spent 20s; clocked out at 2016-09-10 19:05:59 -0200.
-[0/0/1] //t4
+  Spent 1min 20s. Clocked out at 2016-09-10 19:23:23 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
 ---------------------------------------------------
 $ dit -v -d ./ditdir workon t10
 Using directory: ditdir
@@ -339,24 +339,24 @@ CURRENT saved: ././t10
 ---------------------------------------------------
 $ dit -v -d ./ditdir status
 Using directory: ditdir
-[0/0/3] //t10
+[0/0/3] ././t10
   Group . Subgroup . Task t10
-  Spent 1m; clocked in at 2016-09-10 19:08:19 -0200.
+  Spent 4min. Clocked in at 2016-09-10 19:32:43 -0200.
 [4/1/0] g5/g6/t8
   Group g5 Subgroup g6 Task t8
-  Spent 20s; clocked out at 2016-09-10 19:07:59 -0200.
-[4/0/0] g5//t6
+  Spent 1min 20s. Clocked out at 2016-09-10 19:31:23 -0200.
+[4/0/0] g5/./t6
   Group g5 Subgroup . Task t6
-  Spent 20s; clocked out at 2016-09-10 19:07:19 -0200.
-[3/0/0] g4//t5
+  Spent 1min 20s. Clocked out at 2016-09-10 19:28:43 -0200.
+[3/0/0] g4/./t5
   Group g4 Subgroup . Task t5
-  Spent 20s; clocked out at 2016-09-10 19:06:39 -0200.
-[0/0/2] //t7
+  Spent 1min 20s. Clocked out at 2016-09-10 19:26:03 -0200.
+[0/0/2] ././t7
   Group . Subgroup . Task t7
-  Spent 20s; clocked out at 2016-09-10 19:05:59 -0200.
-[0/0/1] //t4
+  Spent 1min 20s. Clocked out at 2016-09-10 19:23:23 -0200.
+[0/0/1] ././t4
   Group . Subgroup . Task t4
-  Spent 40s; clocked out at 2016-09-10 19:03:49 -0200.
-[0/0/0] //t1
+  Spent 2min 40s. Clocked out at 2016-09-10 19:14:43 -0200.
+[0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 1m; clocked out at 2016-09-10 19:01:19 -0200.
+  Spent 4min. Clocked out at 2016-09-10 19:04:43 -0200.
