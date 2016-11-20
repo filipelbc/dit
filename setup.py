@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from setuptools import setup
 
 setup(
     name='dit',
-    version='0.7dev',
+    version='0.7',
 
     description='A CLI work time tracking tool.',
 
@@ -24,7 +26,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
     ],
 
-    keywords='clocking todo',
+    keywords='timetable clocking',
 
     packages=['dit'],
 

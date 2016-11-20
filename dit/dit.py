@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
+Version 0.7
+
 Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   --directory, -d
@@ -95,7 +97,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       Only consider tasks and log entries up to the given date.
     --where, -w "property-name" "property-value"
       Only consider tasks that have the given property with the given value.
-      Note that name and value can be regular expressions.
+      Note that the value can be a regular expression.
 
   Task editing <command>'s:
 
