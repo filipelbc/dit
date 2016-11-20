@@ -63,7 +63,7 @@ Workflow <command>'s:
   resume
     Same as "workon CURRENT".
 
-  switchto <id> | <name> | --new, -n <name> [-: "title"]
+  switchto <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
     Same as "halt" followed by "workon".
 
   switchback
@@ -76,18 +76,18 @@ Workflow <command>'s:
 
 Listing <command>'s:
 
-  export [--concluded, -c] [--all, -a] [--verbose, -v] [--output, -o "file"]
-         [--format, -f "format"] [<gid> | <gname>]
+  export [--all, -a] [--concluded, -c] [--compact, -z]
+         [--output, -o "file"] [--format, -f "format"] [<gid> | <gname>]
     Prints most information of the CURRENT subgroup or the selected one.
-    --concluded, -a
-      Include concluded tasks.
     --all, -a
       Select all groups and subgroups.
-    --verbose, -v
-      All information is exported.
-    --output, -o
+    --concluded, -c
+      Include concluded tasks.
+    --compact, -z
+      Make the output more compact.
+    --output, -o "file-name"
       File to which to write. Defaults to "stdout".
-    --format, -f
+    --format, -f "format"
       Format to use. If not provided, the format is deduced from the file
       extension if present, else it defaults to dit's own format.
 
@@ -96,20 +96,33 @@ Listing <command>'s:
     none found.
 
   list
-    This is a convenience alias for "export --output stdout".
+    This is a convenience alias for "export --output stdout --format dit".
 
-  status [<gid> | <gname>]
+  status
     Prints an overview of the data for the CURRENT and PREVIOUS tasks.
 
+  Note that these commands also accept the following options:
+  --verbose, -v
+    More information is shown.
+  --sum, -s
+    Show the overall time spent on the listed tasks.
+  --from "date"
+    Only consider tasks and log entries from the given date on.
+  --to "date"
+    Only consider tasks and log entries up to the given date.
+  --where, -w "property-name" "property-value"
+    Only consider tasks that have the given property with the given value.
+    Note that the value can be a regular expression.
+
 Task editing <command>'s:
+
+  fetch <name>
+    Use data fetcher plugin.
 
   move [--fetch, -f] <name> <name>
     Rename task or change its group and/or subgroup.
     --fetch, -f
       Use data fetcher plugin after moving.
-
-  fetch <name>
-    Use data fetcher plugin.
 
   note [<name> | <id>] [-: "text"]
     Adds a note to the CURRENT task or the specified one.
@@ -118,9 +131,9 @@ Task editing <command>'s:
     Sets a property for the CURRENT task or the specified one.
 
   edit [<name> | <id>]
-    Opens the specified task for manual editing. Uses CURRENT task if none is
-    specified. It will look in environment variables $VISUAL or $EDITOR for a
-    text editor to use and if none is found it will do nothing.
+    Opens the specified task for manual editing. Uses CURRENT task or the
+    specified one. It will look in environment variables $VISUAL and $EDITOR
+    for a text editor to use and if none is found it will do nothing.
 
 Other <command>'s:
 
