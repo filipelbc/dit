@@ -130,28 +130,29 @@ def apply_filter_where(data, where):
     return {}
 
 
-def apply_filter_to(data, to):
-    if 'created_at' in data and to <= data['created_at']:
-        return {}
-    logbook = data.get('logbook', [])
-
-    i = 0
-    for i in range(0, -len(logbook), -1):
-        if logbook[i - 1]['in'] <= to:
-            break
-    if i < 0:
-        data['logbook'] = logbook[:i]
-    return data
-
-
-def apply_filter_from(data, fron):
-    if 'concluded_at' in data and fron >= data['concluded_at'] or \
-            'updated_at' in data and fron >= data['updated_at']:
+def apply_filter_to(data, date):
+    if 'created_at' in data and date <= data['created_at']:
         return {}
     logbook = data.get('logbook', [])
 
     for i in range(len(logbook) + 1):
-        if i == len(logbook) or logbook[i]['in'] >= fron:
+        if i == len(logbook) or logbook[-i - 1]['in'] <= date:
+            break
+    if i == len(logbook):
+        data['logbook'] = []
+    elif i > 0:
+        data['logbook'] = logbook[:-i]
+    return data
+
+
+def apply_filter_from(data, date):
+    if 'concluded_at' in data and date >= data['concluded_at'] or \
+            'updated_at' in data and date >= data['updated_at']:
+        return {}
+    logbook = data.get('logbook', [])
+
+    for i in range(len(logbook) + 1):
+        if i == len(logbook) or logbook[i]['in'] >= date:
             break
     if i == len(logbook):
         data['logbook'] = []
