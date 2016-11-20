@@ -7,7 +7,7 @@ Executing hook: before
 before: ./ditdir workon
 Executing hook: before_write
 before_write: ./ditdir workon
-Already working on a task.
+Nothing to do: already working on a task.
 Executing hook: after_write
 after_write: ./ditdir workon
 Executing hook: after

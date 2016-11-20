@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -199,6 +198,8 @@ from importlib import import_module
 from importlib.util import find_spec
 from tempfile import gettempdir
 
+from . import messages as msg
+
 from .exceptions import (DitException,
                          ArgumentException,
                          NoTaskSpecifiedCondition,
@@ -271,43 +272,6 @@ def load_plugin(plugin_name):
     raise DitException("Plugin module not found: %s "
                        "Your dit installation might be corrupt."
                        % plugin_name)
-
-# ===========================================
-# Message output
-
-
-def msg_normal(message):
-    sys.stdout.write("%s\n" % message)
-
-
-def msg_yn_question(message):
-    return input("%s [Y/n] " % message) == "Y"
-
-
-def msg_verbose(message):
-    if VERBOSE:
-        msg_normal(message)
-
-
-def msg_warning(message):
-    if VERBOSE:
-        msg_normal(message)
-
-
-def msg_error(message):
-    if not sys.stdout.isatty():
-        sys.stdout.flush()  # this is needed since stderr is never buffered
-
-    error = "\033[0;41;97mERROR:\033[0m" if sys.stderr.isatty() else "ERROR:"
-    sys.stderr.write("%s %s\n" % (error, message))
-
-
-def msg_selected(group, subgroup, task):
-    msg_verbose("Selected: %s" % _(group, subgroup, task))
-
-
-def msg_usage():
-    msg_normal(__doc__)
 
 # ===========================================
 # Command decorator
@@ -406,6 +370,10 @@ def names_to_string(name, *more_names):
 
 _ = names_to_string
 
+
+def msg_selected(group, subgroup, task):
+    msg.verbose("Selected: %s" % _(group, subgroup, task))
+
 # ==========================================
 # Selector
 
@@ -440,7 +408,7 @@ def selector_to_tuple(string, kind=NAME_SELECTOR):
 def make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
-        msg_verbose("Created: %s" % path_to_string(path))
+        msg.verbose("Created: %s" % path_to_string(path))
 
 
 def load_json_file(fp):
@@ -486,7 +454,7 @@ def prompt(header, initial=None, extension='txt'):
         elif not initial:
             return input(header + ': ').strip()
         else:
-            raise DitException("$EDITOR environment variable is not set.")
+            raise DitException("Could not find the text editor to use.")
     else:
         raise DitException('Cannot prompt while not running interactively.')
 
@@ -504,7 +472,7 @@ def is_valid_group_name(name):
 
 def is_valid_task_data(data):
     if not isinstance(data, dict):
-        msg_verbose("Expected data to be a `dict` but got a `%s`."
+        msg.warning("Expected data to be a `dict` but got a `%s`."
                     % data.__class__.__name__)
         return False
     types = {
@@ -516,7 +484,7 @@ def is_valid_task_data(data):
     ans = True
     for key in sorted(types.keys() & data.keys()):
         if not isinstance(data[key], types[key]):
-            msg_verbose("Expected `data.%s` to be a `%s` but got a `%s`."
+            msg.warning("Expected `data.%s` to be a `%s` but got a `%s`."
                         % (key,
                            types[key].__name__,
                            data[key].__class__.__name__))
@@ -554,7 +522,7 @@ def data_clock_in(data):
     if len(logbook) > 0:
         last = logbook[-1]
         if not last['out']:
-            msg_normal("Already clocked in.")
+            msg.normal("Already clocked in.")
             return
     data.pop('concluded_at', None)
     data['logbook'] = logbook + [{'in': now_str(), 'out': None}]
@@ -563,11 +531,11 @@ def data_clock_in(data):
 def data_clock_append(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        msg_normal("Task has no clocking.")
+        msg.normal("Task has no been clocked yet.")
         return
     last = logbook[-1]
     if not last['out']:
-        msg_normal("Already clocked in.")
+        msg.normal("Already clocked in.")
         return
     last['out'] = None
 
@@ -575,11 +543,11 @@ def data_clock_append(data):
 def data_clock_out(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        msg_normal("Already clocked out.")
+        msg.normal("Task has no been clocked yet.")
         return
     last = logbook[-1]
     if last['out']:
-        msg_normal("Already clocked out.")
+        msg.normal("Already clocked out.")
         return
     last['out'] = now_str()
     data['logbook'] = logbook
@@ -588,11 +556,11 @@ def data_clock_out(data):
 def data_clock_cancel(data):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
-        msg_normal("Was not clocked in.")
+        msg.normal("Task has no been clocked yet.")
         return
     last = logbook[-1]
     if last['out']:
-        msg_normal("Was not clocked in.")
+        msg.normal("Was not clocked in.")
         return
     logbook.pop(-1)
     data['logbook'] = logbook
@@ -600,7 +568,7 @@ def data_clock_cancel(data):
 
 def data_conclude(data):
     if data.get('concluded_at'):
-        msg_normal("Already concluded.")
+        msg.normal("Already concluded.")
         return
     data['concluded_at'] = now_str()
 
@@ -617,7 +585,7 @@ def data_set_property(data, prop_name, prop_value):
 
     properties = data['properties']
     if prop_name in properties:
-        if not msg_yn_question('Property `%s` already exists with value: %s\n'
+        if not msg.yn_question('Property `%s` already exists with value: %s\n'
                                'Do you want to overwrite?' %
                                (prop_name, properties[prop_name])):
             return False
@@ -665,7 +633,7 @@ class Dit:
     def _setup_base_path(self, directory):
         path = discover_base_path(directory)
         make_dirs(path)
-        msg_verbose("Using directory: %s" % path_to_string(path))
+        msg.verbose("Using directory: %s" % path_to_string(path))
         self.base_path = path
 
     def _current_path(self):
@@ -730,7 +698,7 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
         data['updated_at'] = now_str()
         save_json_file(task_fp, data)
-        msg_verbose("Task saved: %s" % _(group, subgroup, task))
+        msg.verbose("Task saved: %s" % _(group, subgroup, task))
 
     def _create_task(self, group, subgroup, task, data):
         task_fp = self._make_task_path(group, subgroup, task)
@@ -768,7 +736,7 @@ class Dit:
             'halted': self.current_halted
         }
         save_json_file(self._current_path(), current_data)
-        msg_verbose("%s saved: %s%s"
+        msg.verbose("%s saved: %s%s"
                     % (CURRENT_FN,
                        _(self.current_group,
                          self.current_subgroup,
@@ -806,7 +774,7 @@ class Dit:
     def _save_previous(self):
         save_json_file(self._previous_path(), self.previous_stack)
         l = len(self.previous_stack)
-        msg_verbose("%s saved. It has %d task%s now."
+        msg.verbose("%s saved. It has %d task%s now."
                     % (PREVIOUS_FN, l, "s" if l != 1 else ""))
 
     def _load_previous(self):
@@ -852,7 +820,7 @@ class Dit:
 
     def _save_index(self):
         save_json_file(self._index_path(), self.index)
-        msg_verbose("%s saved." % INDEX_FN)
+        msg.verbose("%s saved." % INDEX_FN)
 
     def _load_index(self):
         index_fp = self._index_path()
@@ -892,7 +860,7 @@ class Dit:
 
                 self.index[-1][1][-1][1].append(f)
 
-        msg_verbose("%s rebuilt." % INDEX_FN)
+        msg.verbose("%s rebuilt." % INDEX_FN)
 
     # ===========================================
     # Export
@@ -1085,26 +1053,26 @@ class Dit:
                 (group, subgroup, task) = self._name_parser(selection)
 
         msg_selected(group, subgroup, task)
-
         if not task and throw:
             raise NoTaskSpecifiedCondition("No task specified.")
-
         return (group, subgroup, task)
 
     def _forward_parser(self, argv):
         selection = argv.pop(0)
 
         if selection == CURRENT_FN:
-            return self._get_current()
+            (group, subgroup, task) = self._get_current()
 
         elif selection == PREVIOUS_FN:
-            return self._previous_peek()
+            (group, subgroup, task) = self._previous_peek()
 
         elif selection[0].isdigit():
-            return self._gid_parser(selection)
+            (group, subgroup, task) = self._gid_parser(selection)
 
         elif not selection.startswith("-"):
-            return self._gname_parser(selection)
+            (group, subgroup, task) = self._gname_parser(selection)
+
+        return (group, subgroup, task)
 
     @staticmethod
     def _raise_unrecognized_argument(argv):
@@ -1118,7 +1086,7 @@ class Dit:
         if HOOKS_ENABLED:
             hook_fp = self._hook_path(hook)
             if os.path.isfile(hook_fp):
-                msg_verbose("Executing hook: %s" % hook)
+                msg.verbose("Executing hook: %s" % hook)
                 try:
                     run_subprocess([hook_fp, self.base_path, cmd_name],
                                    check=CHECK_HOOKS)
@@ -1131,7 +1099,7 @@ class Dit:
             raise DitException("Data fetcher script `%s` not found."
                                % FETCHER_FN)
         else:
-            msg_normal("Fetching data with `%s`." % fetcher_fp)
+            msg.verbose("Fetching data with `%s`." % fetcher_fp)
 
         fetch_fp = self._make_task_path(group, subgroup, task) + ".json"
 
@@ -1191,7 +1159,7 @@ class Dit:
             data['title'] = title or prompt('Task title')
 
         self._create_task(group, subgroup, task, data)
-        msg_normal("Created: %s" % _(group, subgroup, task))
+        msg.normal("Created: %s" % _(group, subgroup, task))
 
         return (group, subgroup, task)
 
@@ -1201,7 +1169,7 @@ class Dit:
             raise ArgumentException("Missing argument.")
 
         if not self.current_halted:
-            msg_verbose("Already working on a task.")
+            msg.normal("Nothing to do: already working on a task.")
             return
 
         if argv[0] in ["--new", "-n"]:
@@ -1225,7 +1193,7 @@ class Dit:
                 previous_updated = True
 
         data_clock_in(data)
-        msg_normal("Working on: %s" % _(group, subgroup, task))
+        msg.normal("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         if previous_updated:
@@ -1244,7 +1212,8 @@ class Dit:
             (group, subgroup, task) = self._backward_parser([CURRENT_FN], throw=False)
 
         if not task:
-            msg_verbose('Nothing to %s.' % "conclude" if conclude else "halt")
+            msg.normal('Nothing to do: %s.' % ("no task selected" if conclude
+                                               else "no current task"))
             return
 
         data = self._load_task_data(group, subgroup, task)
@@ -1252,21 +1221,21 @@ class Dit:
         task_state = state(data)
         if task_state != State.DOING:
             if not conclude:
-                msg_verbose('Not working on the task.')
+                msg.normal('Nothing to do: not working on the task.')
                 return
             elif task_state == State.CONCLUDED:
-                msg_verbose('Task has already been concluded.')
+                msg.normal('Nothing to do: task is already concluded.')
                 return
 
         if cancel:
             data_clock_cancel(data)
-            msg_normal("Canceled: %s" % _(group, subgroup, task))
+            msg.normal("Canceled: %s" % _(group, subgroup, task))
         else:
             data_clock_out(data)
-            msg_normal("Halted: %s" % _(group, subgroup, task))
+            msg.normal("Halted: %s" % _(group, subgroup, task))
         if conclude:
             data_conclude(data)
-            msg_normal("Concluded: %s" % _(group, subgroup, task))
+            msg.normal("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
         if self._is_current(group, subgroup, task):
@@ -1291,18 +1260,18 @@ class Dit:
         try:
             (group, subgroup, task) = self._backward_parser([CURRENT_FN])
         except NoTaskSpecifiedCondition:
-            msg_verbose('No current task to append to.')
+            msg.normal('Nothing to do: no current task.')
             return
 
         data = self._load_task_data(group, subgroup, task)
         task_state = state(data)
 
         if task_state != State.HALTED:
-            msg_verbose("Can only append if task is halted.")
+            msg.normal("Nothing to do: task is not halted.")
             return
 
         data_clock_append(data)
-        msg_normal("Appending work on: %s" % _(group, subgroup, task))
+        msg.normal("Appending to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
         self.current_halted = False
         self._save_current()
@@ -1326,7 +1295,7 @@ class Dit:
     def switchback(self, argv):
         self._raise_unrecognized_argument(argv)
         if self._previous_empty():
-            msg_verbose("No previous task to switch back to.")
+            msg.normal("Nothing to do: no previous task.")
         else:
             self.halt([])
             self.workon([PREVIOUS_FN])
@@ -1418,9 +1387,9 @@ class Dit:
                 raise ArgumentException("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
+        msg_selected(group, subgroup, task)
         self._raise_unrecognized_argument(argv)
 
-        msg_selected(group, subgroup, task)
         if task:
             options['concluded'] = True
 
@@ -1464,11 +1433,12 @@ class Dit:
 
         fetched_data = self._fetch_data_for(group, subgroup, task)
         if not fetched_data:
-            msg_verbose('Nothing to do: feched data is empty.')
+            msg.verbose('Nothing to do: feched data is empty.')
             return
 
         initial_data = self._load_task_data(group, subgroup, task)
         new_data = data_update(initial_data, fetched_data)
+        msg.normal('Fetched data for: %s' % _(group, subgroup, task))
         self._save_task(group, subgroup, task, new_data)
 
     @command("m", ["--fetch"], SELECT_BACKWARD)
@@ -1494,7 +1464,7 @@ class Dit:
         self._create_task(to_group, to_subgroup, to_task, data)
 
         os.remove(from_fp)
-        msg_normal("Task %s moved to %s" % (from_selector, to_selector))
+        msg.normal("Task %s moved to %s" % (from_selector, to_selector))
 
         # update CURRENT
         if self._is_current(from_group, from_subgroup, from_task):
@@ -1529,12 +1499,12 @@ class Dit:
             note_text = prompt("New note")
 
         if not note_text:
-            msg_normal("Operation cancelled.")
+            msg.normal("Operation cancelled.")
             return
 
         data = self._load_task_data(group, subgroup, task)
         data_add_note(data, note_text)
-        msg_normal("Noted added to: %s" % _(group, subgroup, task))
+        msg.normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
     @command("p", ["-:", "--:"], SELECT_BACKWARD)
@@ -1561,10 +1531,10 @@ class Dit:
 
         data = self._load_task_data(group, subgroup, task)
         if prop_name and data_set_property(data, prop_name, prop_value):
-            msg_normal("Set property of: %s" % _(group, subgroup, task))
+            msg.normal("Set property of: %s" % _(group, subgroup, task))
             self._save_task(group, subgroup, task, data)
         else:
-            msg_normal("Operation cancelled.")
+            msg.normal("Operation cancelled.")
 
     @command("e", [], SELECT_BACKWARD)
     def edit(self, argv):
@@ -1579,12 +1549,12 @@ class Dit:
         if new_data_raw:
             new_data = json.loads(new_data_raw)
             if is_valid_task_data(new_data):
-                msg_normal("Manually edited: %s" % selector)
+                msg.normal("Manually edited: %s" % selector)
                 self._save_task(group, subgroup, task, new_data)
             else:
-                msg_error("Invalid data. Operation cancelled.")
+                msg.error("Invalid data.")
         else:
-            msg_normal("Operation cancelled.")
+            msg.normal("Operation cancelled.")
 
     @command()
     def rebuild_index(self, argv):
@@ -1596,7 +1566,6 @@ class Dit:
     # Main
 
     def interpret(self, argv):
-        global VERBOSE
         global HOOKS_ENABLED
         global CHECK_HOOKS
         directory = None
@@ -1604,7 +1573,7 @@ class Dit:
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
-                VERBOSE = True
+                msg.turn_verbose_on()
             elif opt in ["--no-hooks"]:
                 HOOKS_ENABLED = False
             elif opt in ["--check-hooks"]:
@@ -1612,7 +1581,7 @@ class Dit:
             elif opt in ["--directory", "-d"]:
                 directory = argv.pop(0)
             elif opt in ["--help", "-h"]:
-                msg_usage()
+                msg.normal(__doc__)
                 return
             else:
                 raise ArgumentException("No such option: %s" % opt)
@@ -1763,11 +1732,11 @@ def main():
     try:
         Dit().interpret(argv)
     except DitException as err:
-        msg_error(err)
+        msg.error(err)
     except IndexError as err:
         # this was probably caused by a pop on an empty argument list
-        msg_error("Missing argument.")
+        msg.error("Missing argument.")
     except json.decoder.JSONDecodeError:
-        msg_error("Invalid JSON.")
+        msg.error("Invalid JSON.")
     except SubprocessException as err:
-        msg_error("`%s` returned with non-zero code, aborting." % err)
+        msg.error("`%s` returned with non-zero code, aborting." % err)
