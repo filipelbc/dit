@@ -138,9 +138,7 @@ def apply_filter_to(data, date):
     for i in range(len(logbook) + 1):
         if i == len(logbook) or logbook[-i - 1]['in'] <= date:
             break
-    if i == len(logbook):
-        data['logbook'] = []
-    elif i > 0:
+    if i > 0:
         data['logbook'] = logbook[:-i]
     return data
 
@@ -154,9 +152,7 @@ def apply_filter_from(data, date):
     for i in range(len(logbook) + 1):
         if i == len(logbook) or logbook[i]['in'] >= date:
             break
-    if i == len(logbook):
-        data['logbook'] = []
-    elif i > 0:
+    if i > 0:
         data['logbook'] = logbook[i:]
     return data
 
