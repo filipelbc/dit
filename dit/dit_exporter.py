@@ -6,7 +6,7 @@ from .dit import names_to_string
 from .utils import (dt2str, td2str,
                     time_spent_on,
                     convert_datetimes,
-                    init_filters, apply_filters)
+                    apply_filters)
 
 _file = None
 _isatty = False
@@ -84,8 +84,6 @@ def setup(file, options):
     _file = file
     _isatty = file.isatty()
     _options.update(options)
-
-    init_filters(_options['filters'])
 
 
 def begin():

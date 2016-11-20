@@ -204,7 +204,7 @@ from .exceptions import (DitException,
                          ArgumentException,
                          NoTaskSpecifiedCondition,
                          SubprocessException)
-from .utils import now_str
+from .utils import now_str, interpret_date
 
 # ===========================================
 # Constants
@@ -1319,11 +1319,11 @@ class Dit:
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
-                filters["from"] = argv.pop(0)
+                filters["from"] = interpret_date(argv.pop(0))
             elif opt in ["--to"]:
-                filters["to"] = argv.pop(0)
+                filters["to"] = interpret_date(argv.pop(0))
             elif opt in ["--where", "-w"]:
-                filters["where"] = [argv.pop(0), argv.pop(0)]
+                filters["where"] = [argv.pop(0), re.compile(argv.pop(0))]
             else:
                 raise ArgumentException("No such option: %s" % opt)
         self._raise_unrecognized_argument(argv)
@@ -1368,11 +1368,11 @@ class Dit:
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
-                filters["from"] = argv.pop(0)
+                filters["from"] = interpret_date(argv.pop(0))
             elif opt in ["--to"]:
-                filters["to"] = argv.pop(0)
+                filters["to"] = interpret_date(argv.pop(0))
             elif opt in ["--where", "-w"]:
-                filters["where"] = [argv.pop(0), argv.pop(0)]
+                filters["where"] = [argv.pop(0), re.compile(argv.pop(0))]
             elif opt in ["--all", "-a"]:
                 all = True
             elif opt in ["--concluded", "-c"]:
@@ -1740,3 +1740,6 @@ def main():
         msg.error("Invalid JSON.")
     except SubprocessException as err:
         msg.error("`%s` returned with non-zero code, aborting." % err)
+    except re.error as err:
+        # this was probably caused by a bad regex in the --where filter
+        msg.error("Bad regular expression: %s" % err)
