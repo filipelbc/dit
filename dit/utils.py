@@ -89,7 +89,7 @@ def convert_datetimes(data):
 # Filtering
 
 
-def _interpret_date(string):
+def interpret_date(string):
 
     if string in ["now"]:
         return now()
@@ -159,14 +159,6 @@ def apply_filter_from(data, date):
     elif i > 0:
         data['logbook'] = logbook[i:]
     return data
-
-
-def init_filters(filters):
-    for key in filters:
-        if key in ['from', 'to']:
-            filters[key] = _interpret_date(filters[key])
-        elif key == 'where':
-            filters[key][1] = re.compile(filters[key][1])
 
 
 def apply_filters(data, filters):
