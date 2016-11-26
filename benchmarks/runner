@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+REP=10
+INTERPRETER=python
+
+for i in $@
+do
+    t=0
+    r=1
+    while [ "$r" -le "$REP" ]
+    do
+        t="$t+$(./time $INTERPRETER $i 2>&1)"
+        r=$(($r + 1))
+    done
+    echo $i $(bc -l <<< "($t)/$REP" | cut -c1-6)
+    sleep 0.1
+done
