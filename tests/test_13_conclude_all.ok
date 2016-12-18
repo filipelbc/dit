@@ -14,8 +14,6 @@ Using directory: ditdir
 $ dit -v -d ./ditdir conclude
 Using directory: ditdir
 Selected: ././t10
-Already clocked out.
-Halted: ././t10
 Concluded: ././t10
 Task saved: ././t10
 PREVIOUS saved. It has 1 task now.
@@ -24,8 +22,6 @@ CURRENT saved: g5/g7/t16 (halted)
 $ dit -v -d ./ditdir conclude
 Using directory: ditdir
 Selected: g5/g7/t16
-Already clocked out.
-Halted: g5/g7/t16
 Concluded: g5/g7/t16
 Task saved: g5/g7/t16
 PREVIOUS saved. It has 0 tasks now.
@@ -34,8 +30,6 @@ CURRENT saved: ././t7 (halted)
 $ dit -v -d ./ditdir conclude
 Using directory: ditdir
 Selected: ././t7
-Already clocked out.
-Halted: ././t7
 Concluded: ././t7
 Task saved: ././t7
 CURRENT saved: ././_ (halted)
@@ -91,8 +85,6 @@ CURRENT saved: g5/g6/t8 (halted)
 $ dit -v -d ./ditdir conclude
 Using directory: ditdir
 Selected: g5/g6/t8
-Already clocked out.
-Halted: g5/g6/t8
 Concluded: g5/g6/t8
 Task saved: g5/g6/t8
 CURRENT saved: g5/g6/_ (halted)
