@@ -35,7 +35,7 @@ CLOCK: [2016-09-10 Sat 19:18]--[2016-09-10 Sat 19:20]
 CLOCK: [2016-09-10 Sat 19:32]--[2016-09-10 Sat 19:38]
 CLOCK: [2016-09-10 Sat 19:42]--[2016-09-10 Sat 19:43]
 CLOCK: [2016-09-10 Sat 20:03]--[2016-09-10 Sat 20:04]
-CLOCK: [2016-09-10 Sat 20:27]
+CLOCK: [2016-09-10 Sat 20:30]
 :END:
 - This is a simple note.
 
@@ -114,6 +114,7 @@ CLOCK: [2016-09-10 Sat 20:06]--[2016-09-10 Sat 20:08]
 :END:
 :LOGBOOK:
 CLOCK: [2016-09-10 Sat 20:20]--[2016-09-10 Sat 20:24]
+CLOCK: [2016-09-10 Sat 20:26]--[2016-09-10 Sat 20:28]
 :END:
 - Wololo!
 - This note was fetched.

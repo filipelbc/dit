@@ -3,10 +3,10 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/1] ././t10
   Group . Subgroup . Task t10
-  Spent 13min 20s. Clocked out at 2016-09-10 20:28:43 -0200.
+  Spent 13min 20s. Clocked out at 2016-09-10 20:31:23 -0200.
 [4/2/0] g5/g7/t16
   The task g5 g6 t15 has fetched data.
-  Spent 3min 20s. Clocked out at 2016-09-10 20:24:03 -0200.
+  Spent 5min 20s. Clocked out at 2016-09-10 20:28:43 -0200.
 [0/0/3] ././t7
   Group . Subgroup . Task t7
   Spent 3min 20s. Clocked out at 2016-09-10 20:18:43 -0200.
