@@ -722,7 +722,7 @@ class Dit:
                 self.current_task)
 
     def _clear_current(self):
-        self._set_current(None, None, None)
+        self._set_current(None, None, None, True)
 
     def _set_current(self, group, subgroup, task, halted=False):
         self.current_group = group
@@ -1207,7 +1207,7 @@ class Dit:
     @command("h")
     def halt(self, argv, conclude=False, cancel=False):
         if conclude:
-            (group, subgroup, task) = self._backward_parser(argv, throw=False)
+            (group, subgroup, task) = self._backward_parser(argv or [CURRENT_FN], throw=False)
             self._raise_unrecognized_argument(argv)
         else:
             self._raise_unrecognized_argument(argv)
@@ -1242,12 +1242,12 @@ class Dit:
 
         if self._is_current(group, subgroup, task):
             if conclude:
-                if not self._previous_empty():
+                if self._previous_empty():
+                    self._set_current(group, subgroup, None, True)
+                else:
                     group, subgroup, task = self._previous_pop()
                     self._save_previous()
                     self._set_current(group, subgroup, task, True)
-                else:
-                    self._clear_current()
             else:
                 self.current_halted = True
             self._save_current()

@@ -1,0 +1,112 @@
+---------------------------------------------------
+$ dit -v -d ./ditdir status
+Using directory: ditdir
+[0/0/1] ././t10
+  Group . Subgroup . Task t10
+  Spent 13min 20s. Clocked out at 2016-09-10 20:28:43 -0200.
+[4/2/0] g5/g7/t16
+  The task g5 g6 t15 has fetched data.
+  Spent 3min 20s. Clocked out at 2016-09-10 20:24:03 -0200.
+[0/0/3] ././t7
+  Group . Subgroup . Task t7
+  Spent 3min 20s. Clocked out at 2016-09-10 20:18:43 -0200.
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t10
+Already clocked out.
+Halted: ././t10
+Concluded: ././t10
+Task saved: ././t10
+PREVIOUS saved. It has 1 task now.
+CURRENT saved: g5/g7/t16 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g5/g7/t16
+Already clocked out.
+Halted: g5/g7/t16
+Concluded: g5/g7/t16
+Task saved: g5/g7/t16
+PREVIOUS saved. It has 0 tasks now.
+CURRENT saved: ././t7 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t7
+Already clocked out.
+Halted: ././t7
+Concluded: ././t7
+Task saved: ././t7
+CURRENT saved: ././_ (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir resume
+Using directory: ditdir
+Selected: ././_
+ERROR: No task specified.
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t10
+Using directory: ditdir
+Selected: ././t10
+Working on: ././t10
+Task saved: ././t10
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: ././t10
+Halted: ././t10
+Concluded: ././t10
+Task saved: ././t10
+CURRENT saved: ././_ (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir workon g5/g6/t8
+Using directory: ditdir
+Selected: g5/g6/t8
+Working on: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/t8
+---------------------------------------------------
+$ dit -v -d ./ditdir switchto t11
+Using directory: ditdir
+Selected: g5/g6/t8
+Halted: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/t8 (halted)
+Selected: g5/g6/t11
+Working on: g5/g6/t11
+Task saved: g5/g6/t11
+PREVIOUS saved. It has 1 task now.
+CURRENT saved: g5/g6/t11
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g5/g6/t11
+Halted: g5/g6/t11
+Concluded: g5/g6/t11
+Task saved: g5/g6/t11
+PREVIOUS saved. It has 0 tasks now.
+CURRENT saved: g5/g6/t8 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude
+Using directory: ditdir
+Selected: g5/g6/t8
+Already clocked out.
+Halted: g5/g6/t8
+Concluded: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/_ (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir workon t8
+Using directory: ditdir
+Selected: g5/g6/t8
+Working on: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/t8
+---------------------------------------------------
+$ dit -v -d ./ditdir halt
+Using directory: ditdir
+Selected: g5/g6/t8
+Halted: g5/g6/t8
+Task saved: g5/g6/t8
+CURRENT saved: g5/g6/t8 (halted)
