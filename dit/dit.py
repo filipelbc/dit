@@ -1232,7 +1232,7 @@ class Dit:
         if cancel:
             data_clock_cancel(data)
             msg.normal("Canceled: %s" % _(group, subgroup, task))
-        else:
+        elif task_state == State.DOING:
             data_clock_out(data)
             msg.normal("Halted: %s" % _(group, subgroup, task))
         if conclude:
