@@ -6,7 +6,23 @@ import os
 # ===========================================
 # Constants
 
-INDEX_FN = 'INDEX'
+CURRENT = 'CURRENT'
+CURRENT_FN = '.current'
+FETCHER_FN = '.fetcher'
+HOOKS_DIR = '.hooks'
+INDEX_FN = '.index'
+PREVIOUS = 'PREVIOUS'
+PREVIOUS_FN = '.previous'
+
+PROHIBITED_NAMES = (
+    CURRENT,
+    CURRENT_FN,
+    FETCHER_FN,
+    HOOKS_DIR,
+    INDEX_FN,
+    PREVIOUS,
+    PREVIOUS_FN,
+)
 
 SEPARATOR_CHAR = '/'
 NONE_CHAR = '_'
@@ -14,10 +30,10 @@ ROOT_NAME_CHAR = '.'
 ROOT_NAME = ''
 
 DEFAULT_BASE_DIR = '.dit'
-DEFAULT_BASE_PATH = '~/' + DEFAULT_BASE_DIR
+DEFAULT_BASE_PATH = os.path.join('~', DEFAULT_BASE_DIR)
 
-SELECT_BACKWARD = "forward"
-SELECT_FORWARD = "backward"
+SELECT_BACKWARD = 'forward'
+SELECT_FORWARD = 'backward'
 
 # ===========================================
 # Json Helpers
@@ -90,3 +106,10 @@ def discover_base_path(directory):
         or DEFAULT_BASE_PATH
 
     return os.path.expanduser(directory)
+
+# ===========================================
+# Task Verification
+
+
+def is_valid_task_name(name):
+    return len(name) > 0 and name[0].isalpha() and name not in PROHIBITED_NAMES
