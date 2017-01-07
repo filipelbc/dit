@@ -208,26 +208,30 @@ from .exceptions import (DitException,
                          SubprocessException)
 from .utils import now_str, interpret_date
 
+from .common import (
+    SELECT_BACKWARD,
+    SELECT_FORWARD,
+    INDEX_FN,
+    discover_base_path,
+    load_json_file,
+    save_json_file,
+    names_to_string,
+    selector_split,
+    path_to_string,
+)
+
 # ===========================================
 # Constants
 
 CURRENT_FN = "CURRENT"
 PREVIOUS_FN = "PREVIOUS"
-INDEX_FN = "INDEX"
 HOOKS_DIR = "HOOKS"
 FETCHER_FN = "_data_fetcher"
 
 PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN, HOOKS_DIR]
 
-SEPARATOR_CHAR = "/"
 COMMENT_CHAR = "#"
-NONE_CHAR = "_"
-ROOT_NAME_CHAR = "."
 ROOT_NAME = ""
-COMPLETION_SEP_CHAR = "\n"
-
-DEFAULT_BASE_DIR = ".dit"
-DEFAULT_BASE_PATH = "~/" + DEFAULT_BASE_DIR
 
 # ===========================================
 # Enumerators
@@ -242,7 +246,6 @@ class State(Enum):
 # ===========================================
 # General Options
 
-VERBOSE = False
 HOOKS_ENABLED = True
 CHECK_HOOKS = False
 
@@ -280,9 +283,6 @@ def load_plugin(plugin_name):
 
 COMMAND_INFO = {}
 
-SELECT_BACKWARD = "forward"
-SELECT_FORWARD = "backward"
-
 FILTER_OPTIONS = [
     "--verbose",
     "--sum",
@@ -295,14 +295,6 @@ LIST_OPTIONS = FILTER_OPTIONS + [
     "--all",
     "--concluded",
     "--compact",
-]
-
-DIT_OPTIONS = [
-    "--check-hooks",
-    "--directory",
-    "--help",
-    "--no-hooks",
-    "--verbose",
 ]
 
 
@@ -325,50 +317,7 @@ def command(letter=None, options=[], select=None, readonly=False):
     return wrapper
 
 # ===========================================
-# Path Discovery
-
-
-def discover_base_path(directory):
-
-    def bottomup_search(current_level, basename):
-        path = os.path.join(current_level, basename)
-        while not os.path.isdir(path):
-            parent_level = os.path.dirname(current_level)
-            if parent_level == current_level:
-                return None
-            current_level = parent_level
-            path = os.path.join(current_level, basename)
-        return path
-
-    directory = directory\
-        or bottomup_search(os.getcwd(), DEFAULT_BASE_DIR)\
-        or DEFAULT_BASE_PATH
-
-    return os.path.expanduser(directory)
-
-# ===========================================
 # To Nice String
-
-
-def path_to_string(path):
-    if path == os.path.expanduser(DEFAULT_BASE_PATH):
-        return DEFAULT_BASE_PATH
-    return os.path.relpath(path)
-
-
-def name_to_string(name):
-    if name is None:
-        return NONE_CHAR
-    elif name == ROOT_NAME:
-        return ROOT_NAME_CHAR
-    return name
-
-
-def names_to_string(name, *more_names):
-    s = name_to_string(name)
-    for name in more_names:
-        s += SEPARATOR_CHAR + name_to_string(name)
-    return s
 
 _ = names_to_string
 
@@ -383,14 +332,6 @@ ID_SELECTOR = "id"
 GID_SELECTOR = "gid"
 NAME_SELECTOR = "name"
 GNAME_SELECTOR = "gname"
-
-
-def selector_clean_root(names):
-    return [name if name != ROOT_NAME_CHAR else ROOT_NAME for name in names]
-
-
-def selector_split(string):
-    return selector_clean_root(string.split(SEPARATOR_CHAR))
 
 
 def selector_to_tuple(string, kind=NAME_SELECTOR):
@@ -411,18 +352,6 @@ def make_dirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
         msg.verbose("Created: %s" % path_to_string(path))
-
-
-def load_json_file(fp):
-    if os.path.isfile(fp):
-        with open(fp, 'r') as f:
-            return json.load(f)
-    return None
-
-
-def save_json_file(fp, data):
-    with open(fp, 'w') as f:
-        f.write(json.dumps(data))
 
 
 def make_tmp_fp(name, extension):
@@ -1620,117 +1549,10 @@ class Dit:
         self._call_hook("after", cmd_name)
 
 # ===========================================
-# Completion
+# Entry Point
 
 
-def completion_gname(dit, names):
-
-    names[-1] = None
-    names = names + [None] * (3 - len(names))
-    (group, subgroup, task) = names
-
-    comp_options = []
-    for i, g in enumerate(dit.index):
-        if group is None:
-            comp_options.append(_(g[0]) + SEPARATOR_CHAR)
-        elif g[0] == group:
-            for j, s in enumerate(g[1]):
-                if subgroup is None:
-                    comp_options.append(_(g[0], s[0]) + SEPARATOR_CHAR)
-                elif s[0] == subgroup:
-                    for k, t in enumerate(s[1]):
-                        comp_options.append(_(g[0], s[0], t))
-                    break
-            break
-
-    return COMPLETION_SEP_CHAR.join(comp_options)
-
-
-def completion_selection(cmd, directory, selection):
-
-    names = selector_split(selection)
-    if len(names) > 3:
-        return ""
-
-    path = discover_base_path(directory)
-    if not os.path.exists(path):
-        return ""
-
-    dit = Dit()
-    dit.base_path = path
-    dit._load_index()
-    if not dit.index:
-        return ""
-
-    select = COMMAND_INFO[cmd]['select']
-
-    if select in [SELECT_FORWARD, SELECT_BACKWARD]:
-        return completion_gname(dit, names)
-    else:
-        return ""
-
-
-def completion_cmd_name():
-    return COMPLETION_SEP_CHAR.join([cmd for cmd in COMMAND_INFO])
-
-
-def completion_cmd_option(cmd):
-    return COMPLETION_SEP_CHAR.join(COMMAND_INFO[cmd]['options'])
-
-
-def completion_option():
-    return COMPLETION_SEP_CHAR.join(DIT_OPTIONS)
-
-
-def completion():
-    argv = sys.argv
-    argv.pop(0)
-
-    idx = int(argv.pop(0)) - 1
-    line = argv[1:]
-    cmd = None
-    directory = None
-
-    i = 0
-    while i != idx and i < len(line):
-        if line[i] in ["--directory", "-d"]:
-            i += 1
-            directory = line[i]
-        elif line[i].isalpha():
-            cmd = line[i]
-            break
-        i += 1
-
-    if cmd and cmd not in COMMAND_INFO:
-        return ""
-
-    word = line[idx] if len(line) > idx else ""
-    comp_options = ""
-
-    if word == "" or word[0].isalpha():
-        if cmd:
-            comp_options = completion_selection(cmd, directory, word)
-        else:
-            comp_options = completion_cmd_name()
-    elif word.startswith((ROOT_NAME_CHAR, SEPARATOR_CHAR)):
-        if cmd:
-            comp_options = completion_selection(cmd, directory, word)
-    elif word.startswith('-'):
-        if cmd:
-            comp_options = completion_cmd_option(cmd)
-        else:
-            comp_options = completion_option()
-
-    sys.stdout.write(comp_options)
-
-# ===========================================
-# Main
-
-
-def main():
-    argv = sys.argv
-    argv.pop(0)
-
+def interpret(argv):
     try:
         Dit().interpret(argv)
     except DitException as err:

@@ -38,11 +38,11 @@ setup(
     },
 
     package_data={
-        'dit': [],
+        'dit': ['command_info.json'],
     },
 
     entry_points={
-        'console_scripts': ['dit=dit.dit:main',
-                            'dit-completion=dit.dit:completion'],
+        'console_scripts': ['dit=dit:main',
+                            'dit-completion=dit:completion'],
     },
 )

@@ -10,3 +10,4 @@ tests/DIT_TESTING
 tests/extra/*.diff
 tests/extra/*.out
 tests/extra/DIT_TESTING
+dit/command_info.json

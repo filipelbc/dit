@@ -1,10 +1,11 @@
 .PHONY: install install-completion venv clean
 
 install:
+	python3 -c 'from dit.completion import _save_command_info; _save_command_info()'
 	python3 setup.py install
 
 install-completion:
-	install bash-completion/dit /usr/share/bash-completion/completions/
+	install -m 0644 bash-completion/dit /usr/share/bash-completion/completions/
 
 venv:
 	python3 -m virtualenv -p python3 venv

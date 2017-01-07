@@ -1,7 +1,7 @@
 .PHONY: all is_venv run
 
 all: is_venv
-	make -C .. install > /dev/null
+	make -C .. install
 	make run
 
 is_venv:
