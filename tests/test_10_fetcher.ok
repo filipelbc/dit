@@ -4,7 +4,7 @@ $ setup_fetcher
 $ dit -v -d ./ditdir new --fetch g5/g6/t11
 Using directory: ditdir
 Selected: g5/g6/t11
-Fetching data with `./ditdir/g5/_data_fetcher`.
+Fetching data with `./ditdir/g5/.fetcher`.
 Fetcher arguments: ./ditdir g5 g6 t11
 INDEX saved.
 Created: g5/g6/t11
@@ -25,7 +25,7 @@ Selected: g5/g6/t11
 $ dit -v -d ./ditdir new --fetch ././t12
 Using directory: ditdir
 Selected: ././t12
-ERROR: Data fetcher script `_data_fetcher` not found.
+ERROR: Data fetcher script `.fetcher` not found.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --verbose ././t12
 Using directory: ditdir
@@ -35,7 +35,7 @@ ERROR: Task not found in index.
 $ dit -v -d ./ditdir new --fetch g4/./t13
 Using directory: ditdir
 Selected: g4/./t13
-Fetching data with `./ditdir/g4/_data_fetcher`.
+Fetching data with `./ditdir/g4/.fetcher`.
 ERROR: `./ditdir/g4/t13.json` not found: it seems no data was fetched.
 ---------------------------------------------------
 $ dit -v -d ./ditdir list --verbose g4/./t13
@@ -114,7 +114,7 @@ Task g5/g6/t14 moved to g5/g6/t15
 CURRENT saved: g5/g6/t15 (halted)
 INDEX saved.
 Selected: g5/g6/t15
-Fetching data with `./ditdir/g5/_data_fetcher`.
+Fetching data with `./ditdir/g5/.fetcher`.
 Fetcher arguments: ./ditdir g5 g6 t15
 Fetched data for: g5/g6/t15
 Task saved: g5/g6/t15
@@ -179,7 +179,7 @@ CURRENT saved: g5/g7/t16 (halted)
 $ dit -v -d ./ditdir fetch g1//t2
 Using directory: ditdir
 Selected: g1/./t2
-Fetching data with `./ditdir/g1/_data_fetcher`.
+Fetching data with `./ditdir/g1/.fetcher`.
 Fetcher arguments: ./ditdir g1 . t2
 WARNING: Expected `data.notes` to be a `list` but got a `dict`.
 WARNING: Expected `data.properties` to be a `dict` but got a `list`.

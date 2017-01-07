@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 
+hooks_dir=.hooks
+
 setup_hooks(){
-    mkdir -p ditdir/HOOKS
+    mkdir -p ditdir/$hooks_dir
 
     for f in before after; do
         for s in "" _read _write; do
-            touch ditdir/HOOKS/$f$s
-            echo '#!/usr/bin/env bash' > ditdir/HOOKS/$f$s
-            echo 'echo '$f$s': $@' >> ditdir/HOOKS/$f$s
-            echo 'exit 1' >> ditdir/HOOKS/$f$s
-            chmod +x ditdir/HOOKS/$f$s
+            touch ditdir/$hooks_dir/$f$s
+            echo '#!/usr/bin/env bash' > ditdir/$hooks_dir/$f$s
+            echo 'echo '$f$s': $@' >> ditdir/$hooks_dir/$f$s
+            echo 'exit 1' >> ditdir/$hooks_dir/$f$s
+            chmod +x ditdir/$hooks_dir/$f$s
         done
     done
+}
+
+cleanup_hooks(){
+    rm -rf ditdir/$hooks_dir
 }
 
 echo '---------------------------------------------------'
@@ -26,4 +32,4 @@ setup_hooks
 
 ./ditcmd --check-hooks list ././t1
 
-rm -rf ditdir/HOOKS
+cleanup_hooks
