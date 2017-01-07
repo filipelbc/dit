@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+for script in $@
+do
+    acc=0
+    for i in $(seq 10)
+    do
+        t=$( (command time -f %e python3 $script > /dev/null) 2>&1)
+        acc="$acc + $t"
+    done
+    echo $script $(bc -l <<< "($acc)/10" | sed 's/0*$//')
+    sleep 1
+done
