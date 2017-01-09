@@ -1212,7 +1212,7 @@ class Dit:
         self._raise_unrecognized_argument(argv)
         self.halt([], cancel=True)
 
-    @command("r")
+    @command("r", select=SELECT_FORWARD)
     def resume(self, argv):
         self._raise_unrecognized_argument(argv)
         self.workon([CURRENT_FN])
