@@ -28,6 +28,14 @@ Selected: ././_
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
   - 2016-09-10 19:32:43 -0200
 ---------------------------------------------------
+$ dit -v -d ./ditdir list --id-only
+Using directory: ditdir
+Selected: ././_
+0/0/0
+0/0/1
+0/0/2
+0/0/3
+---------------------------------------------------
 $ dit -v -d ./ditdir list --all
 Using directory: ditdir
 Selected: ././_
@@ -84,6 +92,20 @@ Selected: ././_
   Last logbook entries:
   - 2016-09-10 19:30:03 -0200 ~ 2016-09-10 19:31:23 -0200
 ---------------------------------------------------
+$ dit -v -d ./ditdir list --all --id-only
+Using directory: ditdir
+Selected: ././_
+0/0/0
+0/0/1
+0/0/2
+0/0/3
+1/0/0
+2/1/0
+3/0/0
+4/0/0
+4/0/1
+4/1/0
+---------------------------------------------------
 $ dit -v -d ./ditdir list --concluded
 Using directory: ditdir
 Selected: ././_
@@ -113,6 +135,14 @@ Selected: ././_
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
   - 2016-09-10 19:32:43 -0200
 ---------------------------------------------------
+$ dit -v -d ./ditdir list --concluded --id-only
+Using directory: ditdir
+Selected: ././_
+0/0/0
+0/0/1
+0/0/2
+0/0/3
+---------------------------------------------------
 $ dit -v -d ./ditdir list PREVIOUS
 Using directory: ditdir
 Selected: g5/g6/t8
@@ -124,6 +154,11 @@ Selected: g5/g6/t8
   Last logbook entries:
   - 2016-09-10 19:30:03 -0200 ~ 2016-09-10 19:31:23 -0200
 ---------------------------------------------------
+$ dit -v -d ./ditdir list --id-only PREVIOUS
+Using directory: ditdir
+Selected: g5/g6/t8
+4/1/0
+---------------------------------------------------
 $ dit -v -d ./ditdir list CURRENT
 Using directory: ditdir
 Selected: ././t10
@@ -134,6 +169,11 @@ Selected: ././t10
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
   - 2016-09-10 19:32:43 -0200
+---------------------------------------------------
+$ dit -v -d ./ditdir list --id-only CURRENT
+Using directory: ditdir
+Selected: ././t10
+0/0/3
 ---------------------------------------------------
 $ dit -v -d ./ditdir status --verbose
 Using directory: ditdir
@@ -172,3 +212,13 @@ Using directory: ditdir
   Time spent: 4min
   Last logbook entry:
   - 2016-09-10 19:03:23 -0200 ~ 2016-09-10 19:04:43 -0200
+---------------------------------------------------
+$ dit -v -d ./ditdir status --id-only
+Using directory: ditdir
+0/0/3
+4/1/0
+4/0/0
+3/0/0
+0/0/2
+0/0/1
+0/0/0
