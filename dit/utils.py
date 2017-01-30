@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from tzlocal import get_localzone
 
-from .exceptions import ArgumentException
+from .exceptions import ArgumentError
 
 # Auxiliary
 
@@ -116,7 +116,7 @@ def interpret_date(string):
             dt += timedelta(minutes=int(minutes_m.group('minutes')))
         return dt
 
-    raise ArgumentException('Unrecognized date/time string: %s' % string)
+    raise ArgumentError('Unrecognized date/time string: %s' % string)
 
 
 def apply_filter_where(data, where):

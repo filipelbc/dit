@@ -2,5 +2,5 @@
 
 ./ditcmd rebuild-index
 
-./step cat ditdir/INDEX
+./step cat ditdir/.index
 echo ''

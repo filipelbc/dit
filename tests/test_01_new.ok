@@ -93,7 +93,7 @@ $ find './ditdir' -type f | sort
 ./ditdir/g5/g6/t8
 ./ditdir/g5/t6
 ./ditdir/g5/t9
-./ditdir/INDEX
+./ditdir/.index
 ./ditdir/t1
 ./ditdir/t10
 ./ditdir/t4

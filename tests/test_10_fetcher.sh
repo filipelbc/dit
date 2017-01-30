@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
+fetcher_fn=.fetcher
+
 setup_fetcher(){
-    cat test_10_fetcher.script > ./ditdir/g5/_data_fetcher
-    chmod +x ./ditdir/g5/_data_fetcher
+    cat test_10_fetcher.script > ./ditdir/g5/$fetcher_fn
+    chmod +x ./ditdir/g5/$fetcher_fn
 
-    cat test_10_fetcher.script_bad > ./ditdir/g1/_data_fetcher
-    chmod +x ./ditdir/g1/_data_fetcher
+    cat test_10_fetcher.script_bad > ./ditdir/g1/$fetcher_fn
+    chmod +x ./ditdir/g1/$fetcher_fn
 
-    echo '#!/usr/bin/env bash' > ./ditdir/g4/_data_fetcher
-    chmod +x ./ditdir/g4/_data_fetcher
+    echo '#!/usr/bin/env bash' > ./ditdir/g4/$fetcher_fn
+    chmod +x ./ditdir/g4/$fetcher_fn
 }
 
 echo '---------------------------------------------------'

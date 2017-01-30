@@ -86,13 +86,11 @@ def _selection(cmd, cmd_info, directory, selection):
     from dit.index import Index
     index = Index()
     index.load(path)
-    if not index.data:
-        return ""
 
     select = cmd_info[cmd]['select']
 
     if select in [SELECT_FORWARD, SELECT_BACKWARD]:
-        return _gname(index.data, names)
+        return _gname(index, names)
     else:
         return ""
 

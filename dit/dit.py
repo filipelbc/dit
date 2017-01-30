@@ -202,36 +202,40 @@ from tempfile import gettempdir
 
 from . import messages as msg
 
-from .exceptions import (DitException,
-                         ArgumentException,
-                         NoTaskSpecifiedCondition,
-                         SubprocessException)
+from .exceptions import (
+    DitError,
+    ArgumentError,
+    NoTaskSpecifiedError,
+    SubprocessError,
+    maybe_raise_unrecognized_argument,
+)
 from .utils import now_str, interpret_date
 
 from .common import (
+    CURRENT,
+    CURRENT_FN,
+    FETCHER_FN,
+    HOOKS_DIR,
+    PREVIOUS,
+    PREVIOUS_FN,
+    ROOT_NAME,
     SELECT_BACKWARD,
     SELECT_FORWARD,
-    INDEX_FN,
     discover_base_path,
+    is_valid_task_name,
     load_json_file,
-    save_json_file,
     names_to_string,
-    selector_split,
     path_to_string,
+    save_json_file,
+    selector_split,
 )
+
+from .index import Index
 
 # ===========================================
 # Constants
 
-CURRENT_FN = "CURRENT"
-PREVIOUS_FN = "PREVIOUS"
-HOOKS_DIR = "HOOKS"
-FETCHER_FN = "_data_fetcher"
-
-PROHIBITED_FNS = [CURRENT_FN, PREVIOUS_FN, INDEX_FN, HOOKS_DIR]
-
 COMMENT_CHAR = "#"
-ROOT_NAME = ""
 
 # ===========================================
 # Enumerators
@@ -274,9 +278,9 @@ def load_plugin(plugin_name):
     internal = "dit.%s" % plugin_name
     if find_spec(internal):
         return import_module(internal)
-    raise DitException("Plugin module not found: %s "
-                       "Your dit installation might be corrupt."
-                       % plugin_name)
+    raise DitError("Plugin module not found: %s "
+                   "Your dit installation might be corrupt."
+                   % plugin_name)
 
 # ===========================================
 # Command decorator
@@ -337,7 +341,7 @@ GNAME_SELECTOR = "gname"
 def selector_to_tuple(string, kind=NAME_SELECTOR):
     sel = selector_split(string)
     if len(sel) > 3:
-        raise DitException("Invalid <%s> format." % kind)
+        raise DitError("Invalid <%s> format." % kind)
     if kind in [ID_SELECTOR, NAME_SELECTOR]:
         sel = [None] * (3 - len(sel)) + sel
     else:
@@ -376,7 +380,7 @@ def prompt(header, initial=None, extension='txt'):
             try:
                 run_subprocess([editor, input_fp], check=True)
             except subprocess.CalledProcessError:
-                raise SubprocessException("%s %s" % (editor, input_fp))
+                raise SubprocessError("%s %s" % (editor, input_fp))
             with open(input_fp, 'r') as f:
                 lines = [line for line in f.readlines()
                          if not line.startswith(COMMENT_CHAR)]
@@ -385,16 +389,12 @@ def prompt(header, initial=None, extension='txt'):
         elif not initial:
             return input(header + ': ').strip()
         else:
-            raise DitException("Could not find the text editor to use.")
+            raise DitError("Could not find the text editor to use.")
     else:
-        raise DitException('Cannot prompt while not running interactively.')
+        raise DitError('Cannot prompt while not running interactively.')
 
 # ===========================================
 # Task Verification
-
-
-def is_valid_task_name(name):
-    return len(name) > 0 and name[0].isalpha() and name not in PROHIBITED_FNS
 
 
 def is_valid_group_name(name):
@@ -553,7 +553,7 @@ class Dit:
 
     previous_stack = []
 
-    index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
+    index = Index()
 
     base_path = None
     exporter = None
@@ -573,9 +573,6 @@ class Dit:
     def _previous_path(self):
         return os.path.join(self.base_path, PREVIOUS_FN)
 
-    def _index_path(self):
-        return os.path.join(self.base_path, INDEX_FN)
-
     def _hook_path(self, hook):
         return os.path.join(self.base_path, HOOKS_DIR, hook)
 
@@ -593,12 +590,12 @@ class Dit:
     def _raise_task_exists(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
         if os.path.exists(path):
-            raise DitException("Task already exists: %s" % path)
+            raise DitError("Task already exists: %s" % path)
 
     def _get_task_path(self, group, subgroup, task):
         path = os.path.join(self.base_path, group, subgroup, task)
         if not os.path.isfile(path):
-            raise DitException("No such task file: %s" % path)
+            raise DitError("No such task file: %s" % path)
         return path
 
     def _make_task_path(self, group, subgroup, task):
@@ -621,8 +618,8 @@ class Dit:
         task_fp = self._get_task_path(group, subgroup, task)
         data = load_json_file(task_fp)
         if not is_valid_task_data(data):
-            raise DitException("Task file contains invalid data: %s"
-                               % task_fp)
+            raise DitError("Task file contains invalid data: %s"
+                           % task_fp)
         return data
 
     def _save_task(self, group, subgroup, task, data):
@@ -635,8 +632,8 @@ class Dit:
         task_fp = self._make_task_path(group, subgroup, task)
         data['created_at'] = now_str()
         save_json_file(task_fp, data)
-        self._add_to_index(group, subgroup, task)
-        self._save_index()
+        self.index.add(group, subgroup, task)
+        self.index.save()
 
     # Current Task
 
@@ -668,7 +665,7 @@ class Dit:
         }
         save_json_file(self._current_path(), current_data)
         msg.verbose("%s saved: %s%s"
-                    % (CURRENT_FN,
+                    % (CURRENT,
                        _(self.current_group,
                          self.current_subgroup,
                          self.current_task),
@@ -706,92 +703,12 @@ class Dit:
         save_json_file(self._previous_path(), self.previous_stack)
         l = len(self.previous_stack)
         msg.verbose("%s saved. It has %d task%s now."
-                    % (PREVIOUS_FN, l, "s" if l != 1 else ""))
+                    % (PREVIOUS, l, "s" if l != 1 else ""))
 
     def _load_previous(self):
         previous = load_json_file(self._previous_path())
         if previous is not None:
             self.previous_stack = previous
-
-    # ===========================================
-    # Index
-
-    def _add_to_index(self, group, subgroup, task):
-        group_id = -1
-        for i in range(len(self.index)):
-            if self.index[i][0] == group:
-                group_id = i
-                break
-        if group_id == -1:
-            group_id = len(self.index)
-            self.index.append([group, [[ROOT_NAME, []]]])
-
-        subgroup_id = -1
-        for i in range(len(self.index[group_id][1])):
-            if self.index[group_id][1][i][0] == subgroup:
-                subgroup_id = i
-                break
-        if subgroup_id == -1:
-            subgroup_id = len(self.index[group_id][1])
-            self.index[group_id][1].append([subgroup, []])
-
-        self.index[group_id][1][subgroup_id][1].append(task)
-
-    def _remove_from_index(self, group, subgroup, task):
-        for g in self.index:
-            if g[0] == group:
-                for s in g[1]:
-                    if s[0] == subgroup:
-                        for k, t in enumerate(s[1]):
-                            if t == task:
-                                s[1][k] = ""
-                                break
-                        break
-                break
-
-    def _save_index(self):
-        save_json_file(self._index_path(), self.index)
-        msg.verbose("%s saved." % INDEX_FN)
-
-    def _load_index(self):
-        index_fp = self._index_path()
-        index = load_json_file(index_fp)
-        if index is not None:
-            self.index = index
-
-    def _rebuild_index(self):
-        self.index = [[ROOT_NAME, [[ROOT_NAME, []]]]]
-        c_group = ROOT_NAME
-        c_subgroup = ROOT_NAME
-        for root, dirs, files in os.walk(self.base_path):
-            dirs.sort()
-            for f in sorted(files):
-                if not is_valid_task_name(f):
-                    continue
-                p = root[len(self.base_path) + 1:].split(os.sep)
-
-                p = [i for i in p if i]
-                if len(p) == 0:
-                    group, subgroup = ROOT_NAME, ROOT_NAME
-                elif len(p) == 1:
-                    group, subgroup = p[0], ROOT_NAME
-                elif len(p) == 2:
-                    group, subgroup = p
-                else:
-                    continue
-
-                if group != c_group:
-                    c_group = group
-                    c_subgroup = ROOT_NAME
-                    self.index.append([group, [[ROOT_NAME, []]]])
-
-                if subgroup != c_subgroup:
-                    c_subgroup = subgroup
-                    self.index[-1][1].append([subgroup, []])
-
-                self.index[-1][1][-1][1].append(f)
-
-        msg.verbose("%s rebuilt." % INDEX_FN)
 
     # ===========================================
     # Export
@@ -883,35 +800,9 @@ class Dit:
                         break
         return group_idx, subgroup_idx
 
-    @staticmethod
-    def _idxs_to_names(idxs, index):
-        if len(idxs) < 3:
-            raise DitException("Invalid index format.")
-
-        names = [None] * 3
-
-        try:
-            for i, idx in enumerate(idxs):
-                if idx is None:  # we can no longer navigate the index; stop
-                    break
-                idx = int(idx)
-                if i < 2:                     # its a group or subgroup
-                    names[i] = index[idx][0]
-                    index = index[idx][1]     # navigate the index further
-                else:                         # its a task
-                    names[i] = index[idx]
-
-        except ValueError:
-            raise DitException("Invalid index format, must be an integer: %s"
-                               % idx)
-        except IndexError:
-            raise DitException("Invalid index: %d" % idx)
-
-        return names
-
     def _gid_parser(self, string):
         idxs = selector_to_tuple(string, GID_SELECTOR)
-        return self._idxs_to_names(idxs, self.index)
+        return self.index.idxs_to_names(idxs)
 
     def _id_parser(self, string):
         idxs = selector_to_tuple(string, ID_SELECTOR)
@@ -923,16 +814,16 @@ class Dit:
         if idxs[1] is None:
             idxs[1] = subgroup_idx
 
-        return self._idxs_to_names(idxs, self.index)
+        return self.index.idxs_to_names(idxs)
 
     def _gname_parser(self, string):
         (group, subgroup, task) = selector_to_tuple(string, GNAME_SELECTOR)
 
         for name in [group, subgroup]:
             if name and not is_valid_group_name(name):
-                raise DitException("Invalid group name: %s" % name)
+                raise DitError("Invalid group name: %s" % name)
         if task and not is_valid_task_name(task):
-            raise DitException("Invalid task name: %s" % task)
+            raise DitError("Invalid task name: %s" % task)
 
         if group == ROOT_NAME and subgroup:
             group, subgroup = subgroup, (ROOT_NAME if task else None)
@@ -956,9 +847,9 @@ class Dit:
 
         for name in [group, subgroup]:
             if not is_valid_group_name(name):
-                raise DitException("Invalid group name: %s" % name)
+                raise DitError("Invalid group name: %s" % name)
         if not is_valid_task_name(task):
-            raise DitException("Invalid task name: %s" % task)
+            raise DitError("Invalid task name: %s" % task)
 
         if group == ROOT_NAME and subgroup:
             group, subgroup = subgroup, group
@@ -971,10 +862,10 @@ class Dit:
         if len(argv) > 0 and not argv[0].startswith("-"):
             selection = argv.pop(0)
 
-            if selection == CURRENT_FN:
+            if selection == CURRENT:
                 task = self.current_task
 
-            elif selection == PREVIOUS_FN:
+            elif selection == PREVIOUS:
                 (group, subgroup, task) = self._previous_peek()
 
             elif selection[0].isdigit():
@@ -985,16 +876,16 @@ class Dit:
 
         msg_selected(group, subgroup, task)
         if not task and throw:
-            raise NoTaskSpecifiedCondition("No task specified.")
+            raise NoTaskSpecifiedError("No task specified.")
         return (group, subgroup, task)
 
     def _forward_parser(self, argv):
         selection = argv.pop(0)
 
-        if selection == CURRENT_FN:
+        if selection == CURRENT:
             (group, subgroup, task) = self._get_current()
 
-        elif selection == PREVIOUS_FN:
+        elif selection == PREVIOUS:
             (group, subgroup, task) = self._previous_peek()
 
         elif selection[0].isdigit():
@@ -1004,11 +895,6 @@ class Dit:
             (group, subgroup, task) = self._gname_parser(selection)
 
         return (group, subgroup, task)
-
-    @staticmethod
-    def _raise_unrecognized_argument(argv):
-        if len(argv) > 0:
-            raise ArgumentException("Unrecognized argument: %s" % argv[0])
 
     # ===========================================
     # Hooks
@@ -1022,13 +908,13 @@ class Dit:
                     run_subprocess([hook_fp, self.base_path, cmd_name],
                                    check=CHECK_HOOKS)
                 except subprocess.CalledProcessError:
-                    raise SubprocessException(hook_fp)
+                    raise SubprocessError(hook_fp)
 
     def _fetch_data_for(self, group, subgroup, task):
         fetcher_fp = self._plugin_path(FETCHER_FN, group, subgroup)
         if not fetcher_fp:
-            raise DitException("Data fetcher script `%s` not found."
-                               % FETCHER_FN)
+            raise DitError("Data fetcher script `%s` not found."
+                           % FETCHER_FN)
         else:
             msg.verbose("Fetching data with `%s`." % fetcher_fp)
 
@@ -1039,15 +925,15 @@ class Dit:
                 fetcher_fp, self.base_path, _(group), _(subgroup), _(task)
             ], check=True)
         except subprocess.CalledProcessError:
-            raise SubprocessException(fetcher_fp)
+            raise SubprocessError(fetcher_fp)
 
         if not os.path.isfile(fetch_fp):
-            raise DitException("`%s` not found: it seems no data was fetched."
-                               % fetch_fp)
+            raise DitError("`%s` not found: it seems no data was fetched."
+                           % fetch_fp)
 
         data = load_json_file(fetch_fp)
         if not is_valid_task_data(data):
-            raise DitException("Fetched data is invalid: %s" % fetch_fp)
+            raise DitError("Fetched data is invalid: %s" % fetch_fp)
         os.remove(fetch_fp)
         return data
 
@@ -1064,10 +950,10 @@ class Dit:
             if opt in ["--fetch", "-f"]:
                 fetch = True
             else:
-                raise ArgumentException("No such option: %s" % opt)
+                raise ArgumentError("No such option: %s" % opt)
 
         if len(argv) < 1:
-            raise ArgumentException("Missing argument.")
+            raise ArgumentError("Missing argument.")
         (group, subgroup, task) = self._name_parser(argv.pop(0))
         msg_selected(group, subgroup, task)
 
@@ -1076,9 +962,9 @@ class Dit:
             if opt in ["-:", "--:"]:
                 title = argv.pop(0)
             else:
-                raise ArgumentException("No such option: %s" % opt)
+                raise ArgumentError("No such option: %s" % opt)
 
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
         self._raise_task_exists(group, subgroup, task)
 
         data = NEW_TASK_DATA
@@ -1097,7 +983,7 @@ class Dit:
     @command("w", ["--new"], SELECT_BACKWARD)
     def workon(self, argv):
         if len(argv) < 1:
-            raise ArgumentException("Missing argument.")
+            raise ArgumentError("Missing argument.")
 
         if not self.current_halted:
             msg.normal("Nothing to do: already working on a task.")
@@ -1108,7 +994,7 @@ class Dit:
             (group, subgroup, task) = self.new(argv)
         else:
             (group, subgroup, task) = self._backward_parser(argv)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         data = self._load_task_data(group, subgroup, task)
 
@@ -1136,11 +1022,11 @@ class Dit:
     @command("h")
     def halt(self, argv, conclude=False, cancel=False):
         if conclude:
-            (group, subgroup, task) = self._backward_parser(argv or [CURRENT_FN], throw=False)
-            self._raise_unrecognized_argument(argv)
+            (group, subgroup, task) = self._backward_parser(argv or [CURRENT], throw=False)
+            maybe_raise_unrecognized_argument(argv)
         else:
-            self._raise_unrecognized_argument(argv)
-            (group, subgroup, task) = self._backward_parser([CURRENT_FN], throw=False)
+            maybe_raise_unrecognized_argument(argv)
+            (group, subgroup, task) = self._backward_parser([CURRENT], throw=False)
 
         if not task:
             msg.normal('Nothing to do: %s.' % ("no task selected" if conclude
@@ -1186,11 +1072,11 @@ class Dit:
 
     @command("a")
     def append(self, argv):
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         try:
-            (group, subgroup, task) = self._backward_parser([CURRENT_FN])
-        except NoTaskSpecifiedCondition:
+            (group, subgroup, task) = self._backward_parser([CURRENT])
+        except NoTaskSpecifiedError:
             msg.normal('Nothing to do: no current task.')
             return
 
@@ -1209,13 +1095,13 @@ class Dit:
 
     @command("x")
     def cancel(self, argv):
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
         self.halt([], cancel=True)
 
     @command("r")
     def resume(self, argv):
-        self._raise_unrecognized_argument(argv)
-        self.workon([CURRENT_FN])
+        maybe_raise_unrecognized_argument(argv)
+        self.workon([CURRENT])
 
     @command("s", ["--new"], SELECT_BACKWARD)
     def switchto(self, argv):
@@ -1224,12 +1110,12 @@ class Dit:
 
     @command("b")
     def switchback(self, argv):
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
         if self._previous_empty():
             msg.normal("Nothing to do: no previous task.")
         else:
             self.halt([])
-            self.workon([PREVIOUS_FN])
+            self.workon([PREVIOUS])
 
     @command("c", select=SELECT_BACKWARD)
     def conclude(self, argv):
@@ -1256,8 +1142,8 @@ class Dit:
             elif opt in ["--where", "-w"]:
                 filters["where"] = [argv.pop(0), re.compile(argv.pop(0))]
             else:
-                raise ArgumentException("No such option: %s" % opt)
-        self._raise_unrecognized_argument(argv)
+                raise ArgumentError("No such option: %s" % opt)
+        maybe_raise_unrecognized_argument(argv)
 
         if filters:
             options['filters'] = filters
@@ -1315,11 +1201,11 @@ class Dit:
             elif opt in ["--format", "-f"] and not listing:
                 output_format = argv.pop(0)
             else:
-                raise ArgumentException("No such option: %s" % opt)
+                raise ArgumentError("No such option: %s" % opt)
         if len(argv) > 0:
             (group, subgroup, task) = self._forward_parser(argv)
         msg_selected(group, subgroup, task)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         if task:
             options['concluded'] = True
@@ -1344,7 +1230,7 @@ class Dit:
             self._export_all()
         elif task:
             if not self._export_task(group, subgroup, task):
-                raise DitException('Task not found in index.')
+                raise DitError('Task not found in index.')
         elif subgroup is not None:
             self._export_subgroup(group, subgroup)
         elif group is not None:
@@ -1360,7 +1246,7 @@ class Dit:
     @command("f", [], SELECT_BACKWARD)
     def fetch(self, argv):
         (group, subgroup, task) = self._backward_parser(argv)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         fetched_data = self._fetch_data_for(group, subgroup, task)
         if not fetched_data:
@@ -1380,10 +1266,10 @@ class Dit:
             if opt in ["--fetch", "-f"]:
                 fetch = True
             else:
-                raise ArgumentException("No such option: %s" % opt)
+                raise ArgumentError("No such option: %s" % opt)
         (from_group, from_subgroup, from_task) = self._name_parser(argv.pop(0))
         (to_group, to_subgroup, to_task) = self._name_parser(argv.pop(0))
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
         self._raise_task_exists(to_group, to_subgroup, to_task)
 
         from_fp = os.path.join(self.base_path, from_group, from_subgroup, from_task)
@@ -1410,8 +1296,8 @@ class Dit:
                 break
 
         # clean INDEX
-        self._remove_from_index(from_group, from_subgroup, from_task)
-        self._save_index()
+        self.index.remove(from_group, from_subgroup, from_task)
+        self.index.save()
 
         if fetch:
             self.fetch([to_selector])
@@ -1424,7 +1310,7 @@ class Dit:
         if len(argv) > 0 and argv[0] in ["-:", "--:"]:
             argv.pop(0)
             note_text = argv.pop(0)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         if note_text is None:
             note_text = prompt("New note")
@@ -1450,7 +1336,7 @@ class Dit:
                 prop_value = argv.pop(0)
             else:
                 prop_value = prompt("Value for property: %s" % prop_name)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         if prop_name is None:
             prop = prompt("Name and Value for property").split('\n', 1)
@@ -1470,7 +1356,7 @@ class Dit:
     @command("e", [], SELECT_BACKWARD)
     def edit(self, argv):
         (group, subgroup, task) = self._backward_parser(argv)
-        self._raise_unrecognized_argument(argv)
+        maybe_raise_unrecognized_argument(argv)
 
         data_pretty = json.dumps(self._load_task_data(group, subgroup, task),
                                  indent=4)
@@ -1489,9 +1375,9 @@ class Dit:
 
     @command()
     def rebuild_index(self, argv):
-        self._raise_unrecognized_argument(argv)
-        self._rebuild_index()
-        self._save_index()
+        maybe_raise_unrecognized_argument(argv)
+        self.index.rebuild()
+        self.index.save()
 
     # ===========================================
     # Main
@@ -1515,22 +1401,21 @@ class Dit:
                 msg.normal(__doc__)
                 return
             else:
-                raise ArgumentException("No such option: %s" % opt)
+                raise ArgumentError("No such option: %s" % opt)
 
         self._setup_base_path(directory)
 
         if len(argv) == 0:
-            raise ArgumentException("Missing command.")
+            raise ArgumentError("Missing command.")
 
         cmd = argv.pop(0)
         if cmd not in COMMAND_INFO:
-            raise ArgumentException("No such command: %s" % cmd)
+            raise ArgumentError("No such command: %s" % cmd)
 
         readonly_cmd = COMMAND_INFO[cmd]["readonly"]
         cmd_name = COMMAND_INFO[cmd]['name']
 
         self._call_hook("before", cmd_name)
-
         if readonly_cmd:
             self._call_hook("before_read", cmd_name)
         else:
@@ -1538,14 +1423,13 @@ class Dit:
 
         self._load_current()
         self._load_previous()
-        self._load_index()
+        self.index.load(self.base_path)
         getattr(self, cmd_name)(argv)
 
         if readonly_cmd:
             self._call_hook("after_read", cmd_name)
         else:
             self._call_hook("after_write", cmd_name)
-
         self._call_hook("after", cmd_name)
 
 # ===========================================
@@ -1554,16 +1438,17 @@ class Dit:
 
 def interpret(argv):
     try:
-        Dit().interpret(argv)
-    except DitException as err:
+        dit = Dit()
+        dit.interpret(argv)
+    except DitError as err:
         msg.error(err)
+    except SubprocessError as err:
+        msg.error("`%s` returned with non-zero code, aborting." % err)
     except IndexError as err:
         # this was probably caused by a pop on an empty argument list
         msg.error("Missing argument.")
     except json.decoder.JSONDecodeError:
         msg.error("Invalid JSON.")
-    except SubprocessException as err:
-        msg.error("`%s` returned with non-zero code, aborting." % err)
     except re.error as err:
         # this was probably caused by a bad regex in the --where filter
         msg.error("Bad regular expression: %s" % err)
