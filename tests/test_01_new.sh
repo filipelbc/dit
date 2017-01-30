@@ -12,9 +12,7 @@
 ./ditcmd new t10 -: 'Group . Subgroup . Task t10'
 
 ./ditcmd new ././t7 -: '. . t7, fails: already exists'
-./ditcmd new _foo -: 'fails: invalid task name'
 ./ditcmd new .foo -: 'fails: invalid task name'
-./ditcmd new _foo/bar -: 'fails: invalid group name'
 ./ditcmd new .foo/bar -: 'fails: invalid group name'
 
 ./list

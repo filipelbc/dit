@@ -112,4 +112,4 @@ def discover_base_path(directory):
 
 
 def is_valid_task_name(name):
-    return len(name) > 0 and name[0].isalpha() and name not in PROHIBITED_NAMES
+    return not (len(name) == 0 or name.startswith('.') or name in PROHIBITED_NAMES)

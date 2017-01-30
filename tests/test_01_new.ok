@@ -70,17 +70,9 @@ Using directory: ditdir
 Selected: ././t7
 ERROR: Task already exists: ./ditdir/t7
 ---------------------------------------------------
-$ dit -v -d ./ditdir new _foo -: 'fails: invalid task name'
-Using directory: ditdir
-ERROR: Invalid task name: _foo
----------------------------------------------------
 $ dit -v -d ./ditdir new .foo -: 'fails: invalid task name'
 Using directory: ditdir
 ERROR: Invalid task name: .foo
----------------------------------------------------
-$ dit -v -d ./ditdir new _foo/bar -: 'fails: invalid group name'
-Using directory: ditdir
-ERROR: Invalid group name: _foo
 ---------------------------------------------------
 $ dit -v -d ./ditdir new .foo/bar -: 'fails: invalid group name'
 Using directory: ditdir
