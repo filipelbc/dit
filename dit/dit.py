@@ -289,6 +289,7 @@ COMMAND_INFO = {}
 
 FILTER_OPTIONS = [
     "--verbose",
+    "--id-only",
     "--sum",
     "--from",
     "--to",
@@ -1133,6 +1134,8 @@ class Dit:
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 options['verbose'] = True
+            elif opt in ["--id-only", "-i"]:
+                options['id-only'] = True
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
@@ -1182,6 +1185,8 @@ class Dit:
             opt = argv.pop(0)
             if opt in ["--verbose", "-v"]:
                 options['verbose'] = True
+            elif opt in ["--id-only", "-i"]:
+                options['id-only'] = True
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:

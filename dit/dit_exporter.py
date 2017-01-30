@@ -12,6 +12,7 @@ _file = None
 _isatty = False
 _options = {
     'verbose': False,
+    'id-only': False,
     'concluded': False,
     'statussing': False,
     'compact_header': False,
@@ -111,6 +112,7 @@ def subgroup(group, group_id, subgroup, subgroup_id):
 def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # options
     verbose = _options['verbose']
+    id_only = _options['id-only']
     concluded = _options['concluded']
     statussing = _options['statussing']
     filters = _options['filters']
@@ -121,6 +123,10 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # data preprocessor
     data = apply_filters(convert_datetimes(data), filters)
     if not data:
+        return
+
+    if id_only:
+        _write('%s/%s/%s' % (group_id, subgroup_id, task_id))
         return
 
     created_at = data.get('created_at')
