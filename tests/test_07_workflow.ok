@@ -23,7 +23,7 @@ Selected: ./_/_
   - This is a simple note.
   Created at: 2016-09-10 18:57:23 -0200
   Updated at: 2016-09-10 19:36:03 -0200
-  Time spent: 4min
+  Time spent: 9min 20s
   Logbook:
   - 2016-09-10 19:08:03 -0200 ~ 2016-09-10 19:09:23 -0200
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
@@ -49,7 +49,7 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/1] ././t10
   Group . Subgroup . Task t10
-  Spent 4min. Clocked in at 2016-09-10 19:32:43 -0200.
+  Spent 9min 20s. Clocked in at 2016-09-10 19:32:43 -0200.
 [4/1/0] g5/g6/t8
   Group g5 Subgroup g6 Task t8
   Spent 1min 20s. Clocked out at 2016-09-10 19:31:23 -0200.
@@ -187,7 +187,7 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/0] ././t1
   Group . Subgroup . Task t1
-  Spent 5min 20s. Clocked in at 2016-09-10 19:56:43 -0200.
+  Spent 6min 40s. Clocked in at 2016-09-10 19:56:43 -0200.
 [0/0/2] ././t4
   Group . Subgroup . Task t4
   Spent 8min 40s. Clocked out at 2016-09-10 19:50:43 -0200.
@@ -316,7 +316,7 @@ Using directory: ditdir
 Selected: _/_/_
 [0/0/3] t7
   Group . Subgroup . Task t7
-  Time spent: 1min 20s
+  Time spent: 2min 40s
   Last logbook entries:
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
   - 2016-09-10 20:16:43 -0200
@@ -336,7 +336,7 @@ Using directory: ditdir
 Selected: ././t7
 [0/0/3] t7
   Group . Subgroup . Task t7
-  Time spent: 1min 20s
+  Time spent: 2min 40s
   Last logbook entries:
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
   - 2016-09-10 20:16:43 -0200
@@ -394,7 +394,7 @@ Selected: ./_/_
   Group . Subgroup . Task t7
   Created at: 2016-09-10 18:55:23 -0200
   Updated at: 2016-09-10 20:17:23 -0200
-  Time spent: 1min 20s
+  Time spent: 2min 40s
   Logbook:
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
   - 2016-09-10 20:16:43 -0200
@@ -403,4 +403,4 @@ $ dit -v -d ./ditdir status
 Using directory: ditdir
 [0/0/3] ././t7
   Group . Subgroup . Task t7
-  Spent 1min 20s. Clocked in at 2016-09-10 20:16:43 -0200.
+  Spent 2min 40s. Clocked in at 2016-09-10 20:16:43 -0200.
