@@ -975,6 +975,10 @@ class Dit:
         if not data.get('title'):
             data['title'] = title or prompt('Task title')
 
+        if not data.get('title'):
+            msg.normal("Operation cancelled.")
+            return None
+
         self._create_task(group, subgroup, task, data)
         msg.normal("Created: %s" % _(group, subgroup, task))
 
@@ -991,7 +995,10 @@ class Dit:
 
         if argv[0] in ["--new", "-n"]:
             argv.pop(0)
-            (group, subgroup, task) = self.new(argv)
+            task_tuple = self.new(argv)
+            if not task_tuple:
+                return
+            (group, subgroup, task) = task_tuple
         else:
             (group, subgroup, task) = self._backward_parser(argv)
         maybe_raise_unrecognized_argument(argv)
