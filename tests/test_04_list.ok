@@ -22,7 +22,7 @@ Selected: ././_
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
 [0/0/3] t10
   Group . Subgroup . Task t10
-  Time spent: 4min
+  Time spent: 5min 20s
   Last logbook entries:
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
@@ -51,7 +51,7 @@ Selected: ././_
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
 [0/0/3] t10
   Group . Subgroup . Task t10
-  Time spent: 4min
+  Time spent: 5min 20s
   Last logbook entries:
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
@@ -107,7 +107,7 @@ Selected: ././_
   - 2016-09-10 19:22:03 -0200 ~ 2016-09-10 19:23:23 -0200
 [0/0/3] t10
   Group . Subgroup . Task t10
-  Time spent: 4min
+  Time spent: 5min 20s
   Last logbook entries:
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
@@ -129,7 +129,7 @@ Using directory: ditdir
 Selected: ././t10
 [0/0/3] t10
   Group . Subgroup . Task t10
-  Time spent: 4min
+  Time spent: 5min 20s
   Last logbook entries:
   - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
   - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
@@ -139,7 +139,7 @@ $ dit -v -d ./ditdir status --verbose
 Using directory: ditdir
 [0/0/3] ././t10
   Group . Subgroup . Task t10
-  Time spent: 4min
+  Time spent: 5min 20s
   Last logbook entry:
   - 2016-09-10 19:32:43 -0200
 [4/1/0] g5/g6/t8

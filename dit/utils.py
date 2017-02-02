@@ -44,12 +44,12 @@ if os.path.isfile('DIT_TESTING'):
 
     _base_now = datetime(2016, 9, 10, 18, 50, 43, 0, LOCALZONE)
 
-    def now():
+    def now(inc=1):
         with open('DIT_TESTING', 'r') as f:
             i = int(f.read())
         now = _base_now + timedelta(seconds=(i * 40))
         with open('DIT_TESTING', 'w') as f:
-            f.write(str(i + 1))
+            f.write(str(i + inc))
         return now
 
 else:
@@ -59,7 +59,7 @@ else:
                                             second=0,
                                             microsecond=0)
 
-    def now():
+    def now(**kwargs):
         return datetime.now(LOCALZONE)
 
 
@@ -72,6 +72,9 @@ def time_spent_on(logbook):
     for log in logbook:
         if log['out']:
             time_spent += log['out'] - log['in']
+        else:
+            time_spent += now(inc=0) - log['in']
+
     return time_spent
 
 
