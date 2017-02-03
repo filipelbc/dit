@@ -1226,16 +1226,17 @@ class Dit:
             options['filters'] = filters
 
         if output_file in [None, "stdout"]:
-            file = sys.stdout
-            output_format = output_format or 'dit'
+            exporter_stdout = sys.stdout
         else:
-            file = open(output_file, 'w')
+            exporter_stdout = open(output_file, 'w')
             if not output_format:
                 __, ext = os.path.splitext(output_file)
-                output_format = output_format or ext[1:]
+                output_format = ext[1:]
+
+        output_format = output_format or 'dit'
 
         self.exporter = load_plugin("%s_exporter" % output_format)
-        self.exporter.setup(file, options)
+        self.exporter.setup(exporter_stdout, options)
         self.exporter.begin()
 
         if all:
@@ -1253,7 +1254,7 @@ class Dit:
         self.exporter.end()
 
         if output_file not in [None, "stdout"]:
-            file.close()
+            exporter_stdout.close()
 
     @command("f", [], SELECT_BACKWARD)
     def fetch(self, argv):
