@@ -125,19 +125,11 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     if not data:
         return
 
+    # write
     if id_only:
         _write('%s/%s/%s' % (group_id, subgroup_id, task_id))
         return
 
-    created_at = data.get('created_at')
-    updated_at = data.get('updated_at')
-    concluded_at = data.get('concluded_at')
-    title = data.get('title')
-    notes = data.get('notes', [])
-    properties = data.get('properties', {})
-    logbook = data.get('logbook', [])
-
-    # write
     if _options.get('compact_header'):
         _write(_ca('[%s/%s/%s]' % (group_id, subgroup_id, task_id)) + ' ' +
                _cc(names_to_string(group, subgroup, task)))
@@ -150,6 +142,14 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
             _write(_subgroup_string)
             _subgroup_string = None
         _write(_cc('[%s/%s/%s] %s' % (group_id, subgroup_id, task_id, task)))
+
+    created_at = data.get('created_at')
+    updated_at = data.get('updated_at')
+    concluded_at = data.get('concluded_at')
+    title = data.get('title')
+    notes = data.get('notes', [])
+    properties = data.get('properties', {})
+    logbook = data.get('logbook', [])
 
     if title:
         _write('  %s' % _cd(title))
