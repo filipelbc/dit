@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import io
+import sys
+import subprocess
 from datetime import timedelta
 
 from .dit import names_to_string
@@ -10,6 +13,7 @@ from .utils import (dt2str, td2str,
 
 _file = None
 _isatty = False
+_pager = None
 _options = {
     'verbose': False,
     'concluded': False,
@@ -87,13 +91,21 @@ def setup(file, options):
 
 
 def begin():
-    pass
+    if _isatty:
+        global _pager
+        global _file
+        _pager = subprocess.Popen(['less', '-F', '-R', '-S', '-X', '-K'],
+                                  stdin=subprocess.PIPE, stdout=sys.stdout)
+        _file = io.TextIOWrapper(_pager.stdin, 'UTF-8')
 
 
 def end():
     if _options['sum']:
         _write('\n%s %s' % (_cf("Overall time spent:"),
                             td2str(_overall_time_spent)))
+    if _isatty:
+        _file.close()
+        _pager.wait()
 
 
 def group(group, group_id):
