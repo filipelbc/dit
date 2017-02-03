@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Version 0.7
+Version 0.7.2
 
 Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
