@@ -1,6 +1,7 @@
 .PHONY: install install-completion venv clean
 
 install:
+	pip3 install -r requirements.txt
 	python3 -c 'from dit.completion import _save_command_info; _save_command_info()'
 	python3 setup.py install
 
