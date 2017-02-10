@@ -1,0 +1,47 @@
+---------------------------------------------------
+$ dit -v -d ./ditdir workon --at -1d18h36min ././t10
+Using directory: ditdir
+Selected: ././t10
+Working on: ././t10
+Task saved: ././t10
+PREVIOUS saved. It has 1 task now.
+CURRENT saved: ././t10
+---------------------------------------------------
+$ dit -v -d ./ditdir halt --at -1d19h32min
+Using directory: ditdir
+Selected: ././t10
+Halted: ././t10
+Task saved: ././t10
+CURRENT saved: ././t10 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir conclude --at -1d20h11min
+Using directory: ditdir
+Selected: ././t10
+Concluded: ././t10
+Task saved: ././t10
+PREVIOUS saved. It has 0 tasks now.
+CURRENT saved: g5/g6/t8 (halted)
+---------------------------------------------------
+$ dit -v -d ./ditdir list -v ././t10
+Using directory: ditdir
+Selected: ././t10
+[0/0/1] t10
+  Group . Subgroup . Task t10
+  Properties:
+  - pName: pValue
+  Notes:
+  - This is a simple note.
+  Created at: 2016-09-10 18:57:23 -0200
+  Updated at: 2016-09-10 20:52:03 -0200
+  Concluded at: 2016-09-09 20:11:00 -0200
+  Time spent: 1h 10min 40s
+  Logbook:
+  - 2016-09-10 19:08:03 -0200 ~ 2016-09-10 19:09:23 -0200
+  - 2016-09-10 19:16:03 -0200 ~ 2016-09-10 19:17:23 -0200
+  - 2016-09-10 19:18:43 -0200 ~ 2016-09-10 19:20:03 -0200
+  - 2016-09-10 19:32:43 -0200 ~ 2016-09-10 19:38:03 -0200
+  - 2016-09-10 19:42:03 -0200 ~ 2016-09-10 19:43:23 -0200
+  - 2016-09-10 20:03:23 -0200 ~ 2016-09-10 20:04:43 -0200
+  - 2016-09-10 20:30:03 -0200 ~ 2016-09-10 20:31:23 -0200
+  - 2016-09-10 20:37:23 -0200 ~ 2016-09-10 20:38:43 -0200
+  - 2016-09-09 18:36:00 -0200 ~ 2016-09-09 19:32:00 -0200
