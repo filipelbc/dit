@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 ./ditcmd status
+./ditcmd status --limit 0
+./ditcmd status --limit 3
+
 ./ditcmd conclude
 ./ditcmd conclude
 ./ditcmd conclude

@@ -11,6 +11,24 @@ Using directory: ditdir
   Group . Subgroup . Task t7
   Spent 3min 20s. Clocked out at 2016-09-10 20:18:43 -0200.
 ---------------------------------------------------
+$ dit -v -d ./ditdir status --limit 0
+Using directory: ditdir
+[0/0/1] ././t10
+  Group . Subgroup . Task t10
+  Spent 13min 20s. Clocked out at 2016-09-10 20:31:23 -0200.
+---------------------------------------------------
+$ dit -v -d ./ditdir status --limit 3
+Using directory: ditdir
+[0/0/1] ././t10
+  Group . Subgroup . Task t10
+  Spent 13min 20s. Clocked out at 2016-09-10 20:31:23 -0200.
+[4/2/0] g5/g7/t16
+  The task g5 g6 t15 has fetched data.
+  Spent 5min 20s. Clocked out at 2016-09-10 20:28:43 -0200.
+[0/0/3] ././t7
+  Group . Subgroup . Task t7
+  Spent 3min 20s. Clocked out at 2016-09-10 20:18:43 -0200.
+---------------------------------------------------
 $ dit -v -d ./ditdir conclude
 Using directory: ditdir
 Selected: ././t10
