@@ -33,11 +33,15 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     workon <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
+      --at, -a "date"
+        Use the datetime given by "date" instead of now.
       --new, -n
         Same as "new" followed by "workon".
 
     halt
       Stops clocking the CURRENT task.
+      --at, -a "date"
+        Use the datetime given by "date" instead of now.
 
     append
       Undoes the previous "halt".
@@ -209,7 +213,7 @@ from .exceptions import (
     SubprocessError,
     maybe_raise_unrecognized_argument,
 )
-from .utils import now_str, interpret_date
+from .utils import now_str, interpret_date, dt2str
 
 from .common import (
     CURRENT,
@@ -449,7 +453,7 @@ def state(task_data):
         return State.TODO
 
 
-def data_clock_in(data):
+def data_clock_in(data, at=None):
     logbook = data.get('logbook', [])
     if len(logbook) > 0:
         last = logbook[-1]
@@ -457,7 +461,7 @@ def data_clock_in(data):
             msg.normal("Already clocked in.")
             return
     data.pop('concluded_at', None)
-    data['logbook'] = logbook + [{'in': now_str(), 'out': None}]
+    data['logbook'] = logbook + [{'in': at or now_str(), 'out': None}]
 
 
 def data_clock_append(data):
@@ -472,7 +476,7 @@ def data_clock_append(data):
     last['out'] = None
 
 
-def data_clock_out(data):
+def data_clock_out(data, at=None):
     logbook = data.get('logbook', [])
     if len(logbook) == 0:
         msg.normal("Task has no been clocked yet.")
@@ -481,7 +485,7 @@ def data_clock_out(data):
     if last['out']:
         msg.normal("Already clocked out.")
         return
-    last['out'] = now_str()
+    last['out'] = at or now_str()
     data['logbook'] = logbook
 
 
@@ -498,11 +502,11 @@ def data_clock_cancel(data):
     data['logbook'] = logbook
 
 
-def data_conclude(data):
+def data_conclude(data, at=None):
     if data.get('concluded_at'):
         msg.normal("Already concluded.")
         return
-    data['concluded_at'] = now_str()
+    data['concluded_at'] = at or now_str()
 
 
 def data_add_note(data, note_text):
@@ -985,7 +989,7 @@ class Dit:
 
         return (group, subgroup, task)
 
-    @command("w", ["--new"], SELECT_BACKWARD)
+    @command("w", ["--at", "--new"], SELECT_BACKWARD)
     def workon(self, argv):
         if len(argv) < 1:
             raise ArgumentError("Missing argument.")
@@ -993,6 +997,12 @@ class Dit:
         if not self.current_halted:
             msg.normal("Nothing to do: already working on a task.")
             return
+
+        at = None
+
+        if argv[0] in ["--at", "-a"]:
+            argv.pop(0)
+            at = dt2str(interpret_date(argv.pop(0)))
 
         if argv[0] in ["--new", "-n"]:
             argv.pop(0)
@@ -1017,7 +1027,7 @@ class Dit:
                 self._previous_remove(group, subgroup, task)
                 previous_updated = True
 
-        data_clock_in(data)
+        data_clock_in(data, at)
         msg.normal("Working on: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
@@ -1027,8 +1037,16 @@ class Dit:
         self._set_current(group, subgroup, task)
         self._save_current()
 
-    @command("h")
+    @command("h", ["--at"])
     def halt(self, argv, conclude=False, cancel=False):
+        at = None
+        while len(argv) > 0 and argv[0].startswith("-"):
+            opt = argv.pop(0)
+            if opt in ["--at", "-a"]:
+                at = dt2str(interpret_date(argv.pop(0)))
+            else:
+                raise ArgumentError("No such option: %s" % opt)
+
         if conclude:
             (group, subgroup, task) = self._backward_parser(argv or [CURRENT], throw=False)
             maybe_raise_unrecognized_argument(argv)
@@ -1056,10 +1074,10 @@ class Dit:
             data_clock_cancel(data)
             msg.normal("Canceled: %s" % _(group, subgroup, task))
         elif task_state == State.DOING:
-            data_clock_out(data)
+            data_clock_out(data, at)
             msg.normal("Halted: %s" % _(group, subgroup, task))
         if conclude:
-            data_conclude(data)
+            data_conclude(data, at)
             msg.normal("Concluded: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
