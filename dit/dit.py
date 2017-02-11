@@ -1154,6 +1154,7 @@ class Dit:
             'compact_header': True,
         }
         filters = {}
+        limit = 0
 
         while len(argv) > 0 and argv[0].startswith("-"):
             opt = argv.pop(0)
@@ -1169,6 +1170,10 @@ class Dit:
                 filters["to"] = interpret_date(argv.pop(0))
             elif opt in ["--where", "-w"]:
                 filters["where"] = [argv.pop(0), re.compile(argv.pop(0))]
+            elif opt in ["--limit", "-l", "-n"]:
+                limit = int(argv.pop(0))
+                if limit < 1:
+                    limit = 1
             else:
                 raise ArgumentError("No such option: %s" % opt)
         maybe_raise_unrecognized_argument(argv)
@@ -1183,7 +1188,9 @@ class Dit:
         (group, subgroup, task) = self._get_current_task()
         self._export_task(group, subgroup, task)
 
-        for selection in reversed(self.previous_stack):
+        for i, selection in enumerate(reversed(self.previous_stack)):
+            if limit > 0 and i == limit - 1:
+                break
             (group, subgroup, task) = selector_split(selection)
             self._export_task(group, subgroup, task)
 
