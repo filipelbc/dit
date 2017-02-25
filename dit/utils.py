@@ -13,9 +13,9 @@ DATETIME_FORMAT = r'%Y-%m-%d %H:%M:%S %z'
 
 
 def td2str(td):
-    remainder = td.seconds + 3600 * td.days
-    hours, remainder = divmod(remainder, 3600)
+    hours, remainder = divmod(td.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
+    hours += td.days * 24
 
     s = ""
     if hours != 0:
