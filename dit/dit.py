@@ -1124,7 +1124,7 @@ class Dit:
         maybe_raise_unrecognized_argument(argv)
         self.halt([], cancel=True)
 
-    @command("r")
+    @command("r", select=SELECT_FORWARD)
     def resume(self, argv):
         maybe_raise_unrecognized_argument(argv)
         self.workon([CURRENT])
