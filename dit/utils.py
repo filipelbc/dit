@@ -34,6 +34,7 @@ def dt2str(dt):
 def str2dt(string):
     return datetime.strptime(string, DATETIME_FORMAT)
 
+
 # The function `now` needs to be mocked when running tests
 # In order to have progressing time, we maintain a file with an incrementing
 # integer
@@ -92,6 +93,10 @@ def convert_datetimes(data):
 # Filtering
 
 
+def _cast_values(d, t=int):
+    return {k: t(v) for k, v in d.items()}
+
+
 def interpret_date(string):
 
     if string in ["now"]:
@@ -101,6 +106,21 @@ def interpret_date(string):
     elif string in ["yesterday", "yd"]:
         return TODAY - timedelta(days=-1)
 
+    # 2018-03-24-15:40
+    date_p = r'$(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(-(?P<hour>\d{2}):(?P<minute>\d{2}))?^'
+
+    date_m = re.search(date_p, string)
+    if date_m:
+        return datetime(**_cast_values(date_m.groupdict()), tzinfo=LOCALZONE)
+
+    # 15:40
+    time_p = r'$(?P<hours>\d{2}):(?P<minutes>\d{2})^'
+
+    time_m = re.search(time_p, string)
+    if time_m:
+        return TODAY + timedelta(**_cast_values(time_m.groupdict()))
+
+    # 2d 13h 25min
     days_p = r'(?P<days>[+-]?\d+) ?d(ays?)?'
     hours_p = r'(?P<hours>[+-]?\d+) ?h(ours?)?'
     minutes_p = r'(?P<minutes>[+-]?\d+) ?min(utes?)?'
