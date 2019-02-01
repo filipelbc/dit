@@ -98,7 +98,7 @@ def interpret_date(string):
         return now()
     elif string in ["today", "td"]:
         return TODAY
-    elif string == ["yesterday", "yd"]:
+    elif string in ["yesterday", "yd"]:
         return TODAY - timedelta(days=-1)
 
     days_p = r'(?P<days>[+-]?\d+) ?d(ays?)?'
