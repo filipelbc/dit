@@ -94,7 +94,7 @@ def convert_datetimes(data):
 
 
 def _cast_values(d, t=int):
-    return {k: t(v) for k, v in d.items()}
+    return {k: t(v) if v else 0 for k, v in d.items()}
 
 
 def interpret_date(string):
@@ -107,7 +107,7 @@ def interpret_date(string):
         return TODAY - timedelta(days=-1)
 
     # 2018-03-24-15:40
-    date_p = r'$(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(-(?P<hour>\d{2}):(?P<minute>\d{2}))?^'
+    date_p = r'^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(-(?P<hour>\d{2}):(?P<minute>\d{2}))?$'
 
     date_m = re.search(date_p, string)
     if date_m:
