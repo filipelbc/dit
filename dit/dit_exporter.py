@@ -220,5 +220,5 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
             for log in logbook[i:]:
                 string = '  - %s' % dt2str(log['in'])
                 if log['out']:
-                    string += ' ~ %s' % dt2str(log['out'])
+                    string += ' ~ %s (%s)' % (dt2str(log['out']), td2str(log['out'] - log['in']))
                 _write(string)
