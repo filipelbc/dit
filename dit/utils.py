@@ -114,7 +114,7 @@ def interpret_date(string):
         return datetime(**_cast_values(date_m.groupdict()), tzinfo=LOCALZONE)
 
     # 15:40
-    time_p = r'$(?P<hours>\d{2}):(?P<minutes>\d{2})^'
+    time_p = r'^(?P<hours>\d{2}):(?P<minutes>\d{2})$'
 
     time_m = re.search(time_p, string)
     if time_m:
