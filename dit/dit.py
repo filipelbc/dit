@@ -133,10 +133,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   Plugins:
 
     Data fetcher:
-      This allows placing a script named "_data_fetcher" in the directory
+      This allows placing a script named ".fetcher" in the directory
       of a group or subgroup, which will be used for fetching data for the task
       from an external source. It will be called in the following manner:
-        "$ _data_fetcher dit-directory group subgroup task"
+        "$ .fetcher dit-directory group subgroup task"
       It should save the fetched data in the file:
         "dit-directory/group/subgroup/task.json"
 
@@ -162,7 +162,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
         - "(before|after)_read": called before/after any readonly command
                                  (listing commands)
         - "after": called after any command is executed successfully.
-      The script should be installed in the "HOOKS" directory in your dit
+      The script should be installed in the ".hooks" directory in your dit
       directory and it will be called in the following manner:
         "$ hook-name dit-directory command-name"
 
@@ -182,7 +182,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   recent.
 
   Note that a "*-name" must begin with a letter to be valid. Group- and
-  subgroup-names can be empty or a dot, which means no group and/or subgroup.
+  subgroup-names can be empty or a ".", which means no group and/or subgroup.
 
   Also note that CURRENT and PREVIOUS are not valid arguments for the command
   "new".
@@ -1151,7 +1151,7 @@ class Dit:
     def status(self, argv):
         options = {
             'statussing': True,
-            'compact_header': True,
+            'compact-header': True,
         }
         filters = {}
         limit = 0
@@ -1232,7 +1232,7 @@ class Dit:
             elif opt in ["--concluded", "-c"]:
                 options['concluded'] = True
             elif opt in ["--compact", "-z"]:
-                options['compact_header'] = True
+                options['compact-header'] = True
             elif opt in ["--output", "-o"] and not listing:
                 output_file = argv.pop(0)
             elif opt in ["--format", "-f"] and not listing:

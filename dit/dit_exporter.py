@@ -19,7 +19,7 @@ _options = {
     'id-only': False,
     'concluded': False,
     'statussing': False,
-    'compact_header': False,
+    'compact-header': False,
     'sum': False,
     'filters': {}
 }
@@ -110,13 +110,13 @@ def end():
 
 
 def group(group, group_id):
-    if not _options.get('compact_header'):
+    if not _options.get('compact-header'):
         global _group_string
         _group_string = _ca('[%s] %s' % (group_id, group))
 
 
 def subgroup(group, group_id, subgroup, subgroup_id):
-    if not _options.get('compact_header'):
+    if not _options.get('compact-header'):
         global _subgroup_string
         _subgroup_string = _cb('[%s/%s] %s' % (group_id, subgroup_id, subgroup))
 
@@ -142,7 +142,7 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         _write('%s/%s/%s' % (group_id, subgroup_id, task_id))
         return
 
-    if _options.get('compact_header'):
+    if _options.get('compact-header'):
         _write(_ca('[%s/%s/%s]' % (group_id, subgroup_id, task_id)) + ' ' +
                _cc(names_to_string(group, subgroup, task)))
     else:
