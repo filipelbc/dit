@@ -34,6 +34,7 @@ def dt2str(dt):
 def str2dt(string):
     return datetime.strptime(string, DATETIME_FORMAT)
 
+
 # The function `now` needs to be mocked when running tests
 # In order to have progressing time, we maintain a file with an incrementing
 # integer
@@ -92,32 +93,39 @@ def convert_datetimes(data):
 # Filtering
 
 
+def _cast_values(d, t=int):
+    return {k: t(v) if v else 0 for k, v in d.items()}
+
+
 def interpret_date(string):
 
     if string in ["now"]:
         return now()
     elif string in ["today", "td"]:
         return TODAY
-    elif string == ["yesterday", "yd"]:
+    elif string in ["yesterday", "yd"]:
         return TODAY - timedelta(days=-1)
 
-    days_p = r'(?P<days>[+-]?\d+) ?d(ays?)?'
-    hours_p = r'(?P<hours>[+-]?\d+) ?h(ours?)?'
-    minutes_p = r'(?P<minutes>[+-]?\d+) ?min(utes?)?'
+    # 2018-03-24-15:40
+    date_p = r'^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(-(?P<hour>\d{2}):(?P<minute>\d{2}))?$'
 
-    days_m = re.search(days_p, string)
-    hours_m = re.search(hours_p, string)
-    minutes_m = re.search(minutes_p, string)
+    date_m = re.search(date_p, string)
+    if date_m:
+        return datetime(**_cast_values(date_m.groupdict()), tzinfo=LOCALZONE)
 
-    if days_m or hours_m or minutes_m:
-        dt = TODAY
-        if days_m:
-            dt += timedelta(days=int(days_m.group('days')))
-        if hours_m:
-            dt += timedelta(hours=int(hours_m.group('hours')))
-        if minutes_m:
-            dt += timedelta(minutes=int(minutes_m.group('minutes')))
-        return dt
+    # 15:40
+    time_p = r'^(?P<hours>\d{2}):(?P<minutes>\d{2})$'
+
+    time_m = re.search(time_p, string)
+    if time_m:
+        return TODAY + timedelta(**_cast_values(time_m.groupdict()))
+
+    # 2d13h25min
+    rel_p = r'^((?P<days>[+-]?\d+)d)?((?P<hours>[+-]?\d+)h)?((?P<minutes>[+-]?\d+)min)?$'
+
+    rel_m = re.search(rel_p, string)
+    if string and rel_m:
+        return TODAY + timedelta(**_cast_values(rel_m.groupdict()))
 
     raise ArgumentError('Unrecognized date/time string: %s' % string)
 
