@@ -120,24 +120,12 @@ def interpret_date(string):
     if time_m:
         return TODAY + timedelta(**_cast_values(time_m.groupdict()))
 
-    # 2d 13h 25min
-    days_p = r'(?P<days>[+-]?\d+) ?d(ays?)?'
-    hours_p = r'(?P<hours>[+-]?\d+) ?h(ours?)?'
-    minutes_p = r'(?P<minutes>[+-]?\d+) ?min(utes?)?'
+    # 2d13h25min
+    rel_p = r'^((?P<days>[+-]?\d+)d)?((?P<hours>[+-]?\d+)h)?((?P<minutes>[+-]?\d+)min)?$'
 
-    days_m = re.search(days_p, string)
-    hours_m = re.search(hours_p, string)
-    minutes_m = re.search(minutes_p, string)
-
-    if days_m or hours_m or minutes_m:
-        dt = TODAY
-        if days_m:
-            dt += timedelta(days=int(days_m.group('days')))
-        if hours_m:
-            dt += timedelta(hours=int(hours_m.group('hours')))
-        if minutes_m:
-            dt += timedelta(minutes=int(minutes_m.group('minutes')))
-        return dt
+    rel_m = re.search(rel_p, string)
+    if string and rel_m:
+        return TODAY + timedelta(**_cast_values(rel_m.groupdict()))
 
     raise ArgumentError('Unrecognized date/time string: %s' % string)
 
