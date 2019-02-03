@@ -43,7 +43,7 @@ Using directory: ditdir
 Selected: g4/./t13
 ERROR: Task not found in index.
 ---------------------------------------------------
-$ dit -v -d ./ditdir switchto --new g5/g6/t14 -: 'This task will be moved a lot!'
+$ dit -v -d ./ditdir switchto --new g5/g6/t14 'This task will be moved a lot!'
 Using directory: ditdir
 Selected: ././t7
 Halted: ././t7
@@ -57,19 +57,19 @@ Task saved: g5/g6/t14
 PREVIOUS saved. It has 1 task now.
 CURRENT saved: g5/g6/t14
 ---------------------------------------------------
-$ dit -v -d ./ditdir set -: ISSUE NUMBER
+$ dit -v -d ./ditdir set ISSUE NUMBER
 Using directory: ditdir
 Selected: g5/g6/t14
 Set property of: g5/g6/t14
 Task saved: g5/g6/t14
 ---------------------------------------------------
-$ dit -v -d ./ditdir set -: From Elsewhere
+$ dit -v -d ./ditdir set From Elsewhere
 Using directory: ditdir
 Selected: g5/g6/t14
 Set property of: g5/g6/t14
 Task saved: g5/g6/t14
 ---------------------------------------------------
-$ dit -v -d ./ditdir note -: 'Wololo!'
+$ dit -v -d ./ditdir note 'Wololo!'
 Using directory: ditdir
 Selected: g5/g6/t14
 Noted added to: g5/g6/t14

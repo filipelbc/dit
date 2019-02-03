@@ -6,7 +6,7 @@ Halted: ././t10
 Task saved: ././t10
 CURRENT saved: ././t10 (halted)
 ---------------------------------------------------
-$ dit -v -d ./ditdir set g5/g7/t16 -: pName pvalue
+$ dit -v -d ./ditdir set --task g5/g7/t16 pName pvalue
 Using directory: ditdir
 Selected: g5/g7/t16
 Set property of: g5/g7/t16

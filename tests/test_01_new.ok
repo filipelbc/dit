@@ -1,80 +1,80 @@
 ---------------------------------------------------
-$ dit -v -d ./ditdir new t1 -: 'Group . Subgroup . Task t1'
+$ dit -v -d ./ditdir new t1 'Group . Subgroup . Task t1'
 Created: ditdir
 Using directory: ditdir
 Selected: ././t1
 INDEX saved.
 Created: ././t1
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g1/t2 -: 'Group g1 Subgroup . Task t2'
+$ dit -v -d ./ditdir new g1/t2 'Group g1 Subgroup . Task t2'
 Using directory: ditdir
 Selected: g1/./t2
 Created: ditdir/g1
 INDEX saved.
 Created: g1/./t2
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g2/g3/t3 -: 'Group g2 Subgroup g3 Task t3'
+$ dit -v -d ./ditdir new g2/g3/t3 'Group g2 Subgroup g3 Task t3'
 Using directory: ditdir
 Selected: g2/g3/t3
 Created: ditdir/g2/g3
 INDEX saved.
 Created: g2/g3/t3
 ---------------------------------------------------
-$ dit -v -d ./ditdir new /t4 -: 'Group . Subgroup . Task t4'
+$ dit -v -d ./ditdir new /t4 'Group . Subgroup . Task t4'
 Using directory: ditdir
 Selected: ././t4
 INDEX saved.
 Created: ././t4
 ---------------------------------------------------
-$ dit -v -d ./ditdir new /g4/t5 -: 'Group g4 Subgroup . Task t5'
+$ dit -v -d ./ditdir new /g4/t5 'Group g4 Subgroup . Task t5'
 Using directory: ditdir
 Selected: g4/./t5
 Created: ditdir/g4
 INDEX saved.
 Created: g4/./t5
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5//t6 -: 'Group g5 Subgroup . Task t6'
+$ dit -v -d ./ditdir new g5//t6 'Group g5 Subgroup . Task t6'
 Using directory: ditdir
 Selected: g5/./t6
 Created: ditdir/g5
 INDEX saved.
 Created: g5/./t6
 ---------------------------------------------------
-$ dit -v -d ./ditdir new //t7 -: 'Group . Subgroup . Task t7'
+$ dit -v -d ./ditdir new //t7 'Group . Subgroup . Task t7'
 Using directory: ditdir
 Selected: ././t7
 INDEX saved.
 Created: ././t7
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5/g6/t8 -: 'Group g5 Subgroup g6 Task t8'
+$ dit -v -d ./ditdir new g5/g6/t8 'Group g5 Subgroup g6 Task t8'
 Using directory: ditdir
 Selected: g5/g6/t8
 Created: ditdir/g5/g6
 INDEX saved.
 Created: g5/g6/t8
 ---------------------------------------------------
-$ dit -v -d ./ditdir new g5//t9 -: 'Group g5 Subgroup . Task t9'
+$ dit -v -d ./ditdir new g5//t9 'Group g5 Subgroup . Task t9'
 Using directory: ditdir
 Selected: g5/./t9
 INDEX saved.
 Created: g5/./t9
 ---------------------------------------------------
-$ dit -v -d ./ditdir new t10 -: 'Group . Subgroup . Task t10'
+$ dit -v -d ./ditdir new t10 'Group . Subgroup . Task t10'
 Using directory: ditdir
 Selected: ././t10
 INDEX saved.
 Created: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir new ././t7 -: '. . t7, fails: already exists'
+$ dit -v -d ./ditdir new ././t7 '. . t7, fails: already exists'
 Using directory: ditdir
 Selected: ././t7
 ERROR: Task already exists: ./ditdir/t7
 ---------------------------------------------------
-$ dit -v -d ./ditdir new .foo -: 'fails: invalid task name'
+$ dit -v -d ./ditdir new .foo 'fails: invalid task name'
 Using directory: ditdir
 ERROR: Invalid task name: .foo
 ---------------------------------------------------
-$ dit -v -d ./ditdir new .foo/bar -: 'fails: invalid group name'
+$ dit -v -d ./ditdir new .foo/bar 'fails: invalid group name'
 Using directory: ditdir
 ERROR: Invalid group name: .foo
 ---------------------------------------------------

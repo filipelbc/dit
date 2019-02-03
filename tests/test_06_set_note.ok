@@ -1,45 +1,45 @@
 ---------------------------------------------------
-$ dit -v -d ./ditdir note -: 'This is a simple note.'
+$ dit -v -d ./ditdir note 'This is a simple note.'
 Using directory: ditdir
 Selected: ././t10
 Noted added to: ././t10
 Task saved: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir note t1 -: 'This is another simple note.'
+$ dit -v -d ./ditdir note --task t1 'This is another simple note.'
 Using directory: ditdir
 Selected: ././t1
 Noted added to: ././t1
 Task saved: ././t1
 ---------------------------------------------------
-$ dit -v -d ./ditdir note t1 -: ''
+$ dit -v -d ./ditdir note --task t1 ''
 Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
-$ dit -v -d ./ditdir note g5/t6 -: 'Note, note, note! This one is a very long note.'
+$ dit -v -d ./ditdir note --task g5/t6 'Note, note, note! This one is a very long note.'
 Using directory: ditdir
 Selected: g5/./t6
 Noted added to: g5/./t6
 Task saved: g5/./t6
 ---------------------------------------------------
-$ dit -v -d ./ditdir set -: pName pValue
+$ dit -v -d ./ditdir set pName pValue
 Using directory: ditdir
 Selected: ././t10
 Set property of: ././t10
 Task saved: ././t10
 ---------------------------------------------------
-$ dit -v -d ./ditdir set t1 -: 'Some Name' 'Some Value'
+$ dit -v -d ./ditdir set --task t1 'Some Name' 'Some Value'
 Using directory: ditdir
 Selected: ././t1
 Set property of: ././t1
 Task saved: ././t1
 ---------------------------------------------------
-$ dit -v -d ./ditdir set t1 -: '' ''
+$ dit -v -d ./ditdir set --task t1 '' ''
 Using directory: ditdir
 Selected: ././t1
 Operation cancelled.
 ---------------------------------------------------
-$ dit -v -d ./ditdir set g5/t6 -: s_name s_value
+$ dit -v -d ./ditdir set --task g5/t6 s_name s_value
 Using directory: ditdir
 Selected: g5/./t6
 Set property of: g5/./t6
