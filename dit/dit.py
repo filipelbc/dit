@@ -24,13 +24,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Workflow <command>'s:
 
-    new [--fetch, -f] <name> [-: "title"]
+    new [--fetch, -f] <name> ["title"]
       Creates a new task. You will be prompted for the "title" if it is
       not provided.
       --fetch, -n
         Use data fetcher plugin.
 
-    workon <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
+    workon <id> | <name> | --new, -n [--fetch, -f] <name> ["title"]
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
       --at, -a "date"
@@ -52,7 +52,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     resume
       Same as "workon CURRENT".
 
-    switchto <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
+    switchto <id> | <name> | --new, -n [--fetch, -f] <name> ["title"]
       Same as "halt" followed by "workon".
 
     switchback
@@ -113,11 +113,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --fetch, -f
         Use data fetcher plugin after moving.
 
-    note [<name> | <id>] [-: "text"]
-      Adds a note to the CURRENT task or the specified one.
+    note [--task, -t <name> | <id>] ["text"]
+      Adds a note to the CURRENT task or the specified one. You will be
+      prompted for the "text" if it is not provided.
 
-    set [<name> | <id>] [-: "name" ["value"]]
-      Sets a property for the CURRENT task or the specified one.
+    set [--task, -t <name> | <id>] ["name" ["value"]]
+      Sets a property for the CURRENT task or the specified one. You will be
+      prompted for the "name" and "value" if they're not provided.
 
     edit [<name> | <id>]
       Opens the specified task for manual editing. Uses CURRENT task or the
@@ -127,7 +129,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   Other <command>'s:
 
     rebuild-index
-      Rebuild the INDEX file. For use in case of manual modification of the
+      Rebuild the ".index" file. For use in case of manual modification of the
       contents of the dit directory.
 
   Plugins:
@@ -168,10 +170,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Clarifications:
 
-  "-:"
-    Arguments preceeded by "-:" are necessary. If omited, then: a) if the
-    $VISUAL or $EDITOR environment variable is set, a text file will be open
-    for editing the argument; b) otherwise, a simple prompt will be used.
+  When mandatory arguments are not provided, you will be prompted to provide
+  them.  This will either be done by opening a  text editor or with a simple
+  CLI prompt. The editor will be used if either the $VISUAL or $EDITOR
+  environment variable is set.
 
   <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
 
@@ -254,6 +256,7 @@ class State(Enum):
 # ===========================================
 # General Options
 
+
 HOOKS_ENABLED = True
 CHECK_HOOKS = False
 
@@ -288,6 +291,7 @@ def load_plugin(plugin_name):
 
 # ===========================================
 # Command decorator
+
 
 COMMAND_INFO = {}
 
@@ -328,6 +332,7 @@ def command(letter=None, options=[], select=None, readonly=False):
 # ===========================================
 # To Nice String
 
+
 _ = names_to_string
 
 
@@ -336,6 +341,7 @@ def msg_selected(group, subgroup, task):
 
 # ==========================================
 # Selector
+
 
 ID_SELECTOR = "id"
 GID_SELECTOR = "gid"
@@ -429,6 +435,7 @@ def is_valid_task_data(data):
 
 # ===========================================
 # Task Data Manipulation
+
 
 NEW_TASK_DATA = {
     "title": None,
@@ -861,11 +868,19 @@ class Dit:
 
         return (group, subgroup, task)
 
-    def _backward_parser(self, argv, throw=True):
+    def _backward_parser(self, argv, throw=True, require_prefix=False):
         (group, subgroup, task) = self._get_current()
 
-        if len(argv) > 0 and not argv[0].startswith("-"):
-            selection = argv.pop(0)
+        selection = None
+        if len(argv) > 0:
+            if require_prefix:
+                if argv[0] in ["--task", "-t"]:
+                    argv.pop(0)
+                    selection = argv.pop(0)
+            elif not argv[0].startswith("-"):
+                selection = argv.pop(0)
+
+        if selection is not None:
 
             if selection == CURRENT:
                 task = self.current_task
@@ -945,7 +960,7 @@ class Dit:
     # ===========================================
     # Commands
 
-    @command("n", ["-:", "--:", "--fetch"], SELECT_BACKWARD)
+    @command("n", ["--fetch"], SELECT_BACKWARD)
     def new(self, argv):
         title = None
         fetch = False
@@ -962,12 +977,8 @@ class Dit:
         (group, subgroup, task) = self._name_parser(argv.pop(0))
         msg_selected(group, subgroup, task)
 
-        while len(argv) > 0 and argv[0].startswith("-"):
-            opt = argv.pop(0)
-            if opt in ["-:", "--:"]:
-                title = argv.pop(0)
-            else:
-                raise ArgumentError("No such option: %s" % opt)
+        if len(argv) > 0:
+            title = argv.pop(0)
 
         maybe_raise_unrecognized_argument(argv)
         self._raise_task_exists(group, subgroup, task)
@@ -1340,14 +1351,12 @@ class Dit:
         if fetch:
             self.fetch([to_selector])
 
-    @command("t", ["-:", "--:"], SELECT_BACKWARD)
+    @command("t", [], SELECT_BACKWARD)
     def note(self, argv):
-        (group, subgroup, task) = self._backward_parser(argv)
+        (group, subgroup, task) = self._backward_parser(argv, require_prefix=True)
 
-        note_text = None
-        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
-            argv.pop(0)
-            note_text = argv.pop(0)
+        note_text = argv.pop(0) if len(argv) > 0 else None
+
         maybe_raise_unrecognized_argument(argv)
 
         if note_text is None:
@@ -1362,27 +1371,24 @@ class Dit:
         msg.normal("Noted added to: %s" % _(group, subgroup, task))
         self._save_task(group, subgroup, task, data)
 
-    @command("p", ["-:", "--:"], SELECT_BACKWARD)
+    @command("p", [], SELECT_BACKWARD)
     def set(self, argv):
-        (group, subgroup, task) = self._backward_parser(argv)
+        (group, subgroup, task) = self._backward_parser(argv, require_prefix=True)
 
         prop_name = None
-        if len(argv) > 0 and argv[0] in ["-:", "--:"]:
-            argv.pop(0)
+        if len(argv) > 0:
             prop_name = argv.pop(0)
             if len(argv) > 0:
                 prop_value = argv.pop(0)
             else:
                 prop_value = prompt("Value for property: %s" % prop_name)
+
         maybe_raise_unrecognized_argument(argv)
 
         if prop_name is None:
             prop = prompt("Name and Value for property").split('\n', 1)
-            prop_name = prop[0].strip()
-            if len(prop) == 2:
-                prop_value = prop[1].strip()
-            else:
-                prop_value = ''
+            prop_name = prop.pop(0).strip()
+            prop_value = prop.pop(0).strip() if len(prop) > 0 else ''
 
         data = self._load_task_data(group, subgroup, task)
         if prop_name and data_set_property(data, prop_name, prop_value):
