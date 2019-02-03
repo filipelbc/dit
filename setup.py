@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='dit',
-    version='0.7.2',
+    version='0.7.3',
 
     description='A CLI work time tracking tool.',
 
