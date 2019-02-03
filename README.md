@@ -39,13 +39,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Workflow <command>'s:
 
-    new [--fetch, -f] <name> [-: "title"]
+    new [--fetch, -f] <name> ["title"]
       Creates a new task. You will be prompted for the "title" if it is
       not provided.
       --fetch, -n
         Use data fetcher plugin.
 
-    workon <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
+    workon <id> | <name> | --new, -n [--fetch, -f] <name> ["title"]
       Starts clocking the specified task. If already working on a task, nothing
       is done. Sets the CURRENT and PREVIOUS tasks.
       --at, -a "date"
@@ -67,7 +67,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
     resume
       Same as "workon CURRENT".
 
-    switchto <id> | <name> | --new, -n [--fetch, -f] <name> [-: "title"]
+    switchto <id> | <name> | --new, -n [--fetch, -f] <name> ["title"]
       Same as "halt" followed by "workon".
 
     switchback
@@ -128,11 +128,13 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
       --fetch, -f
         Use data fetcher plugin after moving.
 
-    note [<name> | <id>] [-: "text"]
-      Adds a note to the CURRENT task or the specified one.
+    note [--task, -t <name> | <id>] ["text"]
+      Adds a note to the CURRENT task or the specified one. You will be
+      prompted for the "text" if it is not provided.
 
-    set [<name> | <id>] [-: "name" ["value"]]
-      Sets a property for the CURRENT task or the specified one.
+    set [--task, -t <name> | <id>] ["name" ["value"]]
+      Sets a property for the CURRENT task or the specified one. You will be
+      prompted for the "name" and "value" if they're not provided.
 
     edit [<name> | <id>]
       Opens the specified task for manual editing. Uses CURRENT task or the
@@ -142,7 +144,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   Other <command>'s:
 
     rebuild-index
-      Rebuild the INDEX file. For use in case of manual modification of the
+      Rebuild the ".index" file. For use in case of manual modification of the
       contents of the dit directory.
 
   Plugins:
@@ -183,10 +185,10 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
 
   Clarifications:
 
-  "-:"
-    Arguments preceeded by "-:" are necessary. If omited, then: a) if the
-    $VISUAL or $EDITOR environment variable is set, a text file will be open
-    for editing the argument; b) otherwise, a simple prompt will be used.
+  When mandatory arguments are not provided, you will be prompted to provide
+  them.  This will either be done by opening a  text editor or with a simple
+  CLI prompt. The editor will be used if either the $VISUAL or $EDITOR
+  environment variable is set.
 
   <name>: [["group-name"/]"subgroup-name"/]"task-name" | CURRENT | PREVIOUS
 
