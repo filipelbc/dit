@@ -127,7 +127,7 @@ Usage: dit [--verbose, -v] [--directory, -d "path"] <command>
   Other <command>'s:
 
     rebuild-index
-      Rebuild the INDEX file. For use in case of manual modification of the
+      Rebuild the ".index" file. For use in case of manual modification of the
       contents of the dit directory.
 
   Plugins:
