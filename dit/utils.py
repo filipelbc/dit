@@ -41,7 +41,6 @@ def str2dt(string):
 if os.path.isfile('DIT_TESTING'):
 
     LOCALZONE = timezone(timedelta(-1, 79200), 'BRST')
-    TODAY = datetime(2016, 9, 10, 0, 0, 0, 0, LOCALZONE)
 
     _base_now = datetime(2016, 9, 10, 18, 50, 43, 0, LOCALZONE)
 
@@ -53,15 +52,24 @@ if os.path.isfile('DIT_TESTING'):
             f.write(str(i + inc))
         return now
 
+    def today():
+        return now().replace(hour=0,
+                             minute=0,
+                             second=0,
+                             microsecond=0)
+
+
 else:
     LOCALZONE = get_localzone()
-    TODAY = datetime.now(LOCALZONE).replace(hour=0,
-                                            minute=0,
-                                            second=0,
-                                            microsecond=0)
 
     def now(**kwargs):
         return datetime.now(LOCALZONE)
+
+    def today():
+        return now().replace(hour=0,
+                             minute=0,
+                             second=0,
+                             microsecond=0)
 
 
 def now_str():
@@ -102,9 +110,9 @@ def interpret_date(string):
     if string in ["now"]:
         return now()
     elif string in ["today", "td"]:
-        return TODAY
+        return today()
     elif string in ["yesterday", "yd"]:
-        return TODAY - timedelta(days=-1)
+        return today() - timedelta(days=-1)
 
     # 2018-03-24-15:40
     date_p = r'^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(-(?P<hour>\d{2}):(?P<minute>\d{2}))?$'
@@ -118,14 +126,14 @@ def interpret_date(string):
 
     time_m = re.search(time_p, string)
     if time_m:
-        return TODAY + timedelta(**_cast_values(time_m.groupdict()))
+        return today() + timedelta(**_cast_values(time_m.groupdict()))
 
     # 2d13h25min
     rel_p = r'^((?P<days>[+-]?\d+)d)?((?P<hours>[+-]?\d+)h)?((?P<minutes>[+-]?\d+)min)?$'
 
     rel_m = re.search(rel_p, string)
     if string and rel_m:
-        return TODAY + timedelta(**_cast_values(rel_m.groupdict()))
+        return now() + timedelta(**_cast_values(rel_m.groupdict()))
 
     raise ArgumentError('Unrecognized date/time string: %s' % string)
 
