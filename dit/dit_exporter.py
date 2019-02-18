@@ -191,6 +191,7 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
         _overall_time_spent += time_spent
 
         if statussing and not verbose:
+            first_entry = logbook[0]
             log = logbook[-1]
             string = '  '
 
@@ -199,10 +200,11 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
 
             if time_spent:
                 string += "%s %s. " % (_ce('Spent'), td2str(time_spent))
+            string += "\n  %s %s." % (_ce('First clocked in at'), dt2str(first_entry['in']))
             if log['out']:
-                string += "%s %s." % (_ce('Clocked out at'), dt2str(log['out']))
+                string += "\n  %s %s." % (_ce('Clocked out at'), dt2str(log['out']))
             else:
-                string += "%s %s." % (_cf('Clocked in at'), dt2str(log['in']))
+                string += "\n  %s %s." % (_cf('Clocked in at'), dt2str(log['in']))
             _write(string)
 
         else:
