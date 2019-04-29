@@ -17,6 +17,7 @@ _pager = None
 _options = {
     'verbose': False,
     'id-only': False,
+    'name-only': False,
     'concluded': False,
     'statussing': False,
     'compact-header': False,
@@ -125,6 +126,7 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # options
     verbose = _options['verbose']
     id_only = _options['id-only']
+    name_only = _options['name-only']
     concluded = _options['concluded']
     statussing = _options['statussing']
     filters = _options['filters']
@@ -140,6 +142,9 @@ def task(group, group_id, subgroup, subgroup_id, task, task_id, data):
     # write
     if id_only:
         _write('%s/%s/%s' % (group_id, subgroup_id, task_id))
+        return
+    elif name_only:
+        _write(names_to_string(group, subgroup, task))
         return
 
     if _options.get('compact-header'):
