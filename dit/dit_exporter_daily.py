@@ -6,9 +6,12 @@ import subprocess
 from datetime import timedelta
 
 from .dit import names_to_string
-from .utils import (dt2str, td2str,
-                    convert_datetimes,
-                    apply_filters)
+from .utils import (
+    apply_filters,
+    convert_datetimes,
+    dt2str,
+    now,
+)
 
 _0_seconds = timedelta(0)
 
@@ -19,6 +22,7 @@ _days = {}
 _options = {
     'filters': {}
 }
+_now = None
 
 
 # ===========================================
@@ -58,6 +62,22 @@ def _write(string=''):
 
 
 # ===========================================
+# Logic helpers
+
+def _lazy_now():
+    global _now
+    if _now is None:
+        _now = now()
+    return _now
+
+
+def _calc_delta(log_entry):
+    if log_entry[1] is None:
+        return _lazy_now() - log_entry[0]
+    return log_entry[1] - log_entry[0]
+
+
+# ===========================================
 # API
 
 
@@ -81,13 +101,13 @@ def begin():
 
 def end():
     for d, logs in sorted(_days.items(), reverse=True):
-        total = sum(map(lambda x: x[1] - x[0], logs), _0_seconds)
+        total = sum(map(_calc_delta, logs), _0_seconds)
 
         _write('%s (%s)' % (_ca(d.strftime(r'%A %x')), _ce('%s' % total)))
         for lin, lout, name, title in sorted(logs, reverse=True):
             string = '  - %s' % dt2str(lin)
-            if lout:
-                string += ' ~ %s (%s)' % (dt2str(lout), _ce('%s' % (lout - lin)))
+            lout_s = dt2str(lout) if lout else 'ongoing'
+            string += ' ~ %s (%s)' % (lout_s, _ce('%s' % _calc_delta([lin, lout])))
             string += ' : [%s] %s' % (_cc(name), _cd(title))
             _write(string)
 
