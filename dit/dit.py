@@ -298,6 +298,7 @@ COMMAND_INFO = {}
 FILTER_OPTIONS = [
     "--verbose",
     "--id-only",
+    "--name-only",
     "--sum",
     "--from",
     "--to",
@@ -1173,6 +1174,8 @@ class Dit:
                 options['verbose'] = True
             elif opt in ["--id-only", "-i"]:
                 options['id-only'] = True
+            elif opt in ["--name-only", "-i"]:
+                options['name-only'] = True
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
@@ -1214,6 +1217,7 @@ class Dit:
     @command("o", LIST_OPTIONS + ["--output", "--format"], SELECT_FORWARD, True)
     def export(self, argv, listing=False):
         all = False
+        daily = False
         output_file = None
         output_format = None
 
@@ -1230,6 +1234,8 @@ class Dit:
                 options['verbose'] = True
             elif opt in ["--id-only", "-i"]:
                 options['id-only'] = True
+            elif opt in ["--name-only", "-i"]:
+                options['name-only'] = True
             elif opt in ["--sum", "-s"]:
                 options["sum"] = True
             elif opt in ["--from"]:
@@ -1240,6 +1246,8 @@ class Dit:
                 filters["where"] = [argv.pop(0), re.compile(argv.pop(0))]
             elif opt in ["--all", "-a"]:
                 all = True
+            elif opt in ["--daily", "-d"]:
+                daily = True
             elif opt in ["--concluded", "-c"]:
                 options['concluded'] = True
             elif opt in ["--compact", "-z"]:
@@ -1271,7 +1279,10 @@ class Dit:
 
         output_format = output_format or 'dit'
 
-        self.exporter = load_plugin("%s_exporter" % output_format)
+        if daily:
+            self.exporter = load_plugin("%s_exporter_daily" % output_format)
+        else:
+            self.exporter = load_plugin("%s_exporter" % output_format)
         self.exporter.setup(exporter_stdout, options)
         self.exporter.begin()
 

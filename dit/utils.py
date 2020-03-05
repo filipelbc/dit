@@ -63,7 +63,7 @@ else:
     LOCALZONE = get_localzone()
 
     def now(**kwargs):
-        return datetime.now(LOCALZONE)
+        return datetime.now(LOCALZONE).replace(microsecond=0)
 
     def today():
         return now().replace(hour=0,
